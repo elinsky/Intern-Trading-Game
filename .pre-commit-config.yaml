@@ -1,0 +1,71 @@
+repos:
+  - repo: local
+    hooks:
+      - id: pytest
+        name: Run pytest
+        entry: pytest --exitfirst --maxfail=1 -q
+        language: system
+        pass_filenames: false
+
+  # Format Python code with Black
+  - repo: https://github.com/psf/black
+    rev: 25.1.0
+    hooks:
+      - id: black
+        name: black (format code)
+        entry: black --quiet
+        language: system
+        types: [python]
+
+  # Sort Python imports with isort
+  - repo: https://github.com/PyCQA/isort
+    rev: 6.0.1
+    hooks:
+      - id: isort
+        name: isort (sort imports)
+        entry: isort
+        language: system
+        types: [python]
+
+  # Lint Python code with flake8
+  - repo: https://github.com/PyCQA/flake8
+    rev: 6.1.0
+    hooks:
+      - id: flake8
+        name: flake8 (lint code)
+        entry: flake8
+        language: system
+        types: [python]
+
+  # Type check with mypy using local configuration
+  - repo: local
+    hooks:
+      - id: mypy
+        name: mypy (type checking)
+        entry: python -m mypy
+        language: system
+        types: [python]
+        pass_filenames: false
+        args:
+          - --config-file=pyproject.toml
+          - --package=intern_trading_game
+
+  - repo: https://github.com/PyCQA/bandit
+    rev: 1.8.3
+    hooks:
+      - id: bandit
+        pass_filenames: false        # ← ignore git-passed filenames
+        # -r src/ means only scan our source code directory
+        # --skip B101 tells Bandit to ignore warnings about `assert` usage
+        args:
+          - -r
+          - src/
+          - --skip
+          - B101
+
+  - repo: https://github.com/pre-commit/pre-commit-hooks
+    rev: v5.0.0
+    hooks:
+      - id: check-merge-conflict  # prevents committing leftover conflict markers
+      - id: end-of-file-fixer  # ensures files end with a newline
+      - id: trailing-whitespace  # strips any trailing spaces
