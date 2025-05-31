@@ -94,9 +94,7 @@ class Order:
 
     The price-time priority rule is commonly used for order matching:
 
-    .. math::
-
-        Priority = (Price, Time)
+    $$\text{Priority} = (\text{Price}, \text{Time})$$
 
     Where better prices have higher priority, and for equal prices, earlier
     orders have higher priority.

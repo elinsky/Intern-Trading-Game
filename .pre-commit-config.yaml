@@ -49,3 +49,13 @@ repos:
       - id: check-merge-conflict  # prevents committing leftover conflict markers
       - id: end-of-file-fixer  # ensures files end with a newline
       - id: trailing-whitespace  # strips any trailing spaces
+
+  # Custom hook to check for reStructuredText math directives
+  - repo: local
+    hooks:
+      - id: check-math-directives
+        name: Check for reStructuredText math directives
+        description: Ensures math formulas use MathJax syntax instead of reST directives
+        entry: .pre-commit-hooks/check_math_directives.py
+        language: python
+        types: [python]

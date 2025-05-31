@@ -43,6 +43,9 @@ markdown_extensions:
       alternate_style: true
   - tables
   - footnotes
+  # MathJax configuration for rendering mathematical formulas
+  # Use $$...$$  for display math and \(...\) for inline math in Markdown and docstrings
+  # See docs/contributing/docstring-math-guide.md for usage guidelines
   - pymdownx.arithmatex:
       generic: true
   - attr_list
@@ -77,6 +80,7 @@ nav:
       - How to Submit Orders: how-to/how-to-submit-orders.md
   - Reference:
       - Exchange API: reference/exchange-api.md
+      - Math Examples: reference/math-examples.md
       - API Reference:
           - Order Book: reference/order_book.md
           - Order: reference/order.md
@@ -85,6 +89,8 @@ nav:
           - Instrument: reference/instrument.md
   - Explanation:
       - Explaining Order Matching: explanation/explaining-order-matching.md
+  - Contributing:
+      - Math in Docstrings: contributing/docstring-math-guide.md
 
 extra_javascript:
   - javascripts/mathjax.js
