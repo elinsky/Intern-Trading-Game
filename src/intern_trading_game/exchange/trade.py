@@ -68,9 +68,7 @@ class Trade:
 
     The total value of a trade is calculated as:
 
-    .. math::
-
-        Value = Price \times Quantity
+    $$\text{Value} = \text{Price} \times \text{Quantity}$$
 
     Trades are created when orders are matched in the exchange. The matching
     process follows price-time priority, where orders with better prices are
