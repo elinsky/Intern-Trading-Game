@@ -36,8 +36,77 @@ class ExchangeVenue:
     """
     The main exchange venue that handles order submission and matching.
 
-    This class maintains order books for each instrument and routes orders
-    to the appropriate book for matching.
+    This class represents a trading venue where financial instruments can be
+    listed and traded. It maintains separate order books for each instrument,
+    handles order submission, matching, and cancellation, and provides market
+    data such as order book depth and trade history.
+
+    The exchange implements a standard price-time priority matching algorithm,
+    where orders are matched based on price first (best prices get priority)
+    and then by time (earlier orders at the same price get priority).
+
+    Parameters
+    ----------
+    None
+
+    Attributes
+    ----------
+    order_books : Dict[str, OrderBook]
+        Map of instrument IDs to their order books.
+    instruments : Dict[str, Instrument]
+        Map of instrument IDs to their instrument objects.
+    all_order_ids : Set[str]
+        Set of all order IDs across all books.
+
+    Notes
+    -----
+    The exchange venue is the central component of a trading system, responsible
+    for maintaining fair and orderly markets. It implements the core matching
+    logic that pairs buyers with sellers according to well-defined rules.
+
+    The matching algorithm follows price-time priority:
+
+    $$\text{Priority} = (\text{Price}, \text{Time})$$
+
+    For buy orders, higher prices have higher priority.
+    For sell orders, lower prices have higher priority.
+    For orders at the same price, earlier orders have higher priority.
+
+    TradingContext
+    -------------
+    This implementation assumes:
+    - A central limit order book model
+    - Continuous trading (no auctions or opening/closing procedures)
+    - No circuit breakers or trading halts
+    - No fees or commissions
+    - No position limits or risk checks
+    - No support for hidden orders, iceberg orders, or other advanced order types
+    - All orders can be partially filled
+    - No cross-instrument strategies or basket orders
+
+    Examples
+    --------
+    Creating an exchange and listing an instrument:
+
+    >>> exchange = ExchangeVenue()
+    >>> apple_stock = Instrument(symbol="AAPL", underlying="AAPL")
+    >>> exchange.list_instrument(apple_stock)
+
+    Submitting orders and checking the market:
+
+    >>> buy_order = Order(
+    ...     instrument_id="AAPL",
+    ...     side="buy",
+    ...     quantity=10,
+    ...     price=150.0,
+    ...     trader_id="trader1"
+    ... )
+    >>> result = exchange.submit_order(buy_order)
+    >>> result.status
+    'accepted'
+    >>> market = exchange.get_market_summary("AAPL")
+    >>> market["best_bid"]
+    {'price': 150.0, 'quantity': 10.0}
     """
 
     def __init__(self):
