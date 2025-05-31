@@ -11,7 +11,7 @@ from datetime import datetime
 
 @dataclass
 class Trade:
-    """
+    r"""
     Represents an executed trade between two orders.
 
     A trade occurs when two orders are matched in the exchange. It records the

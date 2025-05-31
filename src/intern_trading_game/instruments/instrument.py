@@ -11,7 +11,7 @@ from typing import Optional
 
 @dataclass
 class Instrument:
-    """
+    r"""
     Represents a tradeable instrument in the exchange.
 
     This class models financial instruments that can be traded on the exchange.

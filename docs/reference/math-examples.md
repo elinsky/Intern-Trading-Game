@@ -166,11 +166,11 @@ The delta of an option \(\Delta\) measures the rate of change of the option pric
 
 ## Using Math in Docstrings
 
-When adding math to Python docstrings, make sure to maintain proper indentation:
+When adding math to Python docstrings, **always use raw strings** (prefixed with `r`) and maintain proper indentation:
 
 ```python
 def calculate_option_price(S, K, r, q, T, sigma):
-    """
+    r"""
     Calculate the price of a European call option using the Black-Scholes formula.
 
     The Black-Scholes formula is:
@@ -203,6 +203,29 @@ def calculate_option_price(S, K, r, q, T, sigma):
     float
         Price of the European call option
     """
+```
+
+### Why Raw Strings Are Required
+
+Without the `r` prefix, Python interprets backslashes as escape sequences:
+- `\t` becomes a tab character
+- `\f` becomes a form feed character
+- `\n` becomes a newline
+
+This breaks LaTeX commands like `\text`, `\frac`, and `\sqrt`, causing formulas to render incorrectly.
+
+For example, without a raw string:
+```python
+"""
+$$\text{Value} = \text{Price} \times \text{Quantity}$$
+"""  # Will render as "extValue = extPrice × extQuantity"
+```
+
+With a raw string:
+```python
+r"""
+$$\text{Value} = \text{Price} \times \text{Quantity}$$
+"""  # Will render correctly
 ```
 
 ## Resources

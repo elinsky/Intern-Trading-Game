@@ -33,7 +33,7 @@ class OrderResult:
 
 
 class ExchangeVenue:
-    """
+    r"""
     The main exchange venue that handles order submission and matching.
 
     This class represents a trading venue where financial instruments can be

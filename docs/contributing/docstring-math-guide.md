@@ -2,6 +2,47 @@
 
 This guide explains how to properly include mathematical formulas in docstrings and documentation for the Intern Trading Game project.
 
+## Always Use Raw Strings for LaTeX
+
+When including LaTeX formulas in Python docstrings, **always use raw strings** (prefixed with `r`):
+
+```python
+def calculate_option_price(S, K, r, T, sigma):
+    r"""
+    Calculate option price using Black-Scholes formula:
+
+    $$d_1 = \frac{\ln(S/K) + (r + \sigma^2/2)T}{\sigma\sqrt{T}}$$
+
+    $$d_2 = d_1 - \sigma\sqrt{T}$$
+    """
+    # Implementation
+```
+
+### Why Raw Strings Are Required
+
+Without the `r` prefix, Python interprets backslashes as escape sequences:
+- `\t` becomes a tab character
+- `\f` becomes a form feed character
+- `\n` becomes a newline
+
+This breaks LaTeX commands like `\text`, `\frac`, and `\sqrt`, causing formulas to render incorrectly.
+
+### ❌ Incorrect (Without Raw String)
+
+```python
+"""
+$$\text{Value} = \text{Price} \times \text{Quantity}$$
+"""  # Will render as "extValue = extPrice × extQuantity"
+```
+
+### ✅ Correct (With Raw String)
+
+```python
+r"""
+$$\text{Value} = \text{Price} \times \text{Quantity}$$
+"""  # Will render correctly
+```
+
 ## Using MathJax Syntax
 
 All mathematical formulas in docstrings and Markdown documentation should use MathJax syntax with LaTeX notation. This ensures proper rendering in our documentation site.
@@ -88,7 +129,7 @@ Do not use HTML-based math notation:
 ### Price-Time Priority
 
 ```python
-"""
+r"""
 The price-time priority rule is commonly used for order matching:
 
 $$\text{Priority} = (\text{Price}, \text{Time})$$
@@ -101,7 +142,7 @@ orders have higher priority.
 ### Option Pricing
 
 ```python
-"""
+r"""
 The Black-Scholes formula for European call options:
 
 $$C = S_0 e^{-qT} N(d_1) - K e^{-rT} N(d_2)$$
