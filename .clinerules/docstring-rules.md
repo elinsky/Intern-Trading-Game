@@ -1,8 +1,8 @@
-# Code Documentation Rule – “Quant and Business Logic Modules require rich docstrings”
+# Code Documentation Rule – "Quant and Business Logic Modules require rich docstrings"
 
 ## Purpose
 Complex quantitative algorithms and domain‑specific business logic must be understandable years from now by new developers, quants, and auditors.
-We therefore require **professional‑quality docstrings**, comparable to scikit‑learn’s style, on all such code.
+We therefore require **professional‑quality docstrings**, comparable to scikit‑learn's style, on all such code.
 
 ---
 
@@ -20,7 +20,7 @@ Use **numpydoc / scikit‑learn** formatting with the following sections **in or
 9. **Examples** – runnable code snippets with expected output, demonstrating realistic trading scenarios.
 
 ### Minimum length
-* Docstring body (lines after the summary) must be **≥ 10 non‑blank lines**.
+* Docstring body (lines after the summary) must be **≥ 10 non‑blank lines**.
 
 ### Formatting details
 * Use reST section headers with a line of dashes:
@@ -28,21 +28,21 @@ Use **numpydoc / scikit‑learn** formatting with the following sections **in or
       Parameters
       ----------
 * Align types and descriptions vertically as in scikit‑learn.
-* Wrap lines at ≤ 88 characters.
+* Wrap lines at ≤ 79 characters.
 * Inline math using LaTeX. Longer derivations may be indented as::
 
       .. math::
 
          V = e^{-rT} \mathbb{E}[(S_T - K)^+]
 
-* Reference academic papers or manuals with BibTeX‑style citations in “Notes”.
+* Reference academic papers or manuals with BibTeX‑style citations in "Notes".
 
 ---
 
 ## Enforcement checklist (evaluated by Cline)
-1. For each public object lacking a docstring or with < 10 non‑blank lines, fail.
+1. For each public object lacking a docstring or with < 10 non‑blank lines, fail.
 2. Parse docstring text and verify presence (case‑insensitive) of required section headers (`Parameters`, `Returns` or `Yields`, and either `Notes` or `TradingContext`, plus `Examples`).
-3. CI job `docstring-enforce` runs `/scripts/ci/enforce_docstrings.py`. Exit 1 on violation.
+3. CI job `docstring-enforce` runs `/scripts/ci/enforce_docstrings.py`. Exit 1 on violation.
 4. Override allowed only with commit footer:
 
        #docstring-override: true
