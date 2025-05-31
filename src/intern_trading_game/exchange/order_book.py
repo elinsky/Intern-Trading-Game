@@ -19,10 +19,85 @@ class PriceLevel:
     """
     Represents a price level in the order book.
 
-    Attributes:
-        price (float): The price level.
-        orders (deque): Queue of orders at this price level (time priority).
-        total_quantity (float): Total quantity of all orders at this level.
+    A price level is a collection of orders at the same price point in the order
+    book. Orders at the same price level are prioritized by time (first in, first
+    out). The price level tracks the total quantity of all orders at this price,
+    which is used for market depth calculations.
+
+    Parameters
+    ----------
+    price : float
+        The price level. This is the price at which all orders in this level
+        will execute.
+    orders : deque, optional
+        Queue of orders at this price level, sorted by time priority (first in,
+        first out). If not provided, an empty queue is created.
+    total_quantity : float, optional, default=0
+        Total quantity of all orders at this level. This is automatically
+        calculated when orders are added or removed.
+
+    Attributes
+    ----------
+    price : float
+        The price level.
+    orders : deque
+        Queue of orders at this price level (time priority).
+    total_quantity : float
+        Total quantity of all orders at this level.
+
+    Notes
+    -----
+    Price levels are a key concept in order book management. They allow for
+    efficient organization of orders by price, which is essential for
+    implementing price-time priority matching algorithms.
+
+    The total quantity at a price level is an important metric for market
+    participants, as it indicates the liquidity available at that price.
+
+    In a limit order book, price levels are typically organized in two separate
+    lists:
+    1. Bid price levels (buy orders) - sorted in descending order (highest first)
+    2. Ask price levels (sell orders) - sorted in ascending order (lowest first)
+
+    This organization allows for efficient matching of incoming orders against
+    the best available prices.
+
+    TradingContext
+    -------------
+    This implementation assumes:
+    - Price-time priority (orders at the same price are executed in time order)
+    - No hidden or iceberg orders (all order quantity is visible)
+    - No pro-rata matching (where orders at the same price are matched
+      proportionally to their size)
+    - No minimum quantity requirements for order matching
+
+    Examples
+    --------
+    Creating a price level and adding orders:
+
+    >>> from collections import deque
+    >>> from intern_trading_game.exchange.order import Order
+    >>> level = PriceLevel(price=150.0)
+    >>> buy_order = Order(
+    ...     instrument_id="AAPL",
+    ...     side="buy",
+    ...     quantity=10,
+    ...     price=150.0,
+    ...     trader_id="trader1"
+    ... )
+    >>> level.add_order(buy_order)
+    >>> level.total_quantity
+    10.0
+    >>> second_order = Order(
+    ...     instrument_id="AAPL",
+    ...     side="buy",
+    ...     quantity=5,
+    ...     price=150.0,
+    ...     trader_id="trader2"
+    ... )
+    >>> level.add_order(second_order)
+    >>> level.total_quantity
+    15.0
     """
 
     price: float
@@ -33,8 +108,16 @@ class PriceLevel:
         """
         Add an order to this price level.
 
-        Args:
-            order (Order): The order to add.
+        Parameters
+        ----------
+        order : Order
+            The order to add to this price level. The order's price should match
+            the price level's price.
+
+        Notes
+        -----
+        This method updates the total quantity of the price level by adding
+        the remaining quantity of the order.
         """
         self.orders.append(order)
         self.total_quantity += order.remaining_quantity
@@ -43,11 +126,20 @@ class PriceLevel:
         """
         Remove an order from this price level by its ID.
 
-        Args:
-            order_id (str): The ID of the order to remove.
+        Parameters
+        ----------
+        order_id : str
+            The ID of the order to remove.
 
-        Returns:
-            Optional[Order]: The removed order, or None if not found.
+        Returns
+        -------
+        Optional[Order]
+            The removed order, or None if not found.
+
+        Notes
+        -----
+        This method updates the total quantity of the price level by subtracting
+        the remaining quantity of the removed order.
         """
         for i, order in enumerate(self.orders):
             if order.order_id == order_id:
@@ -61,9 +153,17 @@ class PriceLevel:
         """
         Update the quantity of an order at this price level.
 
-        Args:
-            order_id (str): The ID of the order to update.
-            new_quantity (float): The new remaining quantity.
+        Parameters
+        ----------
+        order_id : str
+            The ID of the order to update.
+        new_quantity : float
+            The new remaining quantity for the order.
+
+        Notes
+        -----
+        This method updates the total quantity of the price level to reflect
+        the change in the order's quantity.
         """
         for order in self.orders:
             if order.order_id == order_id:
@@ -78,8 +178,15 @@ class PriceLevel:
         """
         Check if this price level has no orders.
 
-        Returns:
-            bool: True if there are no orders, False otherwise.
+        Returns
+        -------
+        bool
+            True if there are no orders at this price level, False otherwise.
+
+        Notes
+        -----
+        Empty price levels are typically removed from the order book to
+        maintain efficiency.
         """
         return len(self.orders) == 0
 
@@ -152,9 +259,15 @@ class OrderBook:
         """
         Initialize an order book for an instrument.
 
-        Args:
-            instrument_id (str): The ID of the instrument this order book is
-                for.
+        Parameters
+        ----------
+        instrument_id : str
+            The ID of the instrument this order book is for.
+
+        Notes
+        -----
+        This constructor initializes empty bid and ask sides of the book,
+        as well as data structures for tracking orders and trades.
         """
         self.instrument_id = instrument_id
 
@@ -272,11 +385,37 @@ class OrderBook:
         """
         Cancel and remove an order from the book.
 
-        Args:
-            order_id (str): The ID of the order to cancel.
+        Parameters
+        ----------
+        order_id : str
+            The ID of the order to cancel.
 
-        Returns:
-            Optional[Order]: The cancelled order, or None if not found.
+        Returns
+        -------
+        Optional[Order]
+            The cancelled order, or None if not found.
+
+        Notes
+        -----
+        This method removes the order from the book and updates all relevant
+        data structures. If the price level becomes empty after removing the
+        order, the price level is also removed.
+
+        Examples
+        --------
+        >>> book = OrderBook("AAPL")
+        >>> order = Order(
+        ...     instrument_id="AAPL",
+        ...     side="buy",
+        ...     quantity=10,
+        ...     price=150.0,
+        ...     trader_id="trader1"
+        ... )
+        >>> book.add_order(order)
+        []
+        >>> cancelled = book.cancel_order(order.order_id)
+        >>> cancelled.order_id == order.order_id
+        True
         """
         if order_id not in self.order_price_map:
             return None
@@ -433,8 +572,23 @@ class OrderBook:
         """
         Insert a limit order into the book.
 
-        Args:
-            order (Order): The limit order to insert.
+        Parameters
+        ----------
+        order : Order
+            The limit order to insert. Must be a limit order with a valid price.
+
+        Notes
+        -----
+        This method inserts the order into the appropriate side of the book
+        (bids or asks) at the correct price level. If a price level for the
+        order's price doesn't exist, a new one is created.
+
+        The price levels are maintained in sorted order:
+        - Bids: descending order (highest price first)
+        - Asks: ascending order (lowest price first)
+
+        This sorting ensures that the best prices are always at the front
+        of each list, which is essential for efficient matching.
         """
         assert (
             order.is_limit_order
@@ -482,11 +636,21 @@ class OrderBook:
         """
         Check if a price is in the bid side of the book.
 
-        Args:
-            price (float): The price to check.
+        Parameters
+        ----------
+        price : float
+            The price to check.
 
-        Returns:
-            bool: True if the price is in the bid side, False otherwise.
+        Returns
+        -------
+        bool
+            True if the price is in the bid side, False otherwise.
+
+        Notes
+        -----
+        This method is used to determine which side of the book (bids or asks)
+        an order is on, given its price. This is useful for operations like
+        cancelling orders where we need to know which list to search.
         """
         return any(level.price == price for level in self.bids)
 
@@ -494,9 +658,34 @@ class OrderBook:
         """
         Get the best (highest) bid price and quantity.
 
-        Returns:
-            Optional[Tuple[float, float]]: (price, quantity) or None if no
-            bids.
+        Returns
+        -------
+        Optional[Tuple[float, float]]
+            A tuple containing (price, quantity) of the best bid, or None if
+            there are no bids in the book.
+
+        Notes
+        -----
+        The best bid is the highest price at which someone is willing to buy.
+        This is always the first price level in the bids list, since it's
+        sorted in descending order.
+
+        Examples
+        --------
+        >>> book = OrderBook("AAPL")
+        >>> book.best_bid()
+        None
+        >>> order = Order(
+        ...     instrument_id="AAPL",
+        ...     side="buy",
+        ...     quantity=10,
+        ...     price=150.0,
+        ...     trader_id="trader1"
+        ... )
+        >>> book.add_order(order)
+        []
+        >>> book.best_bid()
+        (150.0, 10.0)
         """
         if not self.bids:
             return None
@@ -507,9 +696,34 @@ class OrderBook:
         """
         Get the best (lowest) ask price and quantity.
 
-        Returns:
-            Optional[Tuple[float, float]]: (price, quantity) or None if no
-            asks.
+        Returns
+        -------
+        Optional[Tuple[float, float]]
+            A tuple containing (price, quantity) of the best ask, or None if
+            there are no asks in the book.
+
+        Notes
+        -----
+        The best ask is the lowest price at which someone is willing to sell.
+        This is always the first price level in the asks list, since it's
+        sorted in ascending order.
+
+        Examples
+        --------
+        >>> book = OrderBook("AAPL")
+        >>> book.best_ask()
+        None
+        >>> order = Order(
+        ...     instrument_id="AAPL",
+        ...     side="sell",
+        ...     quantity=10,
+        ...     price=150.0,
+        ...     trader_id="trader1"
+        ... )
+        >>> book.add_order(order)
+        []
+        >>> book.best_ask()
+        (150.0, 10.0)
         """
         if not self.asks:
             return None
@@ -522,12 +736,53 @@ class OrderBook:
         """
         Get a snapshot of the order book depth.
 
-        Args:
-            levels (int): The number of price levels to include.
+        Parameters
+        ----------
+        levels : int, default=5
+            The number of price levels to include in the snapshot.
 
-        Returns:
-            Dict[str, List[Tuple[float, float]]]: A dictionary with 'bids'
-                and 'asks' keys, each with a list of (price, quantity) tuples.
+        Returns
+        -------
+        Dict[str, List[Tuple[float, float]]]
+            A dictionary with 'bids' and 'asks' keys, each with a list of
+            (price, quantity) tuples representing the order book depth.
+
+        Notes
+        -----
+        This method provides a view of the current state of the order book,
+        showing the available liquidity at different price levels. This is
+        useful for market data display and analysis.
+
+        The depth snapshot is often used to create a "market depth" or "level 2"
+        view of the market, showing the available liquidity at different price
+        points.
+
+        Examples
+        --------
+        >>> book = OrderBook("AAPL")
+        >>> buy_order = Order(
+        ...     instrument_id="AAPL",
+        ...     side="buy",
+        ...     quantity=10,
+        ...     price=150.0,
+        ...     trader_id="trader1"
+        ... )
+        >>> book.add_order(buy_order)
+        []
+        >>> sell_order = Order(
+        ...     instrument_id="AAPL",
+        ...     side="sell",
+        ...     quantity=5,
+        ...     price=151.0,
+        ...     trader_id="trader2"
+        ... )
+        >>> book.add_order(sell_order)
+        []
+        >>> depth = book.depth_snapshot()
+        >>> depth["bids"]
+        [(150.0, 10.0)]
+        >>> depth["asks"]
+        [(151.0, 5.0)]
         """
         bids = []
         for level in self.bids[:levels]:
@@ -543,11 +798,37 @@ class OrderBook:
         """
         Get an order from the book by its ID.
 
-        Args:
-            order_id (str): The ID of the order to get.
+        Parameters
+        ----------
+        order_id : str
+            The ID of the order to get.
 
-        Returns:
-            Optional[Order]: The order, or None if not found.
+        Returns
+        -------
+        Optional[Order]
+            The order with the specified ID, or None if not found.
+
+        Notes
+        -----
+        This method searches for an order in the book by its ID. It uses the
+        order_price_map to quickly determine which side of the book to search
+        and at which price level.
+
+        Examples
+        --------
+        >>> book = OrderBook("AAPL")
+        >>> order = Order(
+        ...     instrument_id="AAPL",
+        ...     side="buy",
+        ...     quantity=10,
+        ...     price=150.0,
+        ...     trader_id="trader1"
+        ... )
+        >>> book.add_order(order)
+        []
+        >>> retrieved = book.get_order(order.order_id)
+        >>> retrieved.order_id == order.order_id
+        True
         """
         if order_id not in self.order_price_map:
             return None
@@ -567,10 +848,51 @@ class OrderBook:
         """
         Get the most recent trades.
 
-        Args:
-            limit (int): The maximum number of trades to return.
+        Parameters
+        ----------
+        limit : int, default=10
+            The maximum number of trades to return.
 
-        Returns:
-            List[Trade]: The most recent trades, newest first.
+        Returns
+        -------
+        List[Trade]
+            The most recent trades, newest first, up to the specified limit.
+
+        Notes
+        -----
+        This method returns the most recent trades that occurred in this order
+        book. The trades are returned in reverse chronological order (newest
+        first).
+
+        The order book maintains a circular buffer of the last 100 trades,
+        so requesting more than 100 trades will still return at most 100.
+
+        Examples
+        --------
+        >>> book = OrderBook("AAPL")
+        >>> buy_order = Order(
+        ...     instrument_id="AAPL",
+        ...     side="buy",
+        ...     quantity=10,
+        ...     price=150.0,
+        ...     trader_id="trader1"
+        ... )
+        >>> book.add_order(buy_order)
+        []
+        >>> sell_order = Order(
+        ...     instrument_id="AAPL",
+        ...     side="sell",
+        ...     quantity=5,
+        ...     price=150.0,
+        ...     trader_id="trader2"
+        ... )
+        >>> trades = book.add_order(sell_order)
+        >>> len(trades)
+        1
+        >>> recent = book.get_recent_trades()
+        >>> len(recent)
+        1
+        >>> recent[0].quantity
+        5.0
         """
         return list(self.trades)[-limit:]
