@@ -90,6 +90,62 @@ class OrderBook:
 
     The order book keeps track of all open orders for an instrument,
     matches incoming orders against existing orders, and generates trades.
+    It implements a price-time priority matching algorithm, where orders
+    are matched first by price (highest bid, lowest ask) and then by time
+    (first in, first out).
+
+    Parameters
+    ----------
+    instrument_id : str
+        The ID of the instrument this order book is for.
+
+    Attributes
+    ----------
+    instrument_id : str
+        The ID of the instrument this order book is for.
+    bids : List[PriceLevel]
+        Price levels for buy orders, sorted by price in descending order.
+    asks : List[PriceLevel]
+        Price levels for sell orders, sorted by price in ascending order.
+    order_price_map : Dict[str, float]
+        Maps order IDs to their price levels for quick lookup.
+    order_ids : Set[str]
+        Set of order IDs in this book.
+    trades : deque
+        Recent trades, limited to the last 100.
+
+    Notes
+    -----
+    The order book maintains two separate lists of price levels: one for bids
+    (buy orders) and one for asks (sell orders). Each price level contains
+    a queue of orders at that price, sorted by time priority.
+
+    The matching algorithm follows these steps:
+    1. Determine the opposite side of the book to match against
+    2. Check if the incoming order's price is acceptable
+    3. Match against the best price level until filled or no more matches
+    4. Add any remaining quantity to the book (for limit orders)
+
+    TradingContext
+    --------------
+    This order book implementation assumes:
+    - Continuous trading (no auctions or circuit breakers)
+    - No self-trade prevention
+    - No iceberg or hidden orders
+    - No minimum tick size enforcement
+    - No position limits or risk checks
+
+    Examples
+    --------
+    >>> book = OrderBook("AAPL")
+    >>> buy_order = Order(instrument_id="AAPL", side="buy", quantity=10, price=150.0, trader_id="trader1")
+    >>> trades = book.add_order(buy_order)
+    >>> sell_order = Order(instrument_id="AAPL", side="sell", quantity=5, price=150.0, trader_id="trader2")
+    >>> trades = book.add_order(sell_order)
+    >>> print(len(trades))
+    1
+    >>> print(trades[0].quantity)
+    5
     """
 
     def __init__(self, instrument_id: str):
@@ -121,11 +177,75 @@ class OrderBook:
         """
         Add an order to the book and attempt to match it.
 
-        Args:
-            order (Order): The order to add.
+        This is the main entry point for adding orders to the order book.
+        The method first validates the order, then attempts to match it against
+        existing orders on the opposite side of the book. If the order is not
+        fully filled and it's a limit order, the remaining quantity is added
+        to the book.
 
-        Returns:
-            List[Trade]: Any trades that were generated.
+        Parameters
+        ----------
+        order : Order
+            The order to add to the book. Must have the same instrument_id as
+            the order book and a unique order_id.
+
+        Returns
+        -------
+        List[Trade]
+            A list of trades that were generated from matching the order.
+            Empty list if no matches were found.
+
+        Raises
+        ------
+        ValueError
+            If the order's instrument_id doesn't match the book's instrument_id
+            or if the order_id already exists in the book.
+
+        Notes
+        -----
+        The order matching process follows price-time priority:
+        1. For buy orders, match against asks in ascending price order
+        2. For sell orders, match against bids in descending price order
+        3. At each price level, match against orders in time priority (FIFO)
+
+        Market orders are always matched immediately at the best available price,
+        while limit orders are only matched if the price is acceptable.
+
+        TradingContext
+        --------------
+        This method assumes:
+        - Orders are validated before submission
+        - No position limits or risk checks
+        - No fees or commissions
+        - Continuous trading (no auction periods)
+
+        Examples
+        --------
+        >>> book = OrderBook("AAPL")
+        >>> # Add a limit sell order
+        >>> sell_order = Order(
+        ...     instrument_id="AAPL",
+        ...     side="sell",
+        ...     quantity=10,
+        ...     price=150.0,
+        ...     trader_id="trader1"
+        ... )
+        >>> trades = book.add_order(sell_order)
+        >>> print(len(trades))
+        0
+        >>> # Add a matching buy order
+        >>> buy_order = Order(
+        ...     instrument_id="AAPL",
+        ...     side="buy",
+        ...     quantity=5,
+        ...     price=150.0,
+        ...     trader_id="trader2"
+        ... )
+        >>> trades = book.add_order(buy_order)
+        >>> print(len(trades))
+        1
+        >>> print(trades[0].quantity)
+        5
         """
         # Validate order
         if order.instrument_id != self.instrument_id:
@@ -185,11 +305,60 @@ class OrderBook:
         """
         Try to match an order against the opposite side of the book.
 
-        Args:
-            order (Order): The order to match.
+        This method implements the core matching algorithm using price-time priority.
+        It attempts to match the incoming order against existing orders on the
+        opposite side of the book, generating trades for any matches found.
 
-        Returns:
-            List[Trade]: Any trades that were generated.
+        Parameters
+        ----------
+        order : Order
+            The order to match against the book.
+
+        Returns
+        -------
+        List[Trade]
+            A list of trades that were generated from the matching process.
+            Empty list if no matches were found.
+
+        Notes
+        -----
+        The matching algorithm follows these steps:
+        1. Determine which side of the book to match against (asks for buy orders,
+           bids for sell orders)
+        2. For limit orders, check if the price is acceptable
+           (buy price >= ask price or sell price <= bid price)
+        3. Match against orders at the best price level until either:
+           - The incoming order is fully filled
+           - The price is no longer acceptable
+           - There are no more orders on the opposite side
+        4. For each match, create a trade and update the quantities of both orders
+
+        TradingContext
+        --------------
+        The matching process assumes:
+        - Price-time priority (better prices first, then earlier orders)
+        - No minimum match size
+        - No self-trade prevention
+        - Continuous trading (no auction periods)
+        - Trades execute at the price of the resting order
+
+        Examples
+        --------
+        >>> book = OrderBook("AAPL")
+        >>> # Add a resting sell order
+        >>> sell_order = Order(instrument_id="AAPL", side="sell", quantity=10,
+        ...                    price=150.0, trader_id="trader1")
+        >>> book._insert_order(sell_order)
+        >>> # Match a buy order against it
+        >>> buy_order = Order(instrument_id="AAPL", side="buy", quantity=5,
+        ...                   price=150.0, trader_id="trader2")
+        >>> trades = book._match_order(buy_order)
+        >>> print(len(trades))
+        1
+        >>> print(trades[0].quantity)
+        5
+        >>> print(trades[0].price)
+        150.0
         """
         trades = []
 
