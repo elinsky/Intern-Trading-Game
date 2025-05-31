@@ -11,10 +11,10 @@ Intern teams develop automated trading strategies using Jupyter notebooks and co
 
 ## Game Overview
 
-- **Products**: European options on simulated SPX and SPY underlyings  
-- **Tick Frequency**: Every 5 minutes (configurable)  
-- **Submission**: Intern bots submit orders  
-- **Execution**: Matching engine runs per tick, fills orders, updates P&L  
+- **Products**: European options on simulated SPX and SPY underlyings
+- **Tick Frequency**: Every 5 minutes (configurable)
+- **Submission**: Intern bots submit orders
+- **Execution**: Matching engine runs per tick, fills orders, updates P&L
 - **Evaluation**: Role-specific KPIs and strategy quality
 
 ---

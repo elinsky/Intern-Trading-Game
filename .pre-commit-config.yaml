@@ -7,35 +7,15 @@ repos:
         language: system
         pass_filenames: false
 
-  # Format Python code with Black
-  - repo: https://github.com/psf/black
-    rev: 25.1.0
+  # Format, lint, and sort imports with Ruff
+  - repo: https://github.com/astral-sh/ruff-pre-commit
+    rev: v0.3.0
     hooks:
-      - id: black
-        name: black (format code)
-        entry: black --quiet
-        language: system
-        types: [python]
-
-  # Sort Python imports with isort
-  - repo: https://github.com/PyCQA/isort
-    rev: 6.0.1
-    hooks:
-      - id: isort
-        name: isort (sort imports)
-        entry: isort
-        language: system
-        types: [python]
-
-  # Lint Python code with flake8
-  - repo: https://github.com/PyCQA/flake8
-    rev: 6.1.0
-    hooks:
-      - id: flake8
-        name: flake8 (lint code)
-        entry: flake8
-        language: system
-        types: [python]
+      - id: ruff
+        name: ruff (lint code)
+        args: [--fix]
+      - id: ruff-format
+        name: ruff (format code)
 
   # Type check with mypy using local configuration
   - repo: local
