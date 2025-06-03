@@ -12,7 +12,7 @@ Spot pricing mismatches between SPX and SPY, capturing small, consistent profits
   - **Standard Taker Fee**: -\$0.02 per executed contract.
   - **Extra Points**: Scoring bonus for successful round-trip trades that net out risk.
 - **Constraints**:
-  - Must submit paired trades: SPX and SPY positions must be roughly balanced (within 2:1 ratio).
+  - SPX and SPY positions must be roughly balanced (within 2:1 ratio).
   - Position limits: Maximum 100 contracts per leg of paired trades.
 - **Scoring Focus**:
   - Profit from spread convergence.
@@ -30,10 +30,8 @@ Spot pricing mismatches between SPX and SPY, capturing small, consistent profits
 ---
 
 ## 3. Disadvantages
-- **Paired Trade Requirement**: Must maintain balanced SPX/SPY positions - no single-product trades.
+- **Balance Requirement**: Must maintain balanced SPX/SPY positions within 2:1 ratio.
 - **Small Margins**: Reliant on thin mispricings; profits per trade are minimal.
-- **Limited by Product Scope**: Only cross-product spreads allowed, no single-leg directional or vol trades.
-- **No News Edge**: Cannot directly trade off news; must wait for tracking signals.
 
 ---
 
