@@ -63,4 +63,7 @@ Teams are scored on:
 - **Week 3-6**: Live trading, strategy refinement
 - **Week 7-8**: Final optimization and presentations
 
+**Trading Schedule**: Tuesdays & Thursdays only, 9:30 AM - 3:00 PM CT
+**Non-Trading Days**: Monday (prep), Wednesday (analysis), Friday (retrospective)
+
 Ready to start? Proceed to [Core Concepts](fundamentals/core-concepts.md)

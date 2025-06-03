@@ -17,9 +17,11 @@ The Intern Trading Game simulation has numerous configurable parameters that con
 | Parameter | Default Value | Description |
 |-----------|---------------|-------------|
 | underlyings | ["SPX", "SPY"] | Available spot instruments |
-| strikes_per_underlying | 5 | Number of option strikes |
-| expiration_count | 3 | Number of expiration dates |
-| expiration_range | 1-8 weeks | Time to expiration range |
+| strikes_per_underlying | ~15 | Covers ±30% moves, all deltas |
+| expiration_count | 4-6 | Weekly expirations only |
+| expiration_cycle | Weekly | Every week |
+| trading_days | Tue, Thu | Two days per week |
+| trading_hours | 9:30 AM - 3:00 PM CT | 5.5 hours per day |
 
 ### Price Parameters
 | Parameter | Default Value | Description |

@@ -24,8 +24,8 @@ Where:
 SPX serves as the primary underlying:
 - Starting price: ~4,400
 - Tick-to-tick moves based on current volatility regime
-- No overnight gaps or weekend effects
-- Continuous 24/7 trading
+- Trading Tuesday & Thursday only (9:30 AM - 3:00 PM CT)
+- Price evolution continues only during trading hours
 
 ### SPY Price Derivation
 

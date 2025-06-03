@@ -181,16 +181,28 @@ The Intern Trading Game runs for 8 weeks, aligned with the summer internship pro
 
 ## Daily Trading Schedule
 
-### Regular Trading Day
+### Weekly Trading Schedule
 
-| Time | Activity | Description |
-|------|----------|-------------|
-| 8:00 AM | System Opens | Pre-market preparation |
-| 8:30 AM | Daily Report | Previous day metrics published |
-| 9:00 AM | Active Trading | Continuous tick processing begins |
-| 4:00 PM | Reduced Activity | Lower event frequency |
-| 6:00 PM | End of Day | Daily summary available |
-| 11:59 PM | System Maintenance | Brief overnight processing |
+**Trading Days**: Tuesday and Thursday only
+**Trading Hours**: 9:30 AM - 3:00 PM Central Time
+
+| Day | Purpose | Activities |
+|-----|---------|------------|
+| **Monday** | Prep Day | Strategy planning, code updates, research analysis |
+| **Tuesday** | Trading Day 1 | Full market simulation (9:30 AM - 3:00 PM CT) |
+| **Wednesday** | Mid-Week Analysis | Performance review, strategy adaptation, testing |
+| **Thursday** | Trading Day 2 | Full market simulation (9:30 AM - 3:00 PM CT) |
+| **Friday** | Weekly Retrospective | Comprehensive review, prepare for next week |
+
+### Trading Day Schedule (Tue & Thu)
+
+| Time (CT) | Activity | Description |
+|-----------|----------|-------------|
+| 9:00 AM | Pre-Market | Final system checks, strategy confirmation |
+| 9:30 AM | Market Open | Trading begins, tick processing starts |
+| 12:00 PM | Midday | Continuous trading |
+| 3:00 PM | Market Close | Trading ends, final tick processed |
+| 3:30 PM | Post-Market | Daily results published, analysis begins |
 
 ### Tick Schedule (Every 5 Minutes)
 

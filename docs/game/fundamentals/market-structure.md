@@ -26,14 +26,18 @@ This creates arbitrage opportunities between the two products.
 Each underlying has listed options with:
 
 **Strike Selection**
-- Approximately 5 strikes per underlying
-- Centered around current spot price
-- Typical spacing: 1-2% intervals
+- Sufficient strikes to cover ±30% moves
+- Ensures all delta ranges (0.05 to 0.95) are tradeable
+- Typical setup for SPX at 4400:
+  - Downside: 3080, 3300, 3520, 3740, 3960, 4180
+  - ATM area: 4290, 4400, 4510
+  - Upside: 4620, 4840, 5060, 5280, 5500, 5720
+- Similar proportional coverage for SPY
 
 **Expirations**
-- 2-3 expiration dates
-- Weekly and monthly cycles
-- 1-8 weeks until expiration
+- Weekly expirations only
+- Typically 4-6 weeks available at any time
+- Rolling weekly cycle
 
 **Option Style**
 - European exercise only
@@ -64,14 +68,15 @@ Fees vary by role and order type:
 | Market Maker | +$0.02 | -$0.01 |
 | Hedge Fund | +$0.01 | -$0.02 |
 | Arbitrage Desk | +$0.01 | -$0.02 |
-| Retail | -$0.01 | -$0.03 |
+| Retail Flow | -$0.01 | -$0.03 |
 
 ## Trading Sessions
 
-### Continuous Trading
-- Game runs 24/7 during internship
-- New tick every 5 minutes
-- No overnight gaps or weekends
+### Trading Schedule
+- **Trading Days**: Tuesday and Thursday only
+- **Trading Hours**: 9:30 AM - 3:00 PM Central Time
+- **Ticks**: Every 5 minutes during trading hours (66 per day)
+- **Non-Trading Days**: Monday (prep), Wednesday (analysis), Friday (retrospective)
 
 ### Order Submission Window
 - 2-3 minutes per tick

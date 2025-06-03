@@ -297,10 +297,11 @@ Skew quotes by Penalty × Base_Spread.
 
 | Parameter | Value | Usage |
 |-----------|-------|-------|
-| Trading minutes/day | 390 | Time scaling |
-| Trading days/year | 252 | Annualization |
-| Minutes/year | 98,280 | Volatility scaling |
-| Ticks/day | 78 | 5-minute ticks |
+| Trading minutes/day | 330 | 5.5 hours (9:30 AM - 3:00 PM CT) |
+| Trading days/week | 2 | Tuesday and Thursday |
+| Trading weeks | 8 | Full internship duration |
+| Ticks/day | 66 | 5-minute ticks |
+| Total ticks | 1,056 | 66 ticks × 2 days × 8 weeks |
 
 ### Volatility Conversions
 
