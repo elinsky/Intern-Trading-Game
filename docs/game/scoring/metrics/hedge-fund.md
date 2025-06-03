@@ -58,34 +58,36 @@ Signal Accuracy = Profitable Signal Trades / Total Signal Trades
 - Acceptable: 40-60% usage
 - Poor: <40% or ignoring signals
 
-### 4. Volatility Edge Capture
-**Definition**: Profit from implied vs realized volatility trades
+### 4. Gamma Trading Performance
+**Definition**: Profit from gamma scalping and premium collection through dynamic hedging
 
 **Measurement**:
 ```
-Vol P&L = Option P&L - Delta-Hedged Stock P&L
-IV vs RV = (Implied Vol at Trade - Realized Vol) × Vega × Size
+Rehedging P&L = Sum of (Underlying trades × Price moves)
+Gamma P&L = Total Option P&L - Premium paid/received - Rehedging P&L
+Delta Compliance = Ticks within ±50 delta / Total ticks
 ```
 
 **Strategies Scored**:
-- Long vol before regime shifts
-- Short vol in stable regimes
-- Volatility arbitrage across strikes
-- Term structure trades
+- Gamma scalping profits in high vol regimes
+- Premium collection in low vol regimes
+- Rehedging efficiency and timing
+- Delta neutrality maintenance
 
 ## Position Management (15% of Score)
 
-### Position Limits Compliance
+### Position Limits & Delta Compliance
 **Limits**:
 - 150 contracts per option
 - 500 total across all options
+- ±50 portfolio delta at all times
 - One-sided positions only
 
 **Scoring**:
 - Always compliant: Full marks
-- Minor breaches: -5% to -10%
-- Major breaches: -15% to -30%
-- Gross violations: Disqualification risk
+- Delta breaches: -2% per tick over limit
+- Position breaches: -5% to -10%
+- Gross violations: Major penalties
 
 ### Position Sizing Excellence
 **Metrics**:
@@ -130,34 +132,40 @@ Profit Factor = Gross Profits / Gross Losses
 
 ## Strategy Sophistication
 
-### Directional Trading
+### Gamma Positioning
 **Scored Elements**:
-- Entry timing with signals
-- Position sizing logic
-- Exit discipline
-- Trend vs mean reversion balance
+- Gamma exposure matching volatility regime
+- Delta-neutral entry structures
+- Rehedging frequency optimization
+- Transaction cost management
 
 **Example Strategies**:
 ```python
-# Signal-based directional trade
+# Signal-based gamma positioning
 if volatility_signal.next_regime == "high" and confidence > 0.6:
-    # Buy calls/puts based on additional indicators
-    size = base_size * confidence * volatility_multiplier
+    # Build long gamma position (buy straddle/strangle)
+    # Plan frequent rehedging to capture gamma profits
+elif volatility_signal.next_regime == "low":
+    # Build short gamma position (sell straddle/strangle)
+    # Collect premium with minimal rehedging
 ```
 
-### Volatility Strategies
+### Delta-Neutral Strategies
 **Types Valued**:
-1. **Regime Trading**
-   - Long vol before shifts
-   - Short vol in calm periods
-   
-2. **Spread Strategies**
-   - Calendars for term structure
-   - Verticals for directional vol
-   
-3. **Premium Selling**
-   - Iron condors in low vol
-   - Strangles with edge
+1. **High Vol Regime**
+   - Long gamma via straddles/strangles
+   - Active rehedging to scalp gamma
+   - Profit from underlying movement
+
+2. **Low Vol Regime**
+   - Short gamma positions
+   - Premium collection focus
+   - Minimal rehedging needed
+
+3. **Transition Management**
+   - Pre-position gamma before signals
+   - Adjust strikes for optimal exposure
+   - Balance gamma vs theta decay
 
 ### Event-Driven Trading
 **Approach**:
@@ -227,20 +235,20 @@ Cost as % of P&L = Execution Cost / Gross P&L
 
 ## Common Hedge Fund Pitfalls
 
-### 1. Over-Trading
-- Acting on every signal
-- Excessive position turnover
-- Fee bleed from impatience
+### 1. Delta Limit Violations
+- Failing to rehedge promptly
+- Taking directional bets
+- Ignoring gamma's impact on delta
 
-### 2. Poor Signal Discipline
-- Ignoring high-confidence signals
-- Trading against signals
-- Not waiting for confirmation
+### 2. Poor Gamma Management
+- Wrong gamma sign for regime
+- Over/under hedging positions
+- Ignoring transaction costs
 
-### 3. Risk Mismanagement
-- Position sizing too large
-- No stop-loss discipline
-- Correlation concentration
+### 3. Signal Misuse
+- Not pre-positioning gamma
+- Trading gamma without signals
+- Missing regime transitions
 
 ## Advanced Scoring Considerations
 
@@ -301,4 +309,4 @@ Cost as % of P&L = Execution Cost / Gross P&L
    - Timing precision
    - Order type selection
 
-Remember: Hedge funds win through strategic thinking and disciplined execution. Your volatility signal is a powerful edge—use it wisely, size appropriately, and manage risk religiously.
+Remember: Hedge funds win through disciplined gamma trading. Your volatility signal tells you when to be long or short gamma, while the delta constraint forces profitable rehedging. Master this dynamic to align IV with RV and capture consistent profits.

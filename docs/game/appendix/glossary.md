@@ -36,7 +36,7 @@
 
 **Delta**: Rate of change of option price with respect to underlying price movement.
 
-**Directional Trading**: Taking positions based on expected market direction (Hedge Fund specialty).
+**Delta Neutrality**: Maintaining portfolio delta close to zero to isolate other risks (Hedge Fund requirement: ±50 deltas).
 
 **Drawdown**: Peak-to-trough decline in portfolio value.
 
@@ -57,6 +57,10 @@
 ## G
 
 **Gamma**: Rate of change of delta with respect to underlying price.
+
+**Gamma Scalping**: Trading strategy that profits from rehedging a delta-neutral position as the underlying moves (Hedge Fund core strategy).
+
+**Gamma Trading**: Managing options positions to profit from gamma through dynamic hedging.
 
 **Geometric Brownian Motion (GBM)**: Mathematical model for price evolution used in the simulation.
 

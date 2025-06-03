@@ -9,7 +9,7 @@ Each role operates under specific constraints designed to create realistic tradi
 | Role | Fees (Maker/Taker) | Order Limit | Position Limits | Special Requirements |
 |------|--------------------|-------------|-----------------|---------------------|
 | **Market Maker** | +$0.02 / -$0.01 | 100/tick | ±50 per option<br>±200 total | • ≥80% quote uptime<br>• Two-sided quotes |
-| **Hedge Fund** | +$0.01 / -$0.02 | 50/tick | 150 per option<br>500 total | • No two-sided quotes<br>• Volatility signals |
+| **Hedge Fund** | +$0.01 / -$0.02 | 50/tick | 150 per option<br>500 total | • No two-sided quotes<br>• ±50 delta limit<br>• Volatility signals |
 | **Arbitrage Desk** | +$0.01 / -$0.02 | 75/tick | 100 per option<br>300 total | • Paired trades only<br>• Tracking signals |
 | **Retail Flow** | -$0.01 / -$0.03 | Poisson(3) | 50 total | • Automated only<br>• Behavioral patterns |
 
@@ -24,8 +24,9 @@ Each role operates under specific constraints designed to create realistic tradi
 ### Hedge Fund
 - **Per Option**: 150 contracts (one-sided)
 - **Total Portfolio**: 500 contracts
-- **Purpose**: Allow directional bets with risk control
-- **Measurement**: Absolute position
+- **Delta Limit**: ±50 deltas (portfolio-wide)
+- **Purpose**: Enable gamma trading with forced rehedging
+- **Measurement**: Absolute position for size, net delta for neutrality
 
 ### Arbitrage Desk
 - **Per Option**: 100 contracts
@@ -90,8 +91,10 @@ Net Fee = (Maker Rebate × Maker Volume) - (Taker Fee × Taker Volume)
 
 ### Hedge Fund Limitations
 - **No Two-Sided Quoting**: Cannot simultaneously bid and ask
-- **Signal Usage**: Expected to utilize volatility signals
-- **Performance Bonus**: Extra credit for high Sharpe ratio
+- **Delta Neutrality**: Must maintain portfolio delta within ±50
+- **Signal Usage**: Expected to utilize volatility signals for gamma positioning
+- **Rehedging Requirement**: Must adjust positions when delta limit approached
+- **Performance Focus**: Window-based P&L from gamma scalping/premium collection
 
 ### Arbitrage Desk Requirements
 - **Paired Trades**: Must maintain balanced SPX/SPY positions
@@ -143,9 +146,10 @@ All orders validated for:
 - Quick position flipping
 
 ### For Hedge Funds
-- Maximize position utility
-- Time entries with signals
-- Manage gross exposure
+- Position gamma based on volatility signals
+- Maintain delta neutrality through rehedging
+- Profit from gamma scalping in high vol
+- Collect premium in low vol regimes
 
 ### For Arbitrage Desks
 - Maintain ratio discipline

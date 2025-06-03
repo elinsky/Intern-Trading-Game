@@ -39,7 +39,7 @@ Each team is assigned one trading role with unique advantages and constraints:
 | Role | Strategy Focus | Key Advantage | Main Challenge |
 |------|----------------|---------------|----------------|
 | **Market Maker** | Provide liquidity | +$0.02 maker rebates | Must quote 80% uptime |
-| **Hedge Fund** | Directional/volatility | Advance vol signals | Position limits |
+| **Hedge Fund** | Gamma trading | Advance vol signals | ±50 delta neutrality |
 | **Arbitrage Desk** | SPX-SPY convergence | Tracking error signals | Maintain paired trades |
 
 ## Evaluation

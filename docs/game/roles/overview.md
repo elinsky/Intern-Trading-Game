@@ -8,13 +8,13 @@ Each team is assigned one of three primary trading roles, each with unique advan
 
 | Aspect | Market Maker | Hedge Fund | Arbitrage Desk |
 |--------|--------------|------------|----------------|
-| **Primary Goal** | Provide liquidity | Generate alpha | Capture mispricings |
+| **Primary Goal** | Provide liquidity | Align IV with RV | Capture mispricings |
 | **Key Advantage** | +$0.02 maker rebate | Volatility signals | Tracking error signals |
-| **Main Constraint** | 80% quote uptime | No two-sided quotes | Maintain paired trades |
+| **Main Constraint** | 80% quote uptime | ±50 delta limit | Maintain paired trades |
 | **Position Limits** | ±50 per option | 150 per option | 100 per option |
 | **Order Types** | All (quotes required) | Limit/Market only | Limit/Market only |
 | **Products** | SPX & SPY options | SPX & SPY options | SPX & SPY options |
-| **Risk Profile** | Inventory risk | Directional risk | Convergence risk |
+| **Risk Profile** | Inventory risk | Gamma risk | Convergence risk |
 
 ## Role Descriptions
 
@@ -30,11 +30,11 @@ Market makers are the backbone of the options market, required to quote bid and 
 
 ### Hedge Fund
 
-**Mission**: Generate superior risk-adjusted returns using directional and volatility strategies
+**Mission**: Keep implied volatility aligned with realized volatility through gamma trading
 
-Hedge funds enjoy maximum flexibility in trading strategies and receive advance volatility regime signals (66% accuracy). They can take large directional positions (up to 150 contracts per option) but cannot quote two-sided markets.
+Hedge funds receive advance volatility regime signals (66% accuracy) allowing them to position gamma before regime changes. They must maintain delta neutrality (±50 deltas) which forces continuous rehedging, enabling profits from gamma scalping in high vol periods or premium collection in low vol periods.
 
-**Best Suited For**: Teams interested in signal processing, directional trading, and volatility strategies.
+**Best Suited For**: Teams interested in volatility trading, gamma scalping, and dynamic hedging strategies.
 
 [Detailed Hedge Fund Guide](hedge-fund.md)
 

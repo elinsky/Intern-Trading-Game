@@ -1,0 +1,28 @@
+{
+  "version": "0.2",
+  "language": "en",
+  "words": [
+    "Backtesting",
+    "Scholes",
+    "rehedging",
+    "Moneyness",
+    "volatilities",
+    "straddles",
+    "strangles",
+    "gamma",
+    "vega",
+    "theta",
+    "delta",
+    "Brownian",
+    "Poisson"
+  ],
+  "ignorePaths": [
+    "node_modules",
+    "dist",
+    "build",
+    "*.pyc",
+    "__pycache__",
+    ".git",
+    ".vscode"
+  ]
+}

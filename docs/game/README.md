@@ -26,7 +26,7 @@ Welcome to the Intern Trading Game documentation. This guide contains all busine
 ### Roles
 - [Overview](roles/overview.md) - Compare all roles
 - [Market Maker](roles/market-maker.md) - Continuous quoting requirements
-- [Hedge Fund](roles/hedge-fund.md) - Directional trading with signals
+- [Hedge Fund](roles/hedge-fund.md) - Gamma trading with delta neutrality
 - [Arbitrage Desk](roles/arbitrage-desk.md) - Cross-asset opportunities
 - [Retail Flow](roles/retail.md) - Automated retail simulation
 

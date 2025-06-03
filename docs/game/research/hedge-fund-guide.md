@@ -7,7 +7,7 @@ You receive advance warning of volatility regime changes:
 - **Lead time**: 1-5 ticks before the event
 - **Content**: Current regime, next regime, transition probability
 
-This is your only systematic advantage. Everything else depends on how well you model and exploit this signal.
+Combined with your delta neutrality constraint (±50 deltas), this creates a systematic gamma trading opportunity where you profit from rehedging during volatility transitions.
 
 ## The Core Research Problem
 
@@ -26,42 +26,44 @@ Key questions to investigate:
 
 ### 2. Modeling the Opportunity
 
-Volatility regime changes create pricing dislocations. You need to model:
+Your mission is to align implied volatility with realized volatility through gamma trading. You need to model:
 
-**Price dynamics:**
-- How do option prices behave during regime transitions?
-- What's the typical magnitude of repricing?
-- Which strikes/expirations offer the best risk/reward?
+**Gamma dynamics:**
+- How much gamma should you hold before each regime type?
+- Which strikes/expirations provide optimal gamma exposure?
+- How does gamma decay affect your rehedging profits?
 
-**Timing dynamics:**
-- How quickly does the market incorporate regime changes?
-- What's the optimal entry point given your lead time?
-- When do you exit - immediately after transition or hold longer?
+**Rehedging dynamics:**
+- How frequently should you rehedge to capture gamma scalping profits?
+- What's the optimal rehedging threshold given transaction costs?
+- How does the ±50 delta constraint affect your rehedging strategy?
 
-**Risk dynamics:**
-- What happens when your signal is wrong?
-- How do you size positions with uncertain information?
-- What's your maximum acceptable drawdown from false signals?
+**Regime-specific strategies:**
+- **High vol regime**: Long gamma positions to profit from frequent rehedging
+- **Low vol regime**: Short gamma to collect premium with minimal rehedging
+- **Transitions**: How to position before and manage during regime changes
 
 ### 3. Making Trading Decisions
 
-Transform your research into executable strategies:
+Transform your research into executable gamma trading strategies:
 
 **Position construction:**
-- Single options vs. spreads vs. complex structures
-- Strike selection methodology
-- Expiration preferences
-- SPX vs. SPY allocation
+- Delta-neutral structures (straddles, strangles) to isolate gamma
+- Strike selection for maximum gamma per dollar
+- Expiration choice balancing gamma vs. theta decay
+- Dynamic adjustment to maintain ±50 delta limit
 
 **Sizing framework:**
-- How much capital per signal?
-- Scaling with confidence/market conditions
+- Gamma exposure per volatility regime
+- Position sizing based on expected rehedging frequency
+- Risk limits considering false signal scenarios
 - Position limits (150 per option, 500 total)
 
-**Execution discipline:**
-- Entry triggers and timing
-- Exit criteria (profit targets, stop losses, time-based)
-- What to do when signals conflict with market action
+**Rehedging discipline:**
+- Delta threshold triggers (must stay within ±50)
+- Underlying vs. options for rehedging
+- Transaction cost optimization
+- Gamma scalping execution during high vol periods
 
 ## Measuring Success
 
@@ -103,39 +105,49 @@ You're not just trading - you're doing research. Track:
 
 ### Data Analysis Questions
 
-1. **Historical Signal Analysis**
-   - Plot actual regime changes vs. signal predictions
-   - Calculate conditional probabilities
-   - Identify patterns in false signals
+1. **Gamma Trading Analysis**
+   - Calculate P&L from rehedging at different delta thresholds
+   - Compare gamma scalping profits across volatility regimes
+   - Optimize rehedging frequency vs. transaction costs
 
-2. **Price Behavior Study**
-   - How do ATM options reprice during transitions?
-   - What about skew changes?
-   - Time decay during different regimes
+2. **Regime-Specific Gamma Study**
+   - Measure actual realized vol in each regime
+   - Calculate optimal gamma exposure per regime
+   - Analyze gamma decay patterns and timing
 
-3. **Optimal Structure Analysis**
-   - Backtest simple structures: long calls/puts, straddles, spreads
-   - Compare risk/reward profiles
-   - Account for transaction costs
+3. **Delta Constraint Impact**
+   - How does ±50 delta limit affect strategy choice?
+   - Optimal structures to maximize gamma within delta constraints
+   - Rehedging costs vs. gamma profits under different scenarios
 
 ### Simple Framework to Build On
 
 ```python
 # Skeleton - expand based on your research
-def evaluate_signal(signal, market_context):
+def evaluate_gamma_opportunity(signal, current_positions):
     """
     signal: {current_regime, next_regime, probability, ticks_until}
-    market_context: {current_prices, recent_moves, positions}
+    current_positions: {options, underlying, net_delta, net_gamma}
 
-    returns: {trade_decision, size, structure, confidence}
+    returns: {target_gamma, structure, rehedge_plan}
     """
-    # Your research determines what goes here
+    # Determine optimal gamma exposure for predicted regime
     pass
 
-def size_position(confidence, expected_edge, risk_parameters):
+def manage_delta_constraint(portfolio_delta, gamma, underlying_price):
     """
-    Don't just use Kelly blindly - understand why
-    Consider signal decay, regime duration, false signal cost
+    Maintain ±50 delta limit through dynamic rehedging
+    Consider gamma impact on delta as underlying moves
+    Balance rehedging costs vs. gamma scalping profits
+    """
+    pass
+
+def calculate_rehedge_threshold(volatility_regime, gamma, transaction_costs):
+    """
+    Optimize rehedging frequency based on:
+    - Expected underlying movement in regime
+    - Current gamma exposure
+    - Cost of rehedging
     """
     pass
 ```
@@ -144,8 +156,8 @@ def size_position(confidence, expected_edge, risk_parameters):
 
 A successful hedge fund team will:
 
-1. **Deeply understand their signal** - not just use it blindly
-2. **Develop a coherent framework** - linking signal → model → trades → P&L
-3. **Show clear research process** - hypotheses, tests, conclusions
-4. **Adapt over time** - strategies should evolve with market data
-5. **Manage risk intelligently** - especially around false signals
+1. **Master gamma trading mechanics** - understand how gamma generates P&L through rehedging
+2. **Optimize for delta constraints** - use the ±50 limit as a feature, not a bug
+3. **Match gamma to volatility regimes** - long gamma for high vol, short for low vol
+4. **Execute disciplined rehedging** - systematic approach to delta management
+5. **Measure window-based performance** - track P&L from event to event, not just daily
