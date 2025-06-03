@@ -2,6 +2,14 @@
 
 Welcome to the Intern Trading Game! This repo contains the core simulation engine, matching logic, and reference tools for a role-based, options market-making game.
 
+## Quick Links
+
+- **[Game Documentation](docs/game/)** - Complete game rules and mechanics
+- **[Role Guides](docs/game/roles/)** - Detailed information for each trading role
+- **[Research Guides](docs/game/research/)** - Quantitative research frameworks
+- **[Trading Rules](docs/game/trading/)** - Order types, constraints, and execution
+- **[Configuration](docs/game/configuration/)** - Game parameters and schedule
+
 ---
 
 ## Game Overview
@@ -81,6 +89,14 @@ Each intern team is assigned one of three trading roles. Each role exploits diff
   - Precision of execution
   - Market neutrality maintenance
 
+## Getting Started
+
+1. **[Read the Game Overview](docs/game/overview.md)** - Understand the basic mechanics
+2. **[Study Your Role](docs/game/roles/)** - Deep dive into your assigned role
+3. **[Review Research Guide](docs/game/research/)** - Understand your quantitative problem
+4. **[Learn Trading Rules](docs/game/trading/)** - Master order types and constraints
+5. **[Check Schedule](docs/game/configuration/schedule.md)** - Know when trading happens
+
 ---
 
 ## Automated Retail Flow
@@ -124,6 +140,23 @@ Other qualitative factors:
 - Research insight and postmortem quality
 - Strategy evolution over time
 - Code quality and clarity (optional)
+
+## Documentation
+
+### Core Documentation
+- **[Game Overview](docs/game/)** - Start here
+- **[Fundamentals](docs/game/fundamentals/)** - Core concepts and mechanics
+- **[Simulation Details](docs/game/simulation/)** - Price generation and events
+- **[Scoring System](docs/game/scoring/)** - How teams are evaluated
+
+### Reference Materials
+- **[Probability Tables](docs/game/appendix/probability-tables.md)** - Event probabilities
+- **[Mathematical Formulas](docs/game/appendix/formulas.md)** - Key calculations
+- **[Glossary](docs/game/appendix/glossary.md)** - Trading terminology
+
+### Technical Documentation
+- **[API Reference](docs/reference/)** - For bot development
+- **[Implementation Guide](docs/technical/)** - Technical setup
 
 ## Future Extensions
 
