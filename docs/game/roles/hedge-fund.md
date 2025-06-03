@@ -1,7 +1,7 @@
 # Role: Hedge Fund
 
 ## One-Line Mission
-Detect mispriced implied volatility and use directional or volatility trades to capitalize on regime shifts.
+Keep implied volatility aligned with realized volatility by trading gamma before regime changes.
 
 ---
 
@@ -23,11 +23,12 @@ Detect mispriced implied volatility and use directional or volatility trades to 
   - **No Market Making**: Cannot quote two-sided markets (no simultaneous bid and ask).
   - Can only place single-sided limit orders or market orders.
   - Position limits: 150 per option, 500 total options, 200 underlying contracts.
-  - Must use directional or volatility strategies without market making capabilities.
+  - **Delta Neutrality**: Must maintain portfolio delta within ±50 deltas at each tick.
+  - **Rehedging Required**: Must adjust underlying position when delta exceeds limits.
 - **Scoring Focus**:
-  - **Signal P&L**: Profit/loss on positions opened within 5 ticks of signal
-  - **Signal Hit Rate**: Percentage of profitable trades when acting on signals
-  - **Position Penalty**: Deduction for exceeding position limits
+  - **Window P&L**: Total profit/loss from event to event (complete regime cycles)
+  - **Rehedging Profits**: P&L specifically from delta hedging trades
+  - **Delta Penalty**: Deduction for exceeding ±50 delta limit per tick
 
 ---
 
@@ -55,33 +56,34 @@ Detect mispriced implied volatility and use directional or volatility trades to 
 ---
 
 ## 4. How to Make Money
-1. **Understand Your Signal**
-   - You receive advance warning before volatility regime changes
-   - Signal includes probability matrix showing likely transitions
-   - With 66% accuracy, not every signal is correct - manage risk accordingly
+1. **Understand Your Edge**
+   - You know when realized volatility will change (with advance warning)
+   - Your job: ensure implied volatility reflects upcoming realized volatility
+   - Profit by trading gamma before the regime change occurs
 
-2. **Position Before the Market**
-   - Low to High Vol transition → Buy options (straddles/strangles) before vol spike
-   - High to Low Vol transition → Sell options to capture premium decay
-   - Use the advance warning time to build positions before others react
+2. **Trade Based on Regime Direction**
+   - **Low to High Vol**: Buy options now, gamma scalp during high vol period
+   - **High to Low Vol**: Sell options now, collect premium as vol normalizes
+   - Between events, realized vol stabilizes at new level
 
-3. **Size Based on Probabilities**
-   - Signal gives full transition matrix, not just binary prediction
-   - Larger positions when probability is higher
-   - Always account for 34% false signal rate in position sizing
+3. **Gamma Trading Strategy**
+   - **Long Gamma** (bought options): Must rehedge as underlying moves - buy low, sell high
+   - **Short Gamma** (sold options): Must rehedge to stay neutral - sell high, buy low
+   - **Delta Constraint**: ±50 delta limit forces continuous rehedging
+   - Your advance signal lets you position gamma before others adjust IV
 
-4. **Execute and Exit**
-   - Take liquidity when needed - your edge is timing, not spread capture
-   - Exit when regime change materializes (or fails to)
-   - Don't hold hoping for more - you profit from the transition, not the new regime
+4. **Event-to-Event Windows**
+   - Each regime lasts from one news event to the next
+   - Realized vol normalizes quickly after regime change
+   - Performance measured over these complete windows
 
 ---
 
 ## 5. Suggested Strategies
-- **Pre-Position for Vol Changes**: Use advance warning to buy/sell volatility before regime shifts
-- **Focus on ATM Options**: These have highest vega and will move most on vol regime changes
-- **Quick In, Quick Out**: Your edge is the advance warning - capture the initial move, don't overstay
-- **Probability-Weight Positions**: If signal shows 70% chance of high vol, size accordingly
-- **Accept False Signals**: With 66% accuracy, expect 1/3 of trades to be wrong - size to survive
+- **Gamma Positioning**: Long gamma before high vol periods, short gamma before low vol
+- **Delta-Neutral Entry**: Start with straddles/strangles to isolate volatility exposure
+- **Active Rehedging**: In high vol, rehedge frequently to capture gamma profits
+- **Premium Collection**: In low vol, focus on theta decay from sold options
+- **Window-Based P&L**: Measure success over complete event-to-event cycles
 
 ---
