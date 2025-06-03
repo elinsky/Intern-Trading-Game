@@ -6,7 +6,7 @@ Spot pricing mismatches between SPX and SPY, capturing small, consistent profits
 ---
 
 ## 1. Role Details
-- **Signal Access**: Instant SPX–SPY tracking-error signal with 80% accuracy (e.g., “SPY overpriced vs SPX by 0.15”).
+- **Signal Access**: Instant SPX–SPY tracking-error signal with 80% accuracy (e.g., "SPY overpriced vs SPX by 0.15").
 - **Fees/Incentives**:
   - **Standard Maker Rebate**: +\$0.01 per filled side.
   - **Standard Taker Fee**: -\$0.02 per executed contract.
@@ -36,33 +36,34 @@ Spot pricing mismatches between SPX and SPY, capturing small, consistent profits
 ---
 
 ## 4. How to Make Money
-1. **Use the Tracking-Error Signal**
-   - E.g., signal: “SPY overpriced vs SPX by 2.5 points.”
-   - Think: SPY call at 440 strike is richer than SPX call.
+1. **Understand the Tracking-Error Signal**
+   - Signal shows realized volatility divergence between SPX and SPY
+   - E.g., "SPY tracking error +0.15" means SPY is moving more than expected vs SPX
+   - In efficient markets, this realized vol difference should impact option prices
 
-2. **Construct a Paired Options Trade**
-   - **Sell** SPY call at 440.
-   - **Buy** SPX call at 440.
-   - Quantities should be roughly balanced between SPX and SPY.
+2. **Identify Option Mispricings**
+   - Higher realized vol in SPY → SPY options should be priced higher
+   - If options don't reflect this difference, arbitrage opportunity exists
+   - Compare same-strike options between SPX and SPY
 
-3. **Wait for Mean Reversion**
-   - As SPX and SPY realign, relative value converges.
-   - Close both legs to lock in mispricing profit.
+3. **Execute the Arbitrage**
+   - If SPY showing excess realized vol but options equally priced:
+     - **Buy** SPY options (underpriced given higher realized vol)
+     - **Sell** SPX options (overpriced given lower realized vol)
+   - Maintain position balance within 2:1 ratio
+
+4. **Capture the Convergence**
+   - As market recognizes the vol difference, option prices adjust
+   - Close both legs when pricing normalizes
+   - Profit from the option repricing, not underlying convergence
 
 ---
 
 ## 5. Suggested Strategies
-- **Signal‐Driven Entries**: Use instantaneous tracking-error feed to jump in as soon as divergence occurs.
-- **Rapid Execution**: Place limit orders just inside the spread to capture the mispricing without crossing too wide.
-- **Position Balancing**: Adjust positions to maintain SPX/SPY balance within 2:1 ratio.
-- **High-Frequency Pairing**: Continuously scan option pairs for micro-arbitrage in multiple strikes/expirations.
-
----
-
-## 6. Bonus Challenge
-- **Calibrate SPX–SPY Divergence Threshold**
-  1. Analyze historical tracking-error values to identify mean and standard deviation.
-  2. Set an entry rule (e.g., divergence > 1.5σ) and back-test P&L.
-  3. Compute optimal threshold that maximizes sharpe ratio under realistic fill rates.
+- **React to Signal Immediately**: With 80% accuracy and instant delivery, act fast when tracking error appears
+- **Trade the Vol Difference**: If SPY shows higher realized vol, buy SPY options and sell SPX options at same strikes
+- **Size Based on Signal Strength**: Larger tracking errors should drive larger positions (within 2:1 limits)
+- **Monitor for Convergence**: Close positions when either tracking error normalizes OR option prices adjust
+- **Use Multiple Strikes**: Spread trades across different strikes to capture the full volatility surface adjustment
 
 ---
