@@ -6,10 +6,7 @@ Spot pricing mismatches between SPX and SPY, capturing small, consistent profits
 ---
 
 ## 1. Role Details
-- **Product Access**: SPX and SPY options and underlyings.
-- **Delta Hedging**: Allowed; use underlying futures/spot to manage paired positions.
 - **Signal Access**: Instant SPX–SPY tracking-error signal with 80% accuracy (e.g., “SPY overpriced vs SPX by 0.15”).
-- **Trading Frequency**: Can trade every tick during the submission window.
 - **Fees/Incentives**:
   - **Standard Maker Rebate**: +\$0.01 per filled side.
   - **Standard Taker Fee**: -\$0.02 per executed contract.
@@ -41,17 +38,17 @@ Spot pricing mismatches between SPX and SPY, capturing small, consistent profits
 ---
 
 ## 4. How to Make Money
-1. **Use the Tracking-Error Signal**  
+1. **Use the Tracking-Error Signal**
    - E.g., signal: “SPY overpriced vs SPX by 2.5 points.”
    - Think: SPY call at 440 strike is richer than SPX call.
 
-2. **Construct a Paired Options Trade**  
-   - **Sell** SPY call at 440.  
-   - **Buy** SPX call at 440.  
+2. **Construct a Paired Options Trade**
+   - **Sell** SPY call at 440.
+   - **Buy** SPX call at 440.
    - Quantities should be roughly balanced between SPX and SPY.
 
-3. **Wait for Mean Reversion**  
-   - As SPX and SPY realign, relative value converges.  
+3. **Wait for Mean Reversion**
+   - As SPX and SPY realign, relative value converges.
    - Close both legs to lock in mispricing profit.
 
 ---
@@ -65,9 +62,9 @@ Spot pricing mismatches between SPX and SPY, capturing small, consistent profits
 ---
 
 ## 6. Bonus Challenge
-- **Calibrate SPX–SPY Divergence Threshold**  
-  1. Analyze historical tracking-error values to identify mean and standard deviation.  
-  2. Set an entry rule (e.g., divergence > 1.5σ) and back-test P&L.  
+- **Calibrate SPX–SPY Divergence Threshold**
+  1. Analyze historical tracking-error values to identify mean and standard deviation.
+  2. Set an entry rule (e.g., divergence > 1.5σ) and back-test P&L.
   3. Compute optimal threshold that maximizes sharpe ratio under realistic fill rates.
 
 ---

@@ -6,10 +6,7 @@ Quote fair, tight spreads and profit on every fill—while managing inventory wi
 ---
 
 ## 1. Role Details
-- **Product Access**: SPX and SPY options and underlyings.
-- **Delta Hedging**: Allowed; can trade underlying futures/spot to manage inventory.
 - **Signal Access**: None.
-- **Trading Frequency**: Can trade every tick during the submission window.
 - **Fees/Incentives**:
   - **Enhanced Maker Rebate**: +\$0.02 per filled side.
   - **Reduced Taker Fee**: -\$0.01 per contract.
@@ -55,7 +52,7 @@ Quote fair, tight spreads and profit on every fill—while managing inventory wi
 ---
 
 ## 5. Bonus Challenge
-- **Estimate the Implied vs. Realized Vol Spread**  
+- **Estimate the Implied vs. Realized Vol Spread**
   Develop a simple model that:
   1. Tracks the difference between implied vol (IV) and realized vol (RV) for your assigned product.
   2. Adjusts spread widths dynamically when IV – RV widens beyond a threshold.

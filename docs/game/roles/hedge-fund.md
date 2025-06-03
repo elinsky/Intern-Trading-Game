@@ -6,9 +6,7 @@ Detect mispriced implied volatility and use directional or volatility trades to 
 ---
 
 ## 1. Role Details
-- **Product Access**: SPX and SPY options and underlyings.
-- **Delta Hedging**: Allowed; can trade underlying futures/spot to remain neutral.
-- **Signal Access**: 
+- **Signal Access**:
   - Receives advance warning a configurable number of ticks before news events
   - Signal includes:
     - **Regime Change Prediction**: Whether the news event will trigger a volatility regime change
@@ -16,7 +14,6 @@ Detect mispriced implied volatility and use directional or volatility trades to 
     - **Three Volatility States**: Low vol, medium vol, and high vol (all configurable)
     - **Signal Accuracy**: Configurable (e.g., 66% accuracy means signal is correct 66% of the time)
   - Signal timing is configurable (e.g., arrives 2 ticks before the actual news event)
-- **Trading Frequency**: Can trade every tick during the submission window.
 - **Fees/Incentives**:
   - **Standard Maker Rebate**: +\$0.01 per filled side (on single-sided limit orders).
   - **Standard Taker Fee**: -\$0.02 per executed contract.
@@ -64,13 +61,13 @@ Detect mispriced implied volatility and use directional or volatility trades to 
 - **Focus on Directional Alpha**: Without ability to quote spreads, must generate profits from correct market predictions.
 - **Aggressive Positioning**: Use signal edge to take larger, more confident positions before events.
 - **Liquidity Taking**: Accept taker fees when necessary to capture time-sensitive opportunities.
-- **Volatility Plays**:  
+- **Volatility Plays**:
   - Use the probability transition matrix to position before regime shifts:
     - If signal predicts low to high vol transition: Buy straddles/strangles
     - If signal predicts high to low vol transition: Sell premium
   - Size positions based on transition probabilities and signal accuracy.
 
-- **Directional Bets**:  
+- **Directional Bets**:
   - Use regime predictions to anticipate market moves:
     - Higher vol often correlates with larger price swings
     - Position accordingly with the advance warning
@@ -80,14 +77,14 @@ Detect mispriced implied volatility and use directional or volatility trades to 
     - Weight positions by probability of each outcome
     - Hedge against lower-probability but high-impact transitions
 
-- **Cross-Product Spreads**:  
+- **Cross-Product Spreads**:
   - Trade SPX vs. SPY options to capture tracking-error anomalies (when not handled by Arb Desk).
   - Use vol regime predictions to time entry/exit of spread trades.
 
 ---
 
 ## 5. Bonus Challenge
-- **Optimize Signal Usage & Risk Management**  
+- **Optimize Signal Usage & Risk Management**
   1. Track the accuracy of your advance signals vs. actual regime changes.
   2. Analyze the probability transition matrices to identify patterns.
   3. Develop a position sizing algorithm that accounts for:
