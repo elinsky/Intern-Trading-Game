@@ -1,0 +1,280 @@
+# Game Schedule
+
+## Overall Timeline
+
+The Intern Trading Game runs for 8 weeks, aligned with the summer internship program.
+
+### Week-by-Week Overview
+
+| Week | Phase | Focus | Key Activities |
+|------|-------|-------|----------------|
+| 1 | Learning | Setup & Testing | Environment setup, bot development, strategy design |
+| 2 | Learning | Practice Trading | Test strategies, refine code, team coordination |
+| 3 | Competition | Go Live | Begin real trading, initial performance tracking |
+| 4 | Competition | Early Assessment | First evaluation checkpoint, strategy refinement |
+| 5 | Competition | Optimization | Mid-game push, parameter tuning, adaptation |
+| 6 | Competition | Mid-Game Review | Comprehensive evaluation, strategy pivots |
+| 7 | Final | Polish | Final optimizations, documentation completion |
+| 8 | Final | Presentations | Final trading, prepare and deliver presentations |
+
+## Detailed Schedule
+
+### Week 1: Environment Setup
+
+**Monday**
+- Game introduction presentation
+- Role assignments
+- Technical documentation provided
+- Q&A session
+
+**Tuesday-Wednesday**
+- Development environment setup
+- API access and authentication
+- Initial bot scaffolding
+- Practice data exploration
+
+**Thursday-Friday**
+- Basic strategy implementation
+- Connection testing
+- Order submission practice
+- Team strategy sessions
+
+**Deliverables**: Working bot connection
+
+### Week 2: Practice Trading
+
+**Monday-Tuesday**
+- Full system testing
+- Practice mode trading
+- Debug and refine code
+- Performance monitoring setup
+
+**Wednesday-Thursday**
+- Strategy backtesting
+- Parameter optimization
+- Risk management implementation
+- Team coordination
+
+**Friday**
+- Final testing
+- Go-live preparation
+- Strategy documentation
+- Technical review
+
+**Deliverables**: Tested trading strategy
+
+### Week 3: Competition Begins
+
+**Monday**
+- **LIVE TRADING STARTS**
+- Real-time monitoring begins
+- Daily P&L tracking active
+- Position limit enforcement
+
+**Daily Routine**
+- Morning: Review overnight positions
+- Continuous: Monitor and adjust strategies
+- Evening: Daily performance analysis
+- Ongoing: Strategy refinement
+
+**End of Week**
+- First week performance review
+- Technical issues addressed
+- Initial feedback provided
+
+### Week 4: Early Assessment
+
+**Monday-Wednesday**
+- Continue live trading
+- Implement improvements
+- Monitor compliance
+
+**Thursday**
+- **FIRST EVALUATION CHECKPOINT**
+- Performance metrics reviewed
+- Compliance check
+- Individual team feedback
+
+**Friday**
+- Address evaluation feedback
+- Strategy adjustments
+- Plan for coming weeks
+
+**Deliverables**: Performance summary
+
+### Week 5: Mid-Game Push
+
+**Full Week**
+- Intensive trading period
+- Strategy optimization
+- Feature additions
+- Performance improvements
+
+**Key Focus**
+- Maximize signal utilization
+- Optimize execution costs
+- Improve risk metrics
+- Enhance documentation
+
+### Week 6: Mid-Game Review
+
+**Monday-Tuesday**
+- Final push before evaluation
+- Code cleanup
+- Documentation update
+
+**Wednesday**
+- **MID-GAME EVALUATION**
+- Comprehensive review
+- Strategy presentation
+- Detailed feedback session
+
+**Thursday-Friday**
+- Implement feedback
+- Major strategy pivots if needed
+- Prepare for final phase
+
+**Deliverables**: Strategy documentation, performance analysis
+
+### Week 7: Final Optimization
+
+**Monday-Wednesday**
+- Final strategy refinements
+- Focus on consistency
+- Risk management emphasis
+- Documentation completion
+
+**Thursday-Friday**
+- Presentation preparation
+- Performance analysis
+- Code finalization
+- Team rehearsals
+
+**Key Focus**
+- Ensure compliance
+- Maximize scoring metrics
+- Prepare compelling narrative
+- Finalize all materials
+
+### Week 8: Final Week
+
+**Monday-Tuesday**
+- Last trading days
+- Final performance push
+- Presentation polish
+- Technical cleanup
+
+**Wednesday**
+- **TRADING ENDS**
+- Final P&L calculation
+- Complete documentation
+- Submit final code
+
+**Thursday-Friday**
+- **FINAL PRESENTATIONS**
+- 15-minute presentations
+- Q&A sessions
+- Awards ceremony
+- Closing celebration
+
+**Deliverables**: Final code, presentation, documentation
+
+## Daily Trading Schedule
+
+### Regular Trading Day
+
+| Time | Activity | Description |
+|------|----------|-------------|
+| 8:00 AM | System Opens | Pre-market preparation |
+| 8:30 AM | Daily Report | Previous day metrics published |
+| 9:00 AM | Active Trading | Continuous tick processing begins |
+| 4:00 PM | Reduced Activity | Lower event frequency |
+| 6:00 PM | End of Day | Daily summary available |
+| 11:59 PM | System Maintenance | Brief overnight processing |
+
+### Tick Schedule (Every 5 Minutes)
+
+| Phase | Duration | Activity |
+|-------|----------|----------|
+| T+0:00 | 10 sec | New prices generated |
+| T+0:10 | 20 sec | News events published |
+| T+0:30 | 150 sec | Order submission window |
+| T+3:00 | 30 sec | Order processing |
+| T+3:30 | 30 sec | Trades executed |
+| T+4:00 | 60 sec | Results published |
+
+## Special Events Calendar
+
+### Scheduled Events
+
+**Week 3**
+- First volatility storm (Wednesday)
+- Extended news cycle (Friday)
+
+**Week 5**
+- Flash crash simulation (Monday)
+- High correlation breakdown (Thursday)
+
+**Week 7**
+- Final volatility event (Tuesday)
+- Surprise announcement (Thursday)
+
+### Evaluation Milestones
+
+| Week | Day | Event | Weight |
+|------|-----|-------|--------|
+| 1-2 | - | Practice only | 0% |
+| 4 | Thursday | First evaluation | 10% |
+| 6 | Wednesday | Mid-game review | 25% |
+| 8 | Wednesday | Final scoring | 65% |
+
+## Important Deadlines
+
+### Code Submissions
+- Week 2 Friday: Initial strategy code
+- Week 4 Thursday: First evaluation version
+- Week 6 Wednesday: Mid-game version
+- Week 8 Wednesday: Final code freeze
+
+### Documentation
+- Week 4: Basic strategy description
+- Week 6: Detailed documentation
+- Week 8: Final presentation materials
+
+### Presentations
+- Week 6: 5-minute strategy overview
+- Week 8: 15-minute final presentation
+
+## Holidays and Breaks
+
+### Observed Holidays
+- July 4th: No trading (if applicable)
+- Other company holidays: Modified schedule
+
+### Maintenance Windows
+- Sundays 12-4 AM: System maintenance
+- Emergency maintenance: 24-hour notice
+
+## Tips for Success
+
+### Time Management
+1. **Front-load Development**: Complete core features early
+2. **Daily Routine**: Establish consistent monitoring
+3. **Regular Reviews**: Analyze performance daily
+4. **Documentation**: Update continuously, not at end
+
+### Key Milestones
+- Week 1: Working connection
+- Week 2: Complete strategy
+- Week 3: Profitable trading
+- Week 4: Pass first evaluation
+- Week 6: Strong mid-game showing
+- Week 8: Polished presentation
+
+### Critical Periods
+- Week 3 Monday: Going live
+- Week 4 Thursday: First evaluation
+- Week 6 Wednesday: Mid-game review
+- Week 8: Final push and presentations
+
+Remember: Success requires consistent effort throughout the 8 weeks. Front-load technical work, iterate continuously, and maintain steady progress toward each milestone.

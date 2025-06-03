@@ -1,0 +1,240 @@
+# Intern Trading Game Configuration
+# This file defines all game parameters
+
+game:
+  name: "Intern Trading Game 2024"
+  duration_weeks: 8
+  tick_duration_minutes: 5
+  order_window_minutes: 3
+
+market:
+  underlyings:
+    - symbol: "SPX"
+      initial_price: 4400
+      tick_size: 0.01
+    - symbol: "SPY" 
+      initial_price: 440
+      tick_size: 0.01
+      tracks: "SPX"
+      tracking_ratio: 10
+
+  options:
+    strikes_per_underlying: 5
+    strike_spacing_percent: 1.0
+    expirations: [1_week, 2_week, 4_week]
+    style: "european"
+    multiplier: 100
+
+volatility:
+  regimes:
+    low:
+      annual_vol: 0.10
+      persistence_ticks: [50, 200]
+    medium:
+      annual_vol: 0.20
+      persistence_ticks: [30, 100]
+    high:
+      annual_vol: 0.50
+      persistence_ticks: [10, 50]
+  
+  transition_matrix:
+    from_low: {to_low: 0.95, to_medium: 0.04, to_high: 0.01}
+    from_medium: {to_low: 0.02, to_medium: 0.94, to_high: 0.04}
+    from_high: {to_low: 0.01, to_medium: 0.09, to_high: 0.90}
+
+events:
+  news:
+    frequency_hours: [1, 4]
+    distribution: "poisson"
+    
+    event_types:
+      - name: "Fed hints at tightening"
+        regime_shift_prob: 0.60
+        price_jump_prob: 0.20
+      - name: "Geopolitical tensions rise"
+        regime_shift_prob: 0.70
+        price_jump_prob: 0.30
+      - name: "Strong jobs report"
+        regime_shift_prob: 0.40
+        price_jump_prob: 0.10
+      - name: "Markets quiet"
+        regime_shift_prob: 0.05
+        price_jump_prob: 0.00
+
+correlation:
+  spx_spy:
+    base_correlation: 0.98
+    tracking_error_daily: 0.0015
+    lag_ticks: [1, 2]
+    mean_reversion_halflife: 7
+
+roles:
+  market_maker:
+    fees:
+      maker_rebate: 0.02
+      taker_fee: -0.01
+    position_limits:
+      per_option: 50
+      total_portfolio: 200
+      symmetric: true
+    requirements:
+      quote_uptime_percent: 80
+      max_spread_percent: 10
+    order_limits:
+      per_tick: 100
+      max_size: 1000
+
+  hedge_fund:
+    fees:
+      maker_rebate: 0.01
+      taker_fee: -0.02
+    position_limits:
+      per_option: 150
+      total_portfolio: 500
+      symmetric: false
+    signals:
+      volatility_forecast:
+        accuracy: 0.66
+        lead_time_ticks: [1, 5]
+    order_limits:
+      per_tick: 50
+      max_size: 500
+    constraints:
+      no_two_sided_quotes: true
+
+  arbitrage_desk:
+    fees:
+      maker_rebate: 0.01
+      taker_fee: -0.02
+    position_limits:
+      per_option: 100
+      total_portfolio: 300
+    signals:
+      tracking_error:
+        accuracy: 0.80
+        threshold_percent: 0.15
+    requirements:
+      maintain_paired_trades: true
+      target_ratio: 10
+      ratio_tolerance: 0.2
+    order_limits:
+      per_tick: 75
+      max_size: 500
+
+  retail:
+    fees:
+      maker_rebate: -0.01
+      taker_fee: -0.03
+    position_limits:
+      total_portfolio: 50
+    
+    order_generation:
+      orders_per_tick:
+        distribution: "poisson"
+        mean: 3
+        max: 10
+      
+      order_size:
+        distribution: "exponential"
+        mean: 5
+        min: 1
+        max: 50
+        round_to: 5
+      
+      order_types:
+        market_orders: 0.40
+        limit_orders: 0.60
+    
+    directional_bias:
+      base_buy_probability: 0.50
+      momentum_factor: 0.20
+      contrarian_factor: 0.10
+    
+    product_selection:
+      call_probability: 0.60
+      otm_preference: 0.70
+      weekly_preference: 0.80
+      strike_selection:
+        distribution: "normal"
+        stdev_percent: 2.0
+        skew_factor: 1.5
+    
+    behavioral_patterns:
+      chase_momentum:
+        probability: 0.30
+        trigger: "3_tick_trend"
+        size_multiplier: 2.0
+      panic_selling:
+        probability: 0.20
+        trigger: "5%_drawdown"
+        size_multiplier: 3.0
+      fomo_buying:
+        probability: 0.25
+        trigger: "volatility_spike"
+    
+    activity_patterns:
+      morning_spike: {hours: [9, 10], multiplier: 1.5}
+      lunch_lull: {hours: [12, 13], multiplier: 0.7}
+      close_rush: {hours: [15, 16], multiplier: 2.0}
+
+execution:
+  matching_algorithm: "price_time_priority"
+  allow_self_trade: true
+  partial_fills: true
+  order_expiration: "end_of_tick"
+  price_limits:
+    max_deviation_percent: 20
+    circuit_breaker_percent: 5
+
+scoring:
+  weights:
+    quantitative: 0.70
+    qualitative: 0.30
+  
+  quantitative_breakdown:
+    primary_kpis: 0.40
+    position_compliance: 0.15
+    risk_management: 0.15
+  
+  qualitative_breakdown:
+    research_quality: 0.15
+    code_documentation: 0.10
+    team_collaboration: 0.05
+
+  evaluation_schedule:
+    week_4: 0.10
+    week_6: 0.25
+    week_8: 0.65
+
+  penalties:
+    position_limit_breach:
+      minor: {threshold: 0.10, penalty: -0.05}
+      major: {threshold: 0.25, penalty: -0.15}
+      severe: {threshold: 0.50, penalty: -0.30}
+
+system:
+  api:
+    rate_limit_per_second: 100
+    max_message_size_kb: 1024
+    connection_timeout_seconds: 30
+    heartbeat_interval_seconds: 10
+  
+  data:
+    retention_days: 90
+    snapshot_frequency: "every_tick"
+    backup_frequency_hours: 24
+
+phases:
+  learning:
+    weeks: [1, 2]
+    volatility_scaling: 0.5
+    practice_mode: true
+  
+  competition:
+    weeks: [3, 4, 5, 6]
+    full_parameters: true
+  
+  final:
+    weeks: [7, 8]
+    volatility_boost: 1.2
+    special_events_enabled: true

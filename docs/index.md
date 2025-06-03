@@ -17,7 +17,7 @@ Each intern team plays one of the following:
 | Role          | Objective                                      | Tools / Signals                        |
 |---------------|-----------------------------------------------|----------------------------------------|
 | Market Maker  | Quote fairly and manage inventory risk        | Product-specific, delta hedging allowed |
-| Hedge Fund    | Exploit vol regime shifts & implied/realized edge | Delayed vol signal, full product access |
+| Hedge Fund    | Exploit vol regime shifts & implied/realized edge | Advance vol signal with transition matrix, full product access |
 | Arbitrage Desk| Trade mispriced spreads between SPX/SPY       | Tracking signal, fast execution         |
 | Retail Trader | (Employees only) Add flow and realism         | No signal, limited trade size           |
 
