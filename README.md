@@ -30,10 +30,10 @@ Welcome to the Intern Trading Game! This repo contains the core simulation engin
    - A news event is published (may or may not trigger a volatility regime change)
    - Option prices are implied (but not published)
 
-2. **Bot Submission Window (2–3 min)**
-   - Intern bots read from the market data and news
-   - Bots submit orders (limit/market)
-   - Teams receive only the market data feeds, news feeds, and alpha signals
+2. **Bot Submission Window (T+0:30 to T+3:00)**
+   - 2.5 minute window with hard cutoffs
+   - Bots read market data and submit orders
+   - No orders accepted outside this window
 
 3. **Tick Processes**
    - Matching engine executes trades, applies fees, and updates P&L

@@ -24,12 +24,13 @@ The game simulates two correlated underlyings with options:
 
 ## How It Works
 
-Every **5 minutes**, a new market tick occurs:
+Every **5 minutes**, a new market tick occurs with precise timing:
 
-1. **Price Generation**: New underlying prices based on volatility regimes
-2. **Order Collection**: Your bot submits orders during a 2-3 minute window
-3. **Trade Matching**: Exchange processes all orders and executes trades
-4. **Results Published**: Updated positions, P&L, and market data
+1. **T+0:00 - Price Generation**: New underlying prices calculated
+2. **T+0:30 to T+3:00 - Order Window**: Bots submit orders (2.5 minute window)
+3. **T+3:00 - Order Cutoff**: No new orders accepted after this point
+4. **T+3:30 - Trade Matching**: All orders processed and trades executed
+5. **T+4:00 - Results Published**: Positions, P&L, and market data updated
 
 ## Choose Your Role
 

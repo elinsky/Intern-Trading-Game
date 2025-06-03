@@ -206,14 +206,14 @@ The Intern Trading Game runs for 8 weeks, aligned with the summer internship pro
 
 ### Tick Schedule (Every 5 Minutes)
 
-| Phase | Duration | Activity |
-|-------|----------|----------|
-| T+0:00 | 10 sec | New prices generated |
-| T+0:10 | 20 sec | News events published |
-| T+0:30 | 150 sec | Order submission window |
-| T+3:00 | 30 sec | Order processing |
-| T+3:30 | 30 sec | Trades executed |
-| T+4:00 | 60 sec | Results published |
+| Time | Event | Description |
+|------|-------|-------------|
+| T+0:00 | Tick Start | New prices generated, news published |
+| T+0:30 | **Order Window Opens** | HARD START - orders now accepted |
+| T+3:00 | **Order Window Closes** | HARD CUTOFF - no more orders |
+| T+3:30 | Trade Execution | All orders matched and executed |
+| T+4:00 | Results Published | Positions and P&L updated |
+| T+5:00 | Next Tick | Cycle repeats |
 
 ## Special Events Calendar
 

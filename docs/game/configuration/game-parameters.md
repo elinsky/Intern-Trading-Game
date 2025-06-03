@@ -9,8 +9,10 @@ The Intern Trading Game simulation has numerous configurable parameters that con
 ### Tick Configuration
 | Parameter | Default Value | Range | Description |
 |-----------|---------------|-------|-------------|
-| tick_duration | 5 minutes | 1-60 min | Time between market updates |
-| order_window | 3 minutes | 1-4 min | Time to submit orders each tick |
+| tick_duration | 5 minutes | Fixed | Time between market updates |
+| order_window_start | T+0:30 | Fixed | When orders accepted |
+| order_window_end | T+3:00 | Fixed | Hard cutoff for orders |
+| order_window_duration | 2.5 minutes | Fixed | Total submission time |
 | batch_processing | true | - | Orders processed simultaneously |
 
 ### Instrument Configuration

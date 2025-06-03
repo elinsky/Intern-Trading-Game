@@ -7,20 +7,19 @@ The game operates on a tick-based system where market state updates every 5 minu
 ### Tick Lifecycle
 
 ```
-1. Price Generation (T+0:00)
-   │
-2. News Publication (T+0:10)
-   │
-3. Order Window Opens (T+0:30)
-   │
-4. Order Window Closes (T+3:00)
-   │
-5. Matching & Execution (T+3:30)
-   │
-6. Results Published (T+4:00)
-   │
-7. Next Tick Preparation (T+5:00)
+T+0:00    Price Generation & News Publication
+T+0:30    Order Window Opens (HARD START)
+T+3:00    Order Window Closes (HARD CUTOFF)
+T+3:30    Matching & Execution
+T+4:00    Results Published
+T+5:00    Next Tick Begins
 ```
+
+**Critical Timing**:
+- Orders submitted before T+0:30 are rejected
+- Orders submitted after T+3:00 are rejected
+- No modifications allowed after submission
+- All timestamps are server-side (no client clock issues)
 
 ### What Happens Each Tick
 
