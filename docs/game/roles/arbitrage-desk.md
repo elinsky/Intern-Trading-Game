@@ -15,9 +15,9 @@ Spot pricing mismatches between SPX and SPY, capturing small, consistent profits
   - SPX and SPY positions must be roughly balanced (within 2:1 ratio).
   - Position limits: Maximum 100 contracts per leg of paired trades.
 - **Scoring Focus**:
-  - Profit from spread convergence.
-  - Precision of execution (fill rates, slippage).
-  - Frequency of profitable round-trip trades.
+  - **Signal P&L**: Profit/loss when trading on tracking error signals
+  - **Balance Ratio**: Penalty if SPX/SPY positions exceed 2:1 ratio
+  - **Signal Response Time**: Bonus for acting within 1 tick of signal
 
 ---
 

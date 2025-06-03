@@ -25,10 +25,9 @@ Detect mispriced implied volatility and use directional or volatility trades to 
   - Position limits: 150 per option, 500 total options, 200 underlying contracts.
   - Must use directional or volatility strategies without market making capabilities.
 - **Scoring Focus**:
-  - P&L from realized vs. implied volatility trades.
-  - Risk-adjusted returns.
-  - Strategy adaptiveness (reaction to regime changes).
-  - Research output (back-testing quality).
+  - **Signal P&L**: Profit/loss on positions opened within 5 ticks of signal
+  - **Signal Hit Rate**: Percentage of profitable trades when acting on signals
+  - **Position Penalty**: Deduction for exceeding position limits
 
 ---
 
@@ -55,42 +54,34 @@ Detect mispriced implied volatility and use directional or volatility trades to 
 
 ---
 
-## 4. Suggested Strategies
+## 4. How to Make Money
+1. **Understand Your Signal**
+   - You receive advance warning before volatility regime changes
+   - Signal includes probability matrix showing likely transitions
+   - With 66% accuracy, not every signal is correct - manage risk accordingly
 
-### Strategic Implications of No Market Making:
-- **Focus on Directional Alpha**: Without ability to quote spreads, must generate profits from correct market predictions.
-- **Aggressive Positioning**: Use signal edge to take larger, more confident positions before events.
-- **Liquidity Taking**: Accept taker fees when necessary to capture time-sensitive opportunities.
-- **Volatility Plays**:
-  - Use the probability transition matrix to position before regime shifts:
-    - If signal predicts low to high vol transition: Buy straddles/strangles
-    - If signal predicts high to low vol transition: Sell premium
-  - Size positions based on transition probabilities and signal accuracy.
+2. **Position Before the Market**
+   - Low to High Vol transition → Buy options (straddles/strangles) before vol spike
+   - High to Low Vol transition → Sell options to capture premium decay
+   - Use the advance warning time to build positions before others react
 
-- **Directional Bets**:
-  - Use regime predictions to anticipate market moves:
-    - Higher vol often correlates with larger price swings
-    - Position accordingly with the advance warning
+3. **Size Based on Probabilities**
+   - Signal gives full transition matrix, not just binary prediction
+   - Larger positions when probability is higher
+   - Always account for 34% false signal rate in position sizing
 
-- **Probability-Weighted Strategies**:
-  - Use the full transition matrix to create sophisticated strategies:
-    - Weight positions by probability of each outcome
-    - Hedge against lower-probability but high-impact transitions
-
-- **Cross-Product Spreads**:
-  - Trade SPX vs. SPY options to capture tracking-error anomalies (when not handled by Arb Desk).
-  - Use vol regime predictions to time entry/exit of spread trades.
+4. **Execute and Exit**
+   - Take liquidity when needed - your edge is timing, not spread capture
+   - Exit when regime change materializes (or fails to)
+   - Don't hold hoping for more - you profit from the transition, not the new regime
 
 ---
 
-## 5. Bonus Challenge
-- **Optimize Signal Usage & Risk Management**
-  1. Track the accuracy of your advance signals vs. actual regime changes.
-  2. Analyze the probability transition matrices to identify patterns.
-  3. Develop a position sizing algorithm that accounts for:
-     - Signal accuracy (configurable, e.g., 66%)
-     - Transition probabilities from the matrix
-     - Current volatility state
-  4. Measure P&L per correct vs. incorrect signal to refine strategy.
+## 5. Suggested Strategies
+- **Pre-Position for Vol Changes**: Use advance warning to buy/sell volatility before regime shifts
+- **Focus on ATM Options**: These have highest vega and will move most on vol regime changes
+- **Quick In, Quick Out**: Your edge is the advance warning - capture the initial move, don't overstay
+- **Probability-Weight Positions**: If signal shows 70% chance of high vol, size accordingly
+- **Accept False Signals**: With 66% accuracy, expect 1/3 of trades to be wrong - size to survive
 
 ---

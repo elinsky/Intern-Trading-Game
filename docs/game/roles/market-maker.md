@@ -16,10 +16,9 @@ Quote fair, tight spreads and profit on every fill—while managing inventory wi
   - Inventory limits: Maximum ±50 net contracts per product (SPX/SPY).
   - Must provide two-sided quotes (bid and ask) on each instrument.
 - **Scoring Focus**:
-  - Spread capture per trade.
-  - Quote uptime (percentage of time with active quotes).
-  - Inventory risk management (staying within ±50 net position limits).
-  - Quoting coverage (≥ 80 %).
+  - **Fee Revenue**: Net maker rebates minus taker fees per tick
+  - **Quote Coverage**: Percentage of required instruments quoted (must be ≥ 80%)
+  - **Inventory Penalty**: Deduction for positions exceeding ±50 limit
 
 ---
 
@@ -41,20 +40,34 @@ Quote fair, tight spreads and profit on every fill—while managing inventory wi
 
 ---
 
-## 4. Suggested Strategies
-- **Adaptive Spread**: Widen spreads in high-vol regimes; tighten in low-vol.
-- **Retail Flow Exploitation**: Identify aggressive retail orders that cross wide spreads.
-- **Inventory Management**: Use underlying futures/spot to stay within ±50 net position limits.
-- **Inventory Skew Management**: Adjust quotes to steer inventory toward desired levels.
-- **Inter-Product Risk Management**: Balance inventory across SPX and SPY positions.
-- **Competitive Positioning**: Monitor competing MM's quotes and adjust spreads strategically while maintaining profitability through fee advantage.
+## 4. How to Make Money
+1. **Capture the Spread**
+   - Post bid below fair value, ask above fair value
+   - When both sides fill, you profit the spread difference
+   - Enhanced rebates (+$0.02) boost profitability on every fill
+
+2. **Leverage Fee Advantage**
+   - You get +$0.02 maker rebate vs +$0.01 for others
+   - Pay only -$0.01 taker fee vs -$0.02 for others
+   - This $0.01-0.03 edge per contract adds up quickly
+
+3. **Manage Inventory Risk**
+   - Stay within ±50 net position limit per product
+   - Skew quotes to push inventory back toward neutral
+   - Use the underlying to hedge when needed
+
+4. **Quote Smart, Not Wide**
+   - Tighter spreads attract more volume (more rebates)
+   - But spreads must cover adverse selection risk
+   - Balance volume vs risk for optimal profitability
 
 ---
 
-## 5. Bonus Challenge
-- **Estimate the Implied vs. Realized Vol Spread**
-  Develop a simple model that:
-  1. Tracks the difference between implied vol (IV) and realized vol (RV) for your assigned product.
-  2. Adjusts spread widths dynamically when IV – RV widens beyond a threshold.
+## 5. Suggested Strategies
+- **Dynamic Spread Sizing**: Widen spreads when volatility increases or inventory builds
+- **Retail Flow Focus**: Retail orders often cross the spread - your fee advantage makes these profitable
+- **Quote Skewing**: If long 30 contracts, lower your offers and raise your bids to reduce position
+- **Cross-Product Balance**: Monitor combined SPX+SPY exposure, not just individual products
+- **Compete on Volume**: Your fee edge means you can quote tighter than the other MM and still profit
 
 ---
