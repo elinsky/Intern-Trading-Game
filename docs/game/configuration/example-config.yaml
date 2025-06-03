@@ -12,7 +12,7 @@ market:
     - symbol: "SPX"
       initial_price: 4400
       tick_size: 0.01
-    - symbol: "SPY" 
+    - symbol: "SPY"
       initial_price: 440
       tick_size: 0.01
       tracks: "SPX"
@@ -36,7 +36,7 @@ volatility:
     high:
       annual_vol: 0.50
       persistence_ticks: [10, 50]
-  
+
   transition_matrix:
     from_low: {to_low: 0.95, to_medium: 0.04, to_high: 0.01}
     from_medium: {to_low: 0.02, to_medium: 0.94, to_high: 0.04}
@@ -46,7 +46,7 @@ events:
   news:
     frequency_hours: [1, 4]
     distribution: "poisson"
-    
+
     event_types:
       - name: "Fed hints at tightening"
         regime_shift_prob: 0.60
@@ -127,55 +127,31 @@ roles:
       taker_fee: -0.03
     position_limits:
       total_portfolio: 50
-    
+
     order_generation:
       orders_per_tick:
         distribution: "poisson"
         mean: 3
         max: 10
-      
+
       order_size:
         distribution: "exponential"
         mean: 5
         min: 1
         max: 50
         round_to: 5
-      
+
       order_types:
         market_orders: 0.40
         limit_orders: 0.60
-    
+
     directional_bias:
-      base_buy_probability: 0.50
-      momentum_factor: 0.20
-      contrarian_factor: 0.10
-    
-    product_selection:
-      call_probability: 0.60
-      otm_preference: 0.70
-      weekly_preference: 0.80
-      strike_selection:
-        distribution: "normal"
-        stdev_percent: 2.0
-        skew_factor: 1.5
-    
-    behavioral_patterns:
-      chase_momentum:
-        probability: 0.30
-        trigger: "3_tick_trend"
-        size_multiplier: 2.0
-      panic_selling:
-        probability: 0.20
-        trigger: "5%_drawdown"
-        size_multiplier: 3.0
-      fomo_buying:
-        probability: 0.25
-        trigger: "volatility_spike"
-    
-    activity_patterns:
-      morning_spike: {hours: [9, 10], multiplier: 1.5}
-      lunch_lull: {hours: [12, 13], multiplier: 0.7}
-      close_rush: {hours: [15, 16], multiplier: 2.0}
+      buy_probability: 0.50
+      call_probability: 0.60  # Slight bullish bias
+
+    order_preferences:
+      otm_preference: 0.70  # Prefer out-of-money options
+      market_order_percent: 0.40  # vs limit orders
 
 execution:
   matching_algorithm: "price_time_priority"
@@ -190,12 +166,12 @@ scoring:
   weights:
     quantitative: 0.70
     qualitative: 0.30
-  
+
   quantitative_breakdown:
     primary_kpis: 0.40
     position_compliance: 0.15
     risk_management: 0.15
-  
+
   qualitative_breakdown:
     research_quality: 0.15
     code_documentation: 0.10
@@ -218,7 +194,7 @@ system:
     max_message_size_kb: 1024
     connection_timeout_seconds: 30
     heartbeat_interval_seconds: 10
-  
+
   data:
     retention_days: 90
     snapshot_frequency: "every_tick"
@@ -229,11 +205,11 @@ phases:
     weeks: [1, 2]
     volatility_scaling: 0.5
     practice_mode: true
-  
+
   competition:
     weeks: [3, 4, 5, 6]
     full_parameters: true
-  
+
   final:
     weeks: [7, 8]
     volatility_boost: 1.2

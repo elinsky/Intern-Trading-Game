@@ -24,7 +24,7 @@ retail:
     distribution: "poisson"
     mean: 3
     max: 10
-  
+
   inter_arrival_time:
     distribution: "exponential"
     lambda: 0.5  # Average 2 orders per minute within tick
@@ -45,15 +45,7 @@ retail:
 **Buy/Sell Ratio**
 ```yaml
   directional_bias:
-    base_buy_probability: 0.50
-    momentum_factor: 0.2  # Increase buy prob in uptrends
-    contrarian_factor: 0.1  # Some retail fades moves
-    
-  # Dynamic adjustment
-  if price_up_last_3_ticks:
-    buy_probability = base + momentum_factor
-  elif price_down_last_3_ticks:
-    buy_probability = base - momentum_factor + contrarian_factor
+    base_buy_probability: 0.50  # Equal buy/sell probability
 ```
 
 ### Product Selection Bias
@@ -64,7 +56,7 @@ retail:
     call_probability: 0.60  # Retail typically bullish
     otm_preference: 0.70   # Prefer out-of-money
     weekly_preference: 0.80 # Prefer near-term expiry
-    
+
   strike_selection:
     distribution: "normal"
     mean: "current_price"
@@ -72,67 +64,9 @@ retail:
     skew_factor: 1.5    # Prefer OTM calls
 ```
 
-### Behavioral Patterns
-
-**Trading Patterns**
-```yaml
-  behavioral_patterns:
-    chase_momentum:
-      probability: 0.30
-      trigger: "3_tick_trend"
-      size_multiplier: 2.0
-    
-    panic_selling:
-      probability: 0.20
-      trigger: "5%_drawdown"
-      sell_everything: false
-      size_multiplier: 3.0
-    
-    fomo_buying:
-      probability: 0.25
-      trigger: "volatility_spike"
-      target: "otm_calls"
-    
-    profit_taking:
-      probability: 0.15
-      trigger: "20%_gain"
-      sell_percent: 0.50
-```
 
 ## Order Flow Characteristics
 
-### Time-of-Day Patterns
-```yaml
-  activity_patterns:
-    morning_spike:
-      hours: [9, 10]
-      activity_multiplier: 1.5
-    
-    lunch_lull:
-      hours: [12, 13]
-      activity_multiplier: 0.7
-    
-    close_rush:
-      hours: [15, 16]
-      activity_multiplier: 2.0
-```
-
-### Market Condition Response
-```yaml
-  market_response:
-    high_volatility:
-      order_frequency: "+50%"
-      size_reduction: "-30%"
-      otm_preference: "+20%"
-    
-    trending_market:
-      momentum_following: "+40%"
-      contrarian: "+10%"
-    
-    range_bound:
-      activity: "-20%"
-      strike_concentration: "+30%"
-```
 
 ## Implementation Details
 
@@ -141,7 +75,7 @@ retail:
   order_types:
     market_orders: 0.40  # Retail uses more market orders
     limit_orders: 0.60
-    
+
   limit_order_pricing:
     aggressive: 0.30  # At or through market
     passive: 0.50     # Behind market
@@ -180,31 +114,18 @@ retail:
 
 ## Configuration Examples
 
-### Bullish Retail Environment
+### Basic Configuration
 ```yaml
-retail_bullish:
-  call_probability: 0.75
-  buy_probability: 0.65
-  otm_call_preference: 0.85
-  size_on_dips: 2.0
-```
-
-### Fearful Retail Environment
-```yaml
-retail_fearful:
-  put_probability: 0.70
-  sell_probability: 0.60
-  market_order_percent: 0.60
-  panic_threshold: "3%"
-```
-
-### Balanced Random Walk
-```yaml
-retail_random:
-  call_probability: 0.50
-  buy_probability: 0.50
-  random_walk: true
-  no_patterns: true
+retail:
+  orders_per_tick:
+    distribution: "poisson"
+    mean: 3
+  order_size:
+    distribution: "exponential"
+    mean: 5
+  call_probability: 0.60  # Slight bullish bias
+  buy_probability: 0.50   # Balanced buy/sell
+  market_order_percent: 0.40  # Mix of order types
 ```
 
 ## Monitoring and Metrics
@@ -239,32 +160,6 @@ retail_random:
 - Can create temporary dislocations
 - Additional volume for hiding trades
 
-## Advanced Configuration
-
-### Multi-Agent Approach
-```yaml
-retail_agents:
-  - type: "momentum_chaser"
-    weight: 0.30
-    config: {...}
-  
-  - type: "contrarian"
-    weight: 0.20
-    config: {...}
-  
-  - type: "random"
-    weight: 0.50
-    config: {...}
-```
-
-### Adaptive Behavior
-```yaml
-adaptive_retail:
-  learn_from_pnl: true
-  adaptation_rate: 0.01
-  memory_ticks: 100
-  max_behavior_shift: 0.20
-```
 
 ## Fee Structure
 

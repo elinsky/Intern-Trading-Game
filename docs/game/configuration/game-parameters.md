@@ -90,13 +90,6 @@ From High  0.01    0.09    0.90
 | otm_preference | 70% | Prefer cheap options |
 | market_order_rate | 40% | Takes liquidity |
 
-### Retail Behavioral Patterns
-| Pattern | Probability | Trigger | Effect |
-|---------|------------|---------|--------|
-| Momentum Chasing | 30% | 3-tick trend | 2x size |
-| Panic Selling | 20% | 5% drawdown | 3x size sells |
-| FOMO Buying | 25% | Vol spike | Buy OTM calls |
-| Profit Taking | 15% | 20% gain | Sell 50% |
 
 ## Signal Parameters
 

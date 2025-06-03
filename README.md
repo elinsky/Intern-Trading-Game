@@ -7,11 +7,11 @@ Welcome to the Intern Trading Game! This repo contains the core simulation engin
 ## Game Overview
 
 - **Underlying Assets**: Simulated SPX and SPY spot prices
-- **Instruments**: European options on SPX and SPY (5–10 strikes, 2–3 expiries)
-- **Tick Frequency**: Every 5 minutes (configurable)
-- **Submission**: Intern bots submit orders
-- **Execution**: Matching engine runs per tick, fills orders, updates P&L
-- **Evaluation**: Role-specific KPIs and strategy quality
+- **Instruments**: European options on SPX and SPY (~15 strikes covering ±30%, weekly expiries)
+- **Trading Schedule**: Tuesday & Thursday only, 9:30 AM - 3:00 PM CT
+- **Tick Frequency**: Every 5 minutes (66 ticks per trading day)
+- **Submission**: Intern bots submit orders during 2-3 minute window
+- **Evaluation**: Role-specific KPIs and quantitative research quality
 
 ---
 
@@ -43,13 +43,11 @@ Each intern team is assigned one of three trading roles. Each role exploits diff
 
 **Objective**: Capture edge by quoting fair and profitable options prices
 
-- **Product Access**: SPX *or* SPY only (assigned)
-- **Delta Hedging**: Allowed
 - **Signal Access**: None
-- **Latency**: Medium (can trade every tick)
 - **Constraints**:
-  - Must quote 80% of instruments each tick
-  - Must stay delta-neutral
+  - Must quote ≥80% of instruments each tick across both products
+  - Position limits: ±50 per option, ±200 total
+  - Enhanced fee structure: +$0.02 maker, -$0.01 taker
 - **Scoring Focus**:
   - Spread capture per trade
   - Inventory risk management
@@ -57,61 +55,55 @@ Each intern team is assigned one of three trading roles. Each role exploits diff
 
 ### 2. Hedge Fund
 
-**Objective**: Exploit mis-pricings in implied vs. realized volatility
+**Objective**: Exploit advance knowledge of volatility regime changes
 
-- **Product Access**: SPX and SPY
-- **Delta Hedging**: Allowed
-- **Signal Access**: Volatility regime signal (delayed 1 tick)
-- **Latency**: Slow
+- **Signal Access**: Volatility regime forecast (66% accuracy, 1-5 ticks early)
 - **Constraints**:
-  - Capital charges on large positions
-  - Fees on all trades
+  - Position limits: 150 per option, 500 total
+  - Cannot quote two-sided
+  - Standard fees: +$0.01 maker, -$0.02 taker
 - **Scoring Focus**:
-  - Realized vs. implied volatility P&L
-  - Strategy adaptiveness
-  - Risk-adjusted return
+  - Signal utilization effectiveness
+  - Risk-adjusted returns
+  - Volatility trading P&L
 
 ### 3. Arbitrage Desk
 
 **Objective**: Exploit temporary mispricing between SPX and SPY options
 
-- **Product Access**: SPX and SPY
-- **Delta Hedging**: Must stay near delta-neutral
-- **Signal Access**: Tracking error signal (real-time)
-- **Latency**: Fast (no delay)
+- **Signal Access**: Tracking error signal (80% accuracy, real-time)
 - **Constraints**:
-  - Must submit paired, cross-product trades
-  - No directional risk allowed
+  - Must maintain paired trades (target 10:1 SPX:SPY value ratio)
+  - Position limits: 100 per option, 300 total
+  - Standard fees: +$0.01 maker, -$0.02 taker
 - **Scoring Focus**:
   - Profit from convergence trades
   - Precision of execution
-  - Frequency of profitable round-trips
+  - Market neutrality maintenance
 
 ---
 
-## Optional: Retail Traders (Employees)
+## Automated Retail Flow
 
-**Objective**: Create flow and noise to enrich the game environment
+**Objective**: Create realistic market noise and liquidity
 
-- **Product Access**: SPX and/or SPY
-- **Signal Access**: None
+- **Order Generation**: Poisson frequency (mean 3/tick), exponential sizing
 - **Constraints**:
-  - Max 1–3 trades per tick
-  - Not scored
-- **Participation**: Voluntary, open to all employees
+  - Max position: 50 contracts
+  - Predominantly takes liquidity
+  - Fees: -$0.01 maker, -$0.03 taker
 
 ## Market Fundamentals (Configurable)
 
 The simulated market is controlled by a backend configuration that defines key structural dynamics. These parameters are not exposed directly, but interns may infer them through research.
 
-| Fundamental                  | Description                                    | Exploited By   |
-| ---------------------------- | ---------------------------------------------- | -------------- |
-| Volatility Regimes           | Underlying has multi-state vol (e.g. low/high) | Hedge Fund     |
-| Implied vs. Realized Vol Gap | IV is structurally rich vs realized            | Market Maker   |
-| SPX-SPY Tracking Error       | SPY drifts from SPX and mean-reverts           | Arbitrage Desk |
-| Retail Flow Aggression       | Retail orders are randomly aggressive          | Market Maker   |
-| Signal Delay                 | HF signal arrives with 1-tick delay            | Hedge Fund     |
-| Latency Advantage            | Arb desk trades instantly; MM/HF do not        | Arbitrage Desk |
+| Fundamental | Description | Exploited By |
+|-------------|-------------|--------------|
+| Volatility Regimes | Market operates in low/medium/high vol states | Hedge Fund (via signal) |
+| SPX-SPY Tracking Error | SPY diverges from theoretical SPX/10 relationship | Arbitrage Desk (via signal) |
+| Spread Capture | Bid-ask spread with enhanced maker rebates | Market Maker |
+| Retail Flow Patterns | Automated retail creates predictable flow | All roles |
+| Information Asymmetry | Different roles receive different signals | Role-specific advantages |
 
 Each role exploits one or more of these dynamics to generate P&L.
 
