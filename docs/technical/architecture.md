@@ -109,7 +109,6 @@ class OB,PD,MH,GS persistent
 - Maintains separate order books for each option instrument
 - Processes market, limit, and quote orders
 - Creates trade records with appropriate fees/rebates
-- Clears unfilled orders at tick end
 
 **Order Validator**
 - Pre-validates all incoming orders before submission
@@ -163,7 +162,7 @@ class OB,PD,MH,GS persistent
 - Streams updates at tick boundaries
 
 ### Data Stores
-- **Order Books**: Active limit/quote orders per option, cleared each tick
+- **Order Books**: Active limit/quote orders per option
 - **Positions**: Player holdings with quantities, average prices, and P&L
 - **Market History**: Complete time series of prices, trades, and snapshots
 - **Game State**: Session config, player mappings, current tick, scores
