@@ -89,13 +89,13 @@ Role-specific signals:
 
 ### Timing of Information
 
-| Information Type | When Published | Who Sees |
-|-----------------|----------------|----------|
-| Underlying prices | Start of tick | Everyone |
-| News headlines | T+10 seconds | Everyone |
+| Information Type   | When Published           | Who Sees   |
+| ------------------ | ------------------------ | ---------- |
+| Underlying prices  | Start of tick            | Everyone   |
+| News headlines     | T+10 seconds             | Everyone   |
 | Volatility signals | T-60 seconds (next tick) | Hedge Fund |
-| Tracking signals | Start of tick | Arb Desk |
-| Trade results | After matching | Everyone |
+| Tracking signals   | Start of tick            | Arb Desk   |
+| Trade results      | After matching           | Everyone   |
 
 ## Bot Interaction
 
@@ -106,32 +106,8 @@ Role-specific signals:
 4. Submit orders within window
 5. Receive execution reports
 
-### Rate Limits
-- Maximum orders per tick varies by role
-- No order modifications (cancel and replace)
-- Bulk order submission supported
-
 ### Error Handling
 - Invalid orders rejected with reason
-- Connection failures require reconnection
-- Missed ticks cannot be replayed
-
-## Game Phases
-
-### Week 1-2: Learning Phase
-- Simplified market conditions
-- Lower volatility
-- Practice environment available
-
-### Week 3-6: Competition Phase
-- Full market dynamics
-- All events enabled
-- Performance tracking begins
-
-### Week 7-8: Final Phase
-- Increased volatility possible
-- Final strategy refinements
-- Preparation for presentations
 
 ## Next Steps
 

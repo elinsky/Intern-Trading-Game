@@ -121,23 +121,6 @@ All orders validated for:
 - Fee accumulation
 - Constraint violations logged
 
-### Circuit Breakers
-- 5% maximum price move per tick
-- Automatic position liquidation if limits exceeded
-- Trading halt during system issues
-
-## Compliance Monitoring
-
-### Automated Tracking
-- Real-time constraint checking
-- Daily summary reports
-- Warning system for near-violations
-
-### Manual Review
-- Weekly performance reviews
-- Strategy assessment
-- Rule clarification as needed
-
 ## Strategic Implications
 
 ### For Market Makers
@@ -148,28 +131,11 @@ All orders validated for:
 ### For Hedge Funds
 - Position gamma based on volatility signals
 - Maintain delta neutrality through rehedging
-- Profit from gamma scalping in high vol
-- Collect premium in low vol regimes
 
 ### For Arbitrage Desks
 - Maintain ratio discipline
 - Size based on convergence confidence
 - Monitor both legs equally
-
-## Common Violations
-
-### What to Avoid
-1. Exceeding position limits
-2. Quote uptime below 80% (MM)
-3. Two-sided quoting (HF)
-4. Unpaired trades (Arb)
-5. Excessive order spam
-
-### Consequences
-- Warning notifications
-- Temporary trading restrictions
-- Score penalties
-- Educational interventions
 
 ## Next Steps
 

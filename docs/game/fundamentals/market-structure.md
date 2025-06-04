@@ -6,10 +6,10 @@
 
 The game features two correlated equity indices:
 
-| Instrument | Type | Typical Price | Volatility | Key Features |
-|------------|------|---------------|------------|--------------|
-| **SPX** | Index | ~4,400 | Moderate | S&P 500 Index, high dollar value |
-| **SPY** | ETF | ~440 | Moderate | Tracks SPX/10 with noise and lag |
+| Instrument | Type  | Typical Price | Volatility | Key Features                     |
+| ---------- | ----- | ------------- | ---------- | -------------------------------- |
+| **SPX**    | Index | ~4,400        | Moderate   | S&P 500 Index, high dollar value |
+| **SPY**    | ETF   | ~440          | Moderate   | Tracks SPX/10 with noise and lag |
 
 ### Correlation Model
 
@@ -53,22 +53,22 @@ Each underlying has listed options with:
 
 ### Order Types Supported
 
-| Order Type | Description | Available To |
-|------------|-------------|--------------|
-| **Limit Order** | Specify exact price | All roles |
-| **Market Order** | Execute at best price | All roles |
-| **Quote** | Simultaneous bid/ask | Market Makers only |
+| Order Type       | Description           | Available To       |
+| ---------------- | --------------------- | ------------------ |
+| **Limit Order**  | Specify exact price   | All roles          |
+| **Market Order** | Execute at best price | All roles          |
+| **Quote**        | Simultaneous bid/ask  | Market Makers only |
 
 ### Fee Structure
 
 Fees vary by role and order type:
 
-| Role | Maker Fee | Taker Fee |
-|------|-----------|-----------|
-| Market Maker | +$0.02 | -$0.01 |
-| Hedge Fund | +$0.01 | -$0.02 |
-| Arbitrage Desk | +$0.01 | -$0.02 |
-| Retail Flow | -$0.01 | -$0.03 |
+| Role           | Maker Fee | Taker Fee |
+| -------------- | --------- | --------- |
+| Market Maker   | +$0.02    | -$0.01    |
+| Hedge Fund     | +$0.01    | -$0.02    |
+| Arbitrage Desk | +$0.01    | -$0.02    |
+| Retail         | -$0.01    | -$0.03    |
 
 ## Trading Sessions
 
@@ -90,12 +90,10 @@ Each tick provides:
 - Current bid/ask for all instruments
 - Last trade price and size
 - Order book depth (5 levels)
-- Greeks (implied, not published)
 
 ### Historical Data
 - All previous tick snapshots
 - Complete trade history
-- Order book evolution
 - Position tracking
 
 ## Next Steps

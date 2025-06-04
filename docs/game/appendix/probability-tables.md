@@ -8,48 +8,48 @@ All participants have access to these probability tables, which indicate the lik
 
 These events have the highest impact potential and occur less frequently.
 
-| News Headline | Regime Shift | Price Jump | Direction | Magnitude |
-|---------------|--------------|------------|-----------|-----------|
-| Fed announces emergency meeting | 85% | 60% | Negative | 1-3% |
-| Geopolitical tensions escalate | 70% | 30% | Negative | 0.5-2% |
-| Major bank reports losses | 65% | 45% | Negative | 1-2% |
-| Surprise rate decision | 75% | 50% | Either | 1-2.5% |
-| Tech giant acquisition announced | 40% | 50% | Positive | 0.5-1.5% |
+| News Headline                    | Regime Shift | Price Jump | Direction | Magnitude |
+| -------------------------------- | ------------ | ---------- | --------- | --------- |
+| Fed announces emergency meeting  | 85%          | 60%        | Negative  | 1-3%      |
+| Geopolitical tensions escalate   | 70%          | 30%        | Negative  | 0.5-2%    |
+| Major bank reports losses        | 65%          | 45%        | Negative  | 1-2%      |
+| Surprise rate decision           | 75%          | 50%        | Either    | 1-2.5%    |
+| Tech giant acquisition announced | 40%          | 50%        | Positive  | 0.5-1.5%  |
 
 ### Economic Data Releases
 
 Regular economic announcements with moderate impact.
 
-| News Headline | Regime Shift | Price Jump | Direction | Magnitude |
-|---------------|--------------|------------|-----------|-----------|
-| Fed hints at tightening | 60% | 20% | Negative | 0.3-1% |
-| Strong jobs report | 40% | 10% | Positive | 0.2-0.5% |
-| Inflation data surprises | 55% | 35% | Either | 0.5-1% |
-| GDP beats expectations | 35% | 25% | Positive | 0.3-0.8% |
-| Manufacturing data weak | 45% | 15% | Negative | 0.2-0.6% |
+| News Headline            | Regime Shift | Price Jump | Direction | Magnitude |
+| ------------------------ | ------------ | ---------- | --------- | --------- |
+| Fed hints at tightening  | 60%          | 20%        | Negative  | 0.3-1%    |
+| Strong jobs report       | 40%          | 10%        | Positive  | 0.2-0.5%  |
+| Inflation data surprises | 55%          | 35%        | Either    | 0.5-1%    |
+| GDP beats expectations   | 35%          | 25%        | Positive  | 0.3-0.8%  |
+| Manufacturing data weak  | 45%          | 15%        | Negative  | 0.2-0.6%  |
 
 ### Market Commentary
 
 Analyst opinions and market color with lower impact.
 
-| News Headline | Regime Shift | Price Jump | Direction | Magnitude |
-|---------------|--------------|------------|-----------|-----------|
-| Analysts upgrade sector | 15% | 10% | Positive | 0.1-0.3% |
-| Technical breakout observed | 30% | 25% | Either | 0.3-0.7% |
-| Options flow unusual | 25% | 5% | None | 0% |
-| Earnings season begins | 20% | 10% | Either | 0.2-0.4% |
-| Year-end rebalancing | 10% | 5% | Either | 0.1-0.2% |
+| News Headline               | Regime Shift | Price Jump | Direction | Magnitude |
+| --------------------------- | ------------ | ---------- | --------- | --------- |
+| Analysts upgrade sector     | 15%          | 10%        | Positive  | 0.1-0.3%  |
+| Technical breakout observed | 30%          | 25%        | Either    | 0.3-0.7%  |
+| Options flow unusual        | 25%          | 5%         | None      | 0%        |
+| Earnings season begins      | 20%          | 10%        | Either    | 0.2-0.4%  |
+| Year-end rebalancing        | 10%          | 5%         | Either    | 0.1-0.2%  |
 
 ### Neutral Events
 
 Low-impact or non-events for calibration.
 
-| News Headline | Regime Shift | Price Jump | Direction | Magnitude |
-|---------------|--------------|------------|-----------|-----------|
-| Markets quiet ahead of data | 5% | 0% | None | 0% |
-| Trading range-bound | 5% | 5% | Either | 0.1% |
-| Light volume expected | 0% | 0% | None | 0% |
-| No major news today | 0% | 0% | None | 0% |
+| News Headline               | Regime Shift | Price Jump | Direction | Magnitude |
+| --------------------------- | ------------ | ---------- | --------- | --------- |
+| Markets quiet ahead of data | 5%           | 0%         | None      | 0%        |
+| Trading range-bound         | 5%           | 5%         | Either    | 0.1%      |
+| Light volume expected       | 0%           | 0%         | None      | 0%        |
+| No major news today         | 0%           | 0%         | None      | 0%        |
 
 ## Volatility Regime Transition Probabilities
 
@@ -80,11 +80,11 @@ High Volatility   5%        85%       10%
 ### Hedge Fund Volatility Signal
 
 | Actual Outcome | Signal Predicts | Probability |
-|----------------|-----------------|-------------|
-| Regime shifts | Regime shifts | 66% |
-| Regime shifts | No shift | 34% |
-| No shift | No shift | 66% |
-| No shift | Regime shifts | 34% |
+| -------------- | --------------- | ----------- |
+| Regime shifts  | Regime shifts   | 66%         |
+| Regime shifts  | No shift        | 34%         |
+| No shift       | No shift        | 66%         |
+| No shift       | Regime shifts   | 34%         |
 
 **Confusion Matrix**:
 ```
@@ -96,11 +96,11 @@ Actual Stable    34%             66%
 ### Arbitrage Desk Tracking Signal
 
 | Tracking Error Size | Signal Accuracy | False Positive Rate |
-|-------------------|-----------------|-------------------|
-| <0.10% | 60% | 40% |
-| 0.10-0.20% | 75% | 25% |
-| 0.20-0.50% | 80% | 20% |
-| >0.50% | 85% | 15% |
+| ------------------- | --------------- | ------------------- |
+| <0.10%              | 60%             | 40%                 |
+| 0.10-0.20%          | 75%             | 25%                 |
+| 0.20-0.50%          | 80%             | 20%                 |
+| >0.50%              | 85%             | 15%                 |
 
 ## Event Frequency Distributions
 
@@ -112,20 +112,20 @@ Actual Stable    34%             66%
 - Maximum gap: 6 hours
 
 **Daily Pattern**:
-| Time Period | Relative Frequency |
-|-------------|-------------------|
-| 9 AM - 12 PM | 1.5x |
-| 12 PM - 2 PM | 0.8x |
-| 2 PM - 4 PM | 1.2x |
-| After 4 PM | 0.5x |
+| Time Period  | Relative Frequency |
+| ------------ | ------------------ |
+| 9 AM - 12 PM | 1.5x               |
+| 12 PM - 2 PM | 0.8x               |
+| 2 PM - 4 PM  | 1.2x               |
+| After 4 PM   | 0.5x               |
 
 ### Volatility Regime Durations
 
-| Regime | Average Duration | Std Dev | Min | Max |
-|--------|-----------------|---------|-----|-----|
-| Low | 100 ticks | 40 ticks | 50 | 200 |
-| Medium | 65 ticks | 25 ticks | 30 | 100 |
-| High | 30 ticks | 15 ticks | 10 | 50 |
+| Regime | Average Duration | Std Dev  | Min | Max |
+| ------ | ---------------- | -------- | --- | --- |
+| Low    | 100 ticks        | 40 ticks | 50  | 200 |
+| Medium | 65 ticks         | 25 ticks | 30  | 100 |
+| High   | 30 ticks         | 15 ticks | 10  | 50  |
 
 ## Price Impact Calculations
 
