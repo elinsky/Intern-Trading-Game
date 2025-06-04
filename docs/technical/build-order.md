@@ -2,6 +2,28 @@
 
 This document outlines the recommended build order for implementing the Intern Trading Game components.
 
+## Immediate Next Steps: Define Interfaces and Stubs
+
+### 1. Define Core Interfaces
+- [ ] **TickController** - Methods: `advance_tick()`, `publish_event()`
+- [ ] **ExchangeEngine** - Methods: `process_orders()`, `execute_batch_matching()`
+- [ ] **OrderValidator** - Methods: `validate_order()`, `check_constraints()`
+
+### 2. Define Domain Service Interfaces
+- [ ] **PriceModel** - Method: `generate_prices(tick) -> dict`
+- [ ] **VolatilityStateMachine** - Methods: `get_current_regime()`, `process_event()`
+- [ ] **EventSystem** - Methods: `generate_events()`, `publish_signals()`
+- [ ] **RoleService** - Method: `validate_role_constraints()`
+- [ ] **PositionService** - Methods: `update_position()`, `get_portfolio_stats()`
+- [ ] **MarketDataService** - Method: `distribute_market_data()`
+
+### 3. Define Data Models
+- [ ] Order, Trade, Position, MarketState, SignalEvent using `@dataclass`
+
+### 4. Bootstrap Tick Loop
+- [ ] Create `game_loop.py` with basic `run_tick()` function
+- [ ] Add print/log stubs for each tick phase
+
 ## Component Build Order
 
 ### Phase 1: Core Infrastructure
