@@ -84,31 +84,31 @@ Simultaneous two-sided markets providing both bid and ask.
 
 ### Required Fields
 
-| Field | Description | Valid Values |
-|-------|-------------|--------------|
-| type | Order type | LIMIT, MARKET, QUOTE |
-| instrument | Trading symbol | Valid option/underlying |
-| side | Direction | BUY, SELL (not for quotes) |
-| quantity | Size | 1-1000 (role dependent) |
+| Field      | Description    | Valid Values               |
+| ---------- | -------------- | -------------------------- |
+| type       | Order type     | LIMIT, MARKET, QUOTE       |
+| instrument | Trading symbol | Valid option/underlying    |
+| side       | Direction      | BUY, SELL (not for quotes) |
+| quantity   | Size           | 1-1000 (role dependent)    |
 
 ### Optional Fields
 
-| Field | Description | Default |
-|-------|-------------|---------|
-| price | Limit price | Required for LIMIT |
-| client_id | Your reference | None |
-| strategy_id | Strategy tag | None |
+| Field       | Description    | Default            |
+| ----------- | -------------- | ------------------ |
+| price       | Limit price    | Required for LIMIT |
+| client_id   | Your reference | None               |
+| strategy_id | Strategy tag   | None               |
 
 ## Order Constraints
 
 ### Size Limits by Role
 
-| Role | Min Size | Max Size | Max Orders/Tick |
-|------|----------|----------|-----------------|
-| Market Maker | 1 | 1000 | 100 |
-| Hedge Fund | 1 | 500 | 50 |
-| Arbitrage Desk | 1 | 500 | 75 |
-| Retail | 1 | 100 | 5 |
+| Role           | Min Size | Max Size | Max Orders/Tick |
+| -------------- | -------- | -------- | --------------- |
+| Market Maker   | 1        | 1000     | 100             |
+| Hedge Fund     | 1        | 500      | 50              |
+| Arbitrage Desk | 1        | 500      | 75              |
+| Retail         | 1        | 100      | 5               |
 
 ### Price Constraints
 
@@ -132,7 +132,6 @@ Bot → API → Validation → Order Book
 ```
 
 ### 2. Validation Checks
-- Role permissions
 - Size limits
 - Price validity
 - Position limits
@@ -167,13 +166,6 @@ Bot → API → Validation → Order Book
    - Microsecond timestamp precision
    - No queue jumping
 
-### Pro-Rata Fills
-
-For large incoming orders:
-- May fill multiple resting orders
-- Proportional allocation possible
-- Minimum fill size enforced
-
 ## Order Management
 
 ### No Modifications
@@ -197,47 +189,6 @@ Each order receives:
 - Timestamp
 - Status updates
 - Fill reports
-
-## Best Practices
-
-### For Market Makers
-- Use quotes for efficiency
-- Monitor fill rates
-- Adjust spreads dynamically
-- Maintain uptime requirements
-
-### For Hedge Funds
-- Combine limit and market orders
-- Use limits for size building
-- Market orders for signals
-- Track execution costs
-
-### For Arbitrage Desks
-- Speed crucial for convergence
-- Consider market orders for locks
-- Limit orders for patience plays
-- Monitor both legs
-
-### For All Roles
-- Include client IDs for tracking
-- Implement pre-trade checks
-- Monitor position limits
-- Calculate fees in strategy
-
-## Common Pitfalls
-
-### Order Rejection Reasons
-- Exceeds position limit
-- Invalid price (negative, too far)
-- Wrong order type for role
-- Exceeds size limit
-- Missing required fields
-
-### Execution Surprises
-- Slippage on market orders
-- Partial fills on limits
-- Fee impact on P&L
-- Queue position matters
 
 ## Next Steps
 

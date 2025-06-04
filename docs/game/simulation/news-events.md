@@ -13,11 +13,11 @@ News events drive market dynamics by potentially triggering volatility regime ch
 
 ### Event Types
 
-| Type | Effect | Frequency | Example |
-|------|--------|-----------|---------|
-| **Regime Shifter** | Changes volatility state | 40% | "Fed hints at tightening" |
-| **Price Jumper** | Immediate price move | 30% | "Surprise earnings beat" |
-| **False Signal** | No effect | 30% | "Analyst maintains rating" |
+| Type               | Effect                   | Frequency | Example                    |
+| ------------------ | ------------------------ | --------- | -------------------------- |
+| **Regime Shifter** | Changes volatility state | 40%       | "Fed hints at tightening"  |
+| **Price Jumper**   | Immediate price move     | 30%       | "Surprise earnings beat"   |
+| **False Signal**   | No effect                | 30%       | "Analyst maintains rating" |
 
 ## Probability Tables
 
@@ -25,29 +25,29 @@ All participants have access to these published probabilities:
 
 ### Major Events
 
-| News Headline | Regime Shift Chance | Price Jump Chance |
-|--------------|-------------------|------------------|
-| "Fed hints at tightening" | 60% | 20% |
-| "Geopolitical tensions rise" | 70% | 30% |
-| "Major acquisition announced" | 40% | 50% |
-| "Economic data surprises" | 50% | 40% |
+| News Headline                 | Regime Shift Chance | Price Jump Chance |
+| ----------------------------- | ------------------- | ----------------- |
+| "Fed hints at tightening"     | 60%                 | 20%               |
+| "Geopolitical tensions rise"  | 70%                 | 30%               |
+| "Major acquisition announced" | 40%                 | 50%               |
+| "Economic data surprises"     | 50%                 | 40%               |
 
 ### Minor Events
 
-| News Headline | Regime Shift Chance | Price Jump Chance |
-|--------------|-------------------|------------------|
-| "Strong jobs report" | 40% | 10% |
-| "Earnings meet expectations" | 20% | 15% |
-| "Technical breakout observed" | 30% | 25% |
-| "Analyst upgrades sector" | 15% | 10% |
+| News Headline                 | Regime Shift Chance | Price Jump Chance |
+| ----------------------------- | ------------------- | ----------------- |
+| "Strong jobs report"          | 40%                 | 10%               |
+| "Earnings meet expectations"  | 20%                 | 15%               |
+| "Technical breakout observed" | 30%                 | 25%               |
+| "Analyst upgrades sector"     | 15%                 | 10%               |
 
 ### Neutral Events
 
-| News Headline | Regime Shift Chance | Price Jump Chance |
-|--------------|-------------------|------------------|
-| "Markets quiet ahead of data" | 5% | 0% |
-| "Trading range-bound" | 5% | 5% |
-| "No major news today" | 0% | 0% |
+| News Headline                 | Regime Shift Chance | Price Jump Chance |
+| ----------------------------- | ------------------- | ----------------- |
+| "Markets quiet ahead of data" | 5%                  | 0%                |
+| "Trading range-bound"         | 5%                  | 5%                |
+| "No major news today"         | 0%                  | 0%                |
 
 ## Information Asymmetry
 
@@ -113,71 +113,6 @@ No actual market impact:
 - Tests participant reaction
 - Can trigger overtrading
 - Reveals strategy robustness
-
-## Strategic Considerations
-
-### Pre-Event Positioning
-
-**For Hedge Funds:**
-- Maintain readiness for signals
-- Balance position for quick adjustment
-- Consider pre-event hedges
-
-**For Market Makers:**
-- Widen spreads before known event times
-- Reduce position sizes
-- Prepare for increased flow
-
-**For Arbitrage Desks:**
-- Expect larger tracking errors
-- Position for convergence post-event
-- Monitor correlation breakdown
-
-### Post-Event Actions
-
-**Confirmed Regime Shift:**
-- Adjust option positions
-- Modify risk parameters
-- Update pricing models
-
-**Price Jump:**
-- Capture new equilibrium
-- Trade mean reversion
-- Exploit temporary dislocations
-
-**False Signal:**
-- Avoid overreaction
-- Maintain discipline
-- Learn from market response
-
-## Event Patterns
-
-### Clustering
-- Events often cluster in time
-- Active news cycles create opportunities
-- Quiet periods allow position building
-
-### Predictable Windows
-- Certain times have higher event probability
-- Market open/close analogues
-- Weekly patterns exist
-
-### Serial Correlation
-- Some events increase probability of others
-- Regime shifts often follow patterns
-- Price jumps may cascade
-
-## Risk Management
-
-### Event Risk Hedging
-- Straddles before known events
-- Reduced position sizes
-- Diversification across strikes
-
-### Information Advantage
-- Hedge funds monetize advance knowledge
-- Others must hedge uncertainty
-- Speed of reaction crucial
 
 ## Next Steps
 

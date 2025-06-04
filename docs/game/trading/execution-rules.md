@@ -9,7 +9,7 @@ The exchange uses a standard price-time priority algorithm:
 1. **Price Priority**: Best prices execute first
    - Highest bids match before lower bids
    - Lowest asks match before higher asks
-   
+
 2. **Time Priority**: Among same-priced orders
    - Earlier orders execute first
    - Microsecond timestamp precision
@@ -95,16 +95,16 @@ def validate_order(order, role, current_position):
     # Check role permissions
     if order.type == "QUOTE" and role != "MARKET_MAKER":
         return "REJECT: Only market makers can quote"
-    
+
     # Check position limits
     new_position = current_position + order.quantity
     if abs(new_position) > role.position_limit:
         return "REJECT: Would exceed position limit"
-    
+
     # Check price validity
     if order.price <= 0:
         return "REJECT: Invalid price"
-    
+
     return "ACCEPT"
 ```
 
@@ -127,68 +127,22 @@ def validate_order(order, role, current_position):
 
 ## Special Situations
 
-### Locked/Crossed Markets
-
-When bid ≥ ask (shouldn't happen but if it does):
-1. Execute all crossing orders
-2. Notify market surveillance
-3. May indicate system issue
-
 ### Self-Trading
 
 - Allowed (you can trade with yourself)
 - Still incur fees
-- Counts toward volume metrics
-- Common for market makers
 
 ### Order Rejection
 
 Common rejection reasons:
 - Position limit exceeded
 - Invalid instrument
-- Price too far from market (>20%)
-- Insufficient permissions
-- System overload
-
-## Performance Metrics
-
-### Execution Quality
-
-Measured for scoring:
-- Fill rate (filled/submitted)
-- Price improvement
-- Execution speed
-- Slippage for market orders
-
-### Latency Targets
-
-- Order acknowledgment: <10ms
-- Fill notification: <50ms
-- Market data update: <100ms
-- Full tick processing: <5s
-
-## End-of-Tick Processing
-
-### Order Expiration
-
-All unfilled orders expire at tick end:
-1. Open orders cancelled
-2. Partial fills kept
-3. New tick starts clean
-4. No GTC (good-till-cancel) orders
-
-### Settlement
-
-- Trades settle immediately
-- Positions updated real-time
-- P&L calculated continuously
-- No settlement failures
 
 ## Priority Examples
 
 ### Example 1: Simple Match
 ```
-Bids: 
+Bids:
 - 25.45 @ 10:30:00.100 (Trader A, 50 lots)
 - 25.45 @ 10:30:00.200 (Trader B, 30 lots)
 - 25.40 @ 10:30:00.050 (Trader C, 100 lots)
@@ -207,66 +161,11 @@ Execution:
 Market Maker Quote: Bid 25.40 / Ask 25.60
 Hedge Fund Limit: Buy 100 @ 25.60
 
-Result: 
+Result:
 - HF order takes liquidity, fills @ 25.60
 - HF pays taker fee
 - MM earns maker rebate
 ```
-
-## Best Execution Practices
-
-### For All Roles
-
-1. **Use Limit Orders When Possible**
-   - Control execution price
-   - Potentially earn rebates
-   - Reduce slippage
-
-2. **Monitor Queue Position**
-   - Earlier orders have priority
-   - Don't cancel/replace unnecessarily
-   - Time entry strategically
-
-3. **Size Orders Appropriately**
-   - Large orders may move market
-   - Consider splitting
-   - Watch position limits
-
-### Role-Specific Tips
-
-**Market Makers**:
-- Keep quotes tight but realistic
-- Adjust quickly to fills
-- Monitor inventory constantly
-
-**Hedge Funds**:
-- Balance aggression with cost
-- Use market orders for signals
-- Limit orders for building positions
-
-**Arbitrage Desks**:
-- Execute legs simultaneously
-- Consider market impact
-- Don't chase convergence
-
-## Common Pitfalls
-
-### Execution Mistakes
-
-1. **Assuming Fill**
-   - Always wait for confirmation
-   - Handle partial fills
-   - Check execution reports
-
-2. **Ignoring Fees**
-   - Factor into strategy
-   - Track cumulative impact
-   - Optimize maker/taker mix
-
-3. **Poor Timing**
-   - Entering orders too late
-   - Missing tick windows
-   - Not adapting to flow
 
 ## Next Steps
 

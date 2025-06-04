@@ -107,11 +107,6 @@ retail:
 - Cumulative effect: Can move markets in trends
 - Correlation with volatility: Positive
 
-**Behavioral Biases**
-- Disposition effect: Hold losers, sell winners
-- Herding: Increase activity after big moves
-- Overconfidence: Larger sizes after wins
-
 ## Configuration Examples
 
 ### Basic Configuration
@@ -147,27 +142,9 @@ retail:
 
 ### For Market Makers
 - Additional flow to capture
-- More noise in signals
-- Opportunities in retail overreaction
 
 ### For Hedge Funds
-- Momentum amplification
-- Contrarian opportunities
 - Noise to filter out
 
 ### For Arbitrage Desks
-- Minimal direct impact
-- Can create temporary dislocations
-- Additional volume for hiding trades
-
-
-## Fee Structure
-
-Retail flow faces standard fees:
-- **Maker Fee**: -$0.01
-- **Taker Fee**: -$0.03
-- Predominantly takes liquidity due to market order usage
-
-## Summary
-
-The retail flow simulation creates a realistic, configurable source of market activity that enhances the trading environment. By carefully tuning parameters, the simulation generates order flow that exhibits common retail characteristics: momentum chasing, panic selling, preference for cheap out-of-money options, and general market noise. This makes the game more challenging and realistic for all participants.
+- Noise to filter out

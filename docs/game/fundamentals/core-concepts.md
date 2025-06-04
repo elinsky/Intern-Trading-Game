@@ -63,10 +63,10 @@ Each role has specific constraints:
 - Inventory management requirements
 
 ### Performance Metrics
+- P&L
 - Role-specific KPIs
-- Risk-adjusted returns
 - Strategy effectiveness
-- P&L tracking
+
 
 ## Next Steps
 

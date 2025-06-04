@@ -6,11 +6,11 @@ The market operates in one of three volatility regimes at any time, fundamentall
 
 ### Regime Characteristics
 
-| Regime | Market Condition | Price Behavior | Option Impacts |
-|--------|------------------|----------------|----------------|
-| Low | Calm markets | Small, predictable moves | Low option premiums |
-| Medium | Normal trading | Moderate fluctuations | Fair option values |
-| High | Stressed/uncertain | Large, erratic moves | Expensive options |
+| Regime | Market Condition   | Price Behavior           | Option Impacts      |
+| ------ | ------------------ | ------------------------ | ------------------- |
+| Low    | Calm markets       | Small, predictable moves | Low option premiums |
+| Medium | Normal trading     | Moderate fluctuations    | Fair option values  |
+| High   | Stressed/uncertain | Large, erratic moves     | Expensive options   |
 
 ### Detailed Parameters
 
@@ -60,23 +60,6 @@ Common patterns observed:
 - **High to Medium**: Volatility normalization
 - **Direct Low/High**: Rare but possible
 
-## Trading Implications
-
-### For Market Makers
-- **Low Vol**: Tight spreads, stable inventory
-- **Medium Vol**: Balanced risk/reward
-- **High Vol**: Wide spreads, active inventory management
-
-### For Hedge Funds
-- **Low Vol**: Sell premium strategies
-- **Medium Vol**: Mixed strategies
-- **High Vol**: Buy volatility, larger positions
-
-### For Arbitrage Desks
-- **Low Vol**: Small, frequent trades
-- **Medium Vol**: Standard convergence plays
-- **High Vol**: Larger mispricings, bigger opportunities
-
 ## Volatility Signals
 
 ### Hedge Fund Advantage
@@ -107,55 +90,6 @@ Example signal:
 - Reduce positions before high vol
 - Increase activity in low vol
 - Hedge existing positions
-
-## Historical Patterns
-
-### Typical Day Profile
-
-- **Morning**: Often starts in medium volatility
-- **Midday**: May transition to low if quiet
-- **Afternoon**: News events can trigger changes
-- **Evening**: Generally calmer, trending to low
-
-### Weekly Patterns
-
-- **Monday**: Higher chance of regime changes
-- **Tuesday-Thursday**: More stable regimes
-- **Friday**: Increased event probability
-
-## Measuring Realized Volatility
-
-### Calculation Method
-
-Realized volatility over N ticks:
-```
-RV = sqrt(sum((log(S[i]/S[i-1]))^2) × 252 × 78)
-```
-
-Where 78 = trading ticks per day
-
-### Comparing IV vs RV
-
-- Options priced using implied volatility
-- Actual moves follow realized volatility
-- Spread between IV and RV creates opportunities
-
-## Regime Identification
-
-### Without Signals
-
-Market makers must infer regime from:
-- Recent price movements
-- Option premium levels
-- Order flow patterns
-- News interpretation
-
-### Statistical Methods
-
-- Rolling standard deviation
-- GARCH models
-- Regime-switching models
-- Machine learning approaches
 
 ## Next Steps
 

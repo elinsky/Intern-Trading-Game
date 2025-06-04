@@ -6,13 +6,12 @@ The game includes differentiated information access to create realistic advantag
 
 ## Signal Distribution Matrix
 
-| Signal Type | Market Maker | Hedge Fund | Arbitrage Desk | Retail | Timing |
-|-------------|--------------|------------|----------------|--------|--------|
-| **Market Data** | Yes | Yes | Yes | Yes | Real-time |
-| **News Headlines** | Yes | Yes | Yes | Yes | Immediate |
-| **Volatility Forecast** | No | Yes | No | No | 1-5 ticks early |
-| **Tracking Error** | No | No | Yes | No | Real-time |
-| **Order Flow** | Own trades | Own trades | Own trades | No | Post-execution |
+| Signal Type             | Market Maker | Hedge Fund | Arbitrage Desk | Retail | Timing          |
+| ----------------------- | ------------ | ---------- | -------------- | ------ | --------------- |
+| **Market Data**         | Yes          | Yes        | Yes            | Yes    | Real-time       |
+| **News Headlines**      | Yes          | Yes        | Yes            | Yes    | Immediate       |
+| **Volatility Forecast** | No           | Yes        | No             | No     | 1-5 ticks early |
+| **Tracking Error**      | No           | No         | Yes            | No     | Real-time       |
 
 ## Public Information (All Roles)
 
@@ -119,132 +118,31 @@ Static reference data available to all:
 
 ### Market Maker: Information Inference
 
-**No Proprietary Signals**, but can infer from:
-
-1. **Order Flow Patterns**
-   - Sudden increase in volume
-   - Directional pressure
-   - Option skew changes
-
-2. **Spread Behavior**
-   - Widening before events
-   - Volatility surface shifts
-   - Cross-product correlations
-
-3. **Fill Analysis**
-   - Execution imbalances
-   - Quote hit ratios
-   - Inventory accumulation
-
-**Inference Strategies**:
-```python
-# Example: Detecting regime change
-if recent_volatility > historical_average * 1.5:
-    likely_regime_shift = True
-    widen_spreads()
-```
+**No Proprietary Signals**
 
 ## Signal Timing
 
 ### Information Release Schedule
 
-| Time | Event | Who Sees |
-|------|-------|----------|
+| Time   | Event                  | Who Sees   |
+| ------ | ---------------------- | ---------- |
 | T-300s | Vol forecast generated | Hedge Fund |
-| T-60s | Vol signal sent | Hedge Fund |
-| T-0s | New tick begins | Everyone |
-| T+10s | News published | Everyone |
-| T+30s | Order window opens | Everyone |
-| T+180s | Order window closes | Everyone |
-
-### Latency Considerations
-
-- All roles receive public data simultaneously
-- Private signals have guaranteed delivery
-- No artificial delays or advantages
-- Network latency negligible
-
-## Using Signals Effectively
-
-### For Hedge Funds
-
-**Volatility Signal Integration**:
-1. Monitor signal feed continuously
-2. Pre-position when forecast received
-3. Scale size based on confidence
-4. Have exit plan if wrong
-
-**Example Strategy**:
-```python
-if signal.next_regime == "high" and signal.probability > 0.6:
-    # Buy straddles before vol increase
-    buy_atm_options(scale=signal.probability)
-```
-
-### For Arbitrage Desks
-
-**Tracking Error Exploitation**:
-1. Set thresholds for action
-2. Calculate optimal trade size
-3. Execute both legs quickly
-4. Monitor convergence
-
-**Example Strategy**:
-```python
-if abs(signal.error_percent) > 0.20:
-    if signal.error_direction == "SPY_RICH":
-        sell_spy_options()
-        buy_spx_options()
-```
-
-### For Market Makers
-
-**Information Synthesis**:
-1. Combine multiple indicators
-2. Build statistical models
-3. React faster than competitors
-4. Maintain market share
-
-**Example Approach**:
-- Track realized volatility
-- Monitor news frequency
-- Analyze fill ratios
-- Adjust quotes dynamically
+| T-60s  | Vol signal sent        | Hedge Fund |
+| T-0s   | New tick begins        | Everyone   |
+| T+10s  | News published         | Everyone   |
+| T+30s  | Order window opens     | Everyone   |
+| T+180s | Order window closes    | Everyone   |
 
 ## Signal Reliability
 
 ### Expected Accuracy
 
-| Signal | Accuracy | False Positive Rate | Value Decay |
-|--------|----------|-------------------|-------------|
-| Volatility Forecast | 66% | 34% | Low |
-| Tracking Error | 80% | 20% | High |
-| News Impact | Variable | 30% | Medium |
-
-### Edge Degradation
-
-- Signals most valuable when fresh
-- Competition reduces profitability
-- Over-reliance dangerous
-- Always have backup plan
-
-## Prohibited Activities
-
-### Signal Sharing
-- No sharing between teams
-- No reverse engineering attempts
-- No signal spoofing
-- Fair play enforced
-
-### Manipulation
-- No attempting to trigger signals
-- No coordinated trading
-- No system gaming
-- Violations penalized
+| Signal              | Accuracy | False Positive Rate | Value Decay |
+| ------------------- | -------- | ------------------- | ----------- |
+| Volatility Forecast | 66%      | 34%                 | Low         |
+| Tracking Error      | 80%      | 20%                 | High        |
+| News Impact         | Variable | 30%                 | Medium      |
 
 ## Next Steps
 
-- Implement signal handlers in your bot
-- Backtest signal effectiveness
-- Develop signal-based strategies
 - Review [Execution Rules](execution-rules.md)

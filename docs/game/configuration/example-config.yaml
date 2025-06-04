@@ -2,7 +2,7 @@
 # This file defines all game parameters
 
 game:
-  name: "Intern Trading Game 2024"
+  name: "Intern Trading Game"
   duration_weeks: 8
   tick_duration_minutes: 5
   order_window_minutes: 3
