@@ -7,6 +7,7 @@ The Intern Trading Game simulation has numerous configurable parameters that con
 ## Market Structure Parameters
 
 ### Tick Configuration
+
 | Parameter        | Default Value | Range    | Description                     |
 | ---------------- | ------------- | -------- | ------------------------------- |
 | tick_duration    | 5 minutes     | 1-60 min | Time between market updates     |
@@ -14,6 +15,7 @@ The Intern Trading Game simulation has numerous configurable parameters that con
 | batch_processing | true          | -        | Orders processed simultaneously |
 
 ### Instrument Configuration
+
 | Parameter              | Default Value  | Description                |
 | ---------------------- | -------------- | -------------------------- |
 | underlyings            | ["SPX", "SPY"] | Available spot instruments |
@@ -22,6 +24,7 @@ The Intern Trading Game simulation has numerous configurable parameters that con
 | expiration_range       | 1-8 weeks      | Time to expiration range   |
 
 ### Price Parameters
+
 | Parameter         | Default Value | Description             |
 | ----------------- | ------------- | ----------------------- |
 | spx_initial_price | 4400          | Starting SPX price      |
@@ -32,6 +35,7 @@ The Intern Trading Game simulation has numerous configurable parameters that con
 ## Volatility Regime Parameters
 
 ### Regime Definitions
+
 | Regime | Annual Vol | 5-min Std Dev | Persistence  |
 | ------ | ---------- | ------------- | ------------ |
 | Low    | 10%        | 0.04%         | 50-200 ticks |
@@ -39,6 +43,7 @@ The Intern Trading Game simulation has numerous configurable parameters that con
 | High   | 50%        | 0.22%         | 10-50 ticks  |
 
 ### Transition Matrix
+
 ```
          To Low  To Med  To High
 From Low   0.95    0.04    0.01
@@ -49,6 +54,7 @@ From High  0.01    0.09    0.90
 ## Role-Specific Parameters
 
 ### Market Maker
+
 | Parameter                | Value  | Description            |
 | ------------------------ | ------ | ---------------------- |
 | quote_uptime_requirement | 80%    | Minimum quote presence |
@@ -59,6 +65,7 @@ From High  0.01    0.09    0.90
 | max_spread_width         | 10%    | Maximum quote spread   |
 
 ### Hedge Fund
+
 | Parameter            | Value     | Description                |
 | -------------------- | --------- | -------------------------- |
 | maker_rebate         | +$0.01    | Per contract rebate        |
@@ -69,6 +76,7 @@ From High  0.01    0.09    0.90
 | signal_lead_time     | 1-5 ticks | Advance warning            |
 
 ### Arbitrage Desk
+
 | Parameter            | Value  | Description             |
 | -------------------- | ------ | ----------------------- |
 | maker_rebate         | +$0.01 | Per contract rebate     |
@@ -79,6 +87,7 @@ From High  0.01    0.09    0.90
 | target_ratio         | 10:1   | SPX:SPY value ratio     |
 
 ### Retail Flow Simulation
+
 | Parameter         | Value            | Description             |
 | ----------------- | ---------------- | ----------------------- |
 | orders_per_tick   | Poisson(λ=3)     | Random order generation |
@@ -89,6 +98,7 @@ From High  0.01    0.09    0.90
 | market_order_rate | 40%              | Takes liquidity         |
 
 ### Retail Behavioral Patterns
+
 | Pattern          | Probability | Trigger      | Effect        |
 | ---------------- | ----------- | ------------ | ------------- |
 | Momentum Chasing | 30%         | 3-tick trend | 2x size       |
@@ -99,6 +109,7 @@ From High  0.01    0.09    0.90
 ## Signal Parameters
 
 ### News Event Configuration
+
 | Parameter             | Default   | Description               |
 | --------------------- | --------- | ------------------------- |
 | event_frequency       | 1-4 hours | Poisson distribution      |
@@ -107,6 +118,7 @@ From High  0.01    0.09    0.90
 | false_positive_events | 30%       | No effect events          |
 
 ### Tracking Error Parameters
+
 | Parameter            | Default    | Description           |
 | -------------------- | ---------- | --------------------- |
 | base_correlation     | 0.98       | SPX-SPY correlation   |
@@ -117,6 +129,7 @@ From High  0.01    0.09    0.90
 ## Order Management Parameters
 
 ### Order Limits
+
 | Role         | Orders/Tick | Min Size | Max Size |
 | ------------ | ----------- | -------- | -------- |
 | Market Maker | 100         | 1        | 1000     |
@@ -125,6 +138,7 @@ From High  0.01    0.09    0.90
 | Retail Flow  | Poisson(3)  | 1        | 50       |
 
 ### Execution Parameters
+
 | Parameter          | Value       | Description             |
 | ------------------ | ----------- | ----------------------- |
 | matching_algorithm | Price-Time  | Order priority          |
@@ -135,12 +149,14 @@ From High  0.01    0.09    0.90
 ## Scoring Parameters
 
 ### Weight Distribution
+
 | Component                | Weight | Description              |
 | ------------------------ | ------ | ------------------------ |
 | Quantitative Performance | 70%    | P&L, risk metrics        |
 | Qualitative Factors      | 30%    | Code, research, teamwork |
 
 ### Penalty Thresholds
+
 | Violation              | Threshold   | Penalty             |
 | ---------------------- | ----------- | ------------------- |
 | Minor Position Breach  | <10% over   | -5% score           |
@@ -151,6 +167,7 @@ From High  0.01    0.09    0.90
 ## Adjustable Parameters
 
 ### Dynamic Adjustments
+
 Some parameters may be adjusted during the game:
 - Volatility regime probabilities
 - Event frequencies
@@ -158,6 +175,7 @@ Some parameters may be adjusted during the game:
 - Fee structures
 
 ### Fixed Parameters
+
 These remain constant throughout:
 - Position limits
 - Role constraints

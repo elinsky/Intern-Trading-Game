@@ -60,6 +60,7 @@ Parameters:
 ## Greeks Calculations
 
 ### Delta (Δ)
+
 Rate of change of option price with respect to underlying:
 
 **Call Delta**:
@@ -73,6 +74,7 @@ Rate of change of option price with respect to underlying:
 ```
 
 ### Gamma (Γ)
+
 Rate of change of delta:
 
 ```
@@ -82,6 +84,7 @@ Rate of change of delta:
 Where φ(x) is the standard normal PDF.
 
 ### Vega (ν)
+
 Sensitivity to volatility:
 
 ```
@@ -89,6 +92,7 @@ Sensitivity to volatility:
 ```
 
 ### Theta (Θ)
+
 Time decay:
 
 **Call Theta**:

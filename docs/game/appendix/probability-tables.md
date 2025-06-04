@@ -151,16 +151,19 @@ Where:
 ## Using Probability Tables
 
 ### For Hedge Funds
+
 1. **Pre-position** when high-probability events approach
 2. **Size trades** based on regime shift probability
 3. **Combine** with volatility signal for confirmation
 
 ### For Market Makers
+
 1. **Widen spreads** before high-impact events
 2. **Reduce size** proportional to total probability
 3. **Skew quotes** based on likely direction
 
 ### For Arbitrage Desks
+
 1. **Expect divergence** during regime shifts
 2. **Size larger** when volatility increases
 3. **Quick entry** after event confirmation
@@ -175,16 +178,19 @@ Where:
 ## Quick Reference Card
 
 ### High Impact Events (>50% total probability)
+
 - Fed emergency meeting: 85% + 60% = 145% combined
 - Surprise rate decision: 75% + 50% = 125% combined
 - Geopolitical tensions: 70% + 30% = 100% combined
 
 ### Medium Impact Events (25-50% total probability)
+
 - Fed hints at tightening: 60% + 20% = 80% combined
 - Inflation surprises: 55% + 35% = 90% combined
 - Technical breakout: 30% + 25% = 55% combined
 
 ### Low Impact Events (<25% total probability)
+
 - Analyst upgrades: 15% + 10% = 25% combined
 - Markets quiet: 5% + 0% = 5% combined
 - No news: 0% + 0% = 0% combined

@@ -27,17 +27,20 @@ Teams are evaluated on both quantitative performance and qualitative factors. Ea
 Each role is scored on different primary KPIs that align with their trading mandate:
 
 ### Market Maker Focus
+
 - Spread capture efficiency
 - Quote uptime (≥80% required)
 - Volume share
 - Inventory turnover
 
 ### Hedge Fund Focus
+
 - Total P&L generation
 - Signal utilization effectiveness
 - Volatility edge capture
 
 ### Arbitrage Desk Focus
+
 - Convergence trade profitability
 - Signal response efficiency
 - Paired trade maintenance

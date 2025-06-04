@@ -75,6 +75,7 @@ Orders are matched using price-time priority:
 ## Information Dissemination
 
 ### Public Information
+
 Available to all participants:
 - Current market prices
 - Order book (top 5 levels)
@@ -82,6 +83,7 @@ Available to all participants:
 - News headlines
 
 ### Private Information
+
 Role-specific signals:
 - Hedge Fund: Volatility regime predictions
 - Arbitrage Desk: Tracking error measurements
@@ -100,6 +102,7 @@ Role-specific signals:
 ## Bot Interaction
 
 ### Connection Protocol
+
 1. Authenticate with credentials
 2. Subscribe to market data feeds
 3. Receive tick notifications
@@ -107,6 +110,7 @@ Role-specific signals:
 5. Receive execution reports
 
 ### Error Handling
+
 - Invalid orders rejected with reason
 
 ## Next Steps

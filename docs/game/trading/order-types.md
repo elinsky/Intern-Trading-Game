@@ -127,28 +127,33 @@ Simultaneous two-sided markets providing both bid and ask.
 ## Order Lifecycle
 
 ### 1. Submission
+
 ```
 Bot → API → Validation → Order Book
 ```
 
 ### 2. Validation Checks
+
 - Size limits
 - Price validity
 - Position limits
 - Risk checks
 
 ### 3. Book Placement
+
 - Immediate execution if crossable
 - Rest in book if not
 - Price-time priority
 
 ### 4. Execution
+
 - Full or partial fills
 - Fee calculation
 - Position update
 - P&L impact
 
 ### 5. Reporting
+
 - Fill confirmation
 - Remaining quantity
 - Average price

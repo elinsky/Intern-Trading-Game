@@ -219,18 +219,21 @@
 ## Role-Specific Terms
 
 ### Market Maker Terms
+
 - **Inventory Management**: Controlling position size to stay within limits
 - **Quote Coverage**: Percentage of instruments actively quoted
 - **Spread Capture**: Profit from bid-ask spread
 - **Enhanced Rebate**: +$0.02 maker rebate (2x normal)
 
 ### Hedge Fund Terms
+
 - **Directional Bias**: Taking long or short positions
 - **Signal Trading**: Using volatility forecasts to trade
 - **Volatility Edge**: Profit from IV vs RV differences
 - **Position Concentration**: Large positions in fewer instruments
 
 ### Arbitrage Desk Terms
+
 - **Convergence Trade**: Betting on price relationships normalizing
 - **Paired Position**: Balanced SPX and SPY trades
 - **Tracking Signal**: Alert when SPY diverges from SPX

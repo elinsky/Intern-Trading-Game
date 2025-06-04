@@ -1,11 +1,13 @@
 # Role: Market Maker
 
 ## One-Line Mission
+
 Quote fair, tight spreads and profit on every fill—while managing inventory within strict limits.
 
 ---
 
 ## 1. Role Details
+
 - **Signal Access**: None.
 - **Fees/Incentives**:
   - **Enhanced Maker Rebate**: +\$0.02 per filled side.
@@ -23,6 +25,7 @@ Quote fair, tight spreads and profit on every fill—while managing inventory wi
 ---
 
 ## 2. Advantages
+
 - **Guaranteed Flow**: Always in the market with posted quotes for consistent spread capture.
 - **Superior Fee Structure**: Enhanced maker rebates (+\$0.02) and reduced taker fees (-\$0.01) provide significant cost advantage.
 - **Direct Competition**: Both MMs compete on same products, driving innovation and efficiency.
@@ -33,6 +36,7 @@ Quote fair, tight spreads and profit on every fill—while managing inventory wi
 ---
 
 ## 3. Disadvantages
+
 - **No Signal Edge**: Must infer volatility/direction from market data and retail flow.
 - **Obligation to Quote**: ≥ 80 % coverage forces participation, even in adverse conditions.
 - **MM vs MM Competition**: Direct competition with another Market Maker can compress spreads.
@@ -41,6 +45,7 @@ Quote fair, tight spreads and profit on every fill—while managing inventory wi
 ---
 
 ## 4. How to Make Money
+
 1. **Capture the Spread**
    - Post bid below fair value, ask above fair value
    - When both sides fill, you profit the spread difference
@@ -64,6 +69,7 @@ Quote fair, tight spreads and profit on every fill—while managing inventory wi
 ---
 
 ## 5. Suggested Strategies
+
 - **Dynamic Spread Sizing**: Widen spreads when volatility increases or inventory builds
 - **Retail Flow Focus**: Retail orders often cross the spread - your fee advantage makes these profitable
 - **Quote Skewing**: If long 30 contracts, lower your offers and raise your bids to reduce position

@@ -16,12 +16,14 @@ Each role operates under specific constraints designed to create realistic tradi
 ## Position Limits
 
 ### Market Maker
+
 - **Per Option**: ±50 contracts
 - **Total Portfolio**: ±200 contracts
 - **Purpose**: Force active inventory management
 - **Measurement**: Net position (long - short)
 
 ### Hedge Fund
+
 - **Per Option**: 150 contracts (one-sided)
 - **Total Portfolio**: 500 contracts
 - **Delta Limit**: ±50 deltas (portfolio-wide)
@@ -29,12 +31,14 @@ Each role operates under specific constraints designed to create realistic tradi
 - **Measurement**: Absolute position for size, net delta for neutrality
 
 ### Arbitrage Desk
+
 - **Per Option**: 100 contracts
 - **Total Portfolio**: 300 contracts
 - **Paired Trade Requirement**: 2:1 SPX:SPY ratio
 - **Purpose**: Maintain market neutrality
 
 ### Retail Trader
+
 - **Total Portfolio**: 50 contracts
 - **Per Trade**: 10 contracts maximum
 - **Purpose**: Realistic retail constraints
@@ -42,6 +46,7 @@ Each role operates under specific constraints designed to create realistic tradi
 ## Order Limits
 
 ### Submission Rates
+
 - Orders per tick vary by role
 - Bulk submission allowed
 - No modifications (cancel/replace only)
@@ -58,31 +63,37 @@ Each role operates under specific constraints designed to create realistic tradi
 ## Fee Structure
 
 ### Maker/Taker Model
+
 - **Maker**: Add liquidity (limit orders that rest)
 - **Taker**: Remove liquidity (market orders or crossing limits)
 
 ### Fee Calculation
+
 ```
 Net Fee = (Maker Rebate × Maker Volume) - (Taker Fee × Taker Volume)
 ```
 
 ### Role Advantages
+
 - Market Makers: Enhanced maker rebates encourage liquidity
 - Others: Standard fees incentivize thoughtful execution
 
 ## Quote Requirements (Market Makers Only)
 
 ### 80% Uptime Rule
+
 - Must maintain active quotes 80% of tick time
 - Measured per instrument
 - Both bid and ask required
 
 ### Spread Constraints
+
 - Maximum: 10% of mid-price
 - Minimum: $0.01
 - Must be reasonable for market conditions
 
 ### Penalty for Non-Compliance
+
 - Warning at 70% uptime
 - Reduced rebates below 80%
 - Possible role reassignment below 60%
@@ -90,6 +101,7 @@ Net Fee = (Maker Rebate × Maker Volume) - (Taker Fee × Taker Volume)
 ## Special Constraints
 
 ### Hedge Fund Limitations
+
 - **No Two-Sided Quoting**: Cannot simultaneously bid and ask
 - **Delta Neutrality**: Must maintain portfolio delta within ±50
 - **Signal Usage**: Expected to utilize volatility signals for gamma positioning
@@ -97,11 +109,13 @@ Net Fee = (Maker Rebate × Maker Volume) - (Taker Fee × Taker Volume)
 - **Performance Focus**: Window-based P&L from gamma scalping/premium collection
 
 ### Arbitrage Desk Requirements
+
 - **Paired Trades**: Must maintain balanced SPX/SPY positions
 - **Ratio Maintenance**: Target 10:1 value ratio
 - **Convergence Focus**: Scored on arbitrage capture, not directional P&L
 
 ### Retail Restrictions
+
 - **Order Types**: Market and limit only (no quotes)
 - **Frequency**: Maximum 3 trades per tick
 - **No Signals**: Trade on public information only
@@ -109,6 +123,7 @@ Net Fee = (Maker Rebate × Maker Volume) - (Taker Fee × Taker Volume)
 ## Risk Controls
 
 ### Pre-Trade Checks
+
 All orders validated for:
 - Position limit compliance
 - Order size limits
@@ -116,6 +131,7 @@ All orders validated for:
 - Price reasonability
 
 ### Real-Time Monitoring
+
 - Position tracking per tick
 - P&L calculation
 - Fee accumulation
@@ -124,15 +140,18 @@ All orders validated for:
 ## Strategic Implications
 
 ### For Market Makers
+
 - Balance inventory within tight limits
 - Use rebates to offset risk
 - Quick position flipping
 
 ### For Hedge Funds
+
 - Position gamma based on volatility signals
 - Maintain delta neutrality through rehedging
 
 ### For Arbitrage Desks
+
 - Maintain ratio discipline
 - Size based on convergence confidence
 - Monitor both legs equally

@@ -144,17 +144,20 @@ Other qualitative factors:
 ## Documentation
 
 ### Core Documentation
+
 - **[Game Overview](docs/game/)** - Start here
 - **[Fundamentals](docs/game/fundamentals/)** - Core concepts and mechanics
 - **[Simulation Details](docs/game/simulation/)** - Price generation and events
 - **[Scoring System](docs/game/scoring/)** - How teams are evaluated
 
 ### Reference Materials
+
 - **[Probability Tables](docs/game/appendix/probability-tables.md)** - Event probabilities
 - **[Mathematical Formulas](docs/game/appendix/formulas.md)** - Key calculations
 - **[Glossary](docs/game/appendix/glossary.md)** - Trading terminology
 
 ### Technical Documentation
+
 - **[API Reference](docs/reference/)** - For bot development
 - **[Implementation Guide](docs/technical/)** - Technical setup
 

@@ -47,6 +47,7 @@ Each underlying has listed options with:
 ## Order Book Structure
 
 ### Price Levels
+
 - Top 5 bid/ask levels visible
 - Price-time priority matching
 - Minimum tick size: $0.01
@@ -73,12 +74,14 @@ Fees vary by role and order type:
 ## Trading Sessions
 
 ### Trading Schedule
+
 - **Trading Days**: Tuesday and Thursday only
 - **Trading Hours**: 9:30 AM - 3:00 PM Central Time
 - **Ticks**: Every 5 minutes during trading hours (66 per day)
 - **Non-Trading Days**: Monday (prep), Wednesday (analysis), Friday (retrospective)
 
 ### Order Submission Window
+
 - 2-3 minutes per tick
 - All orders collected simultaneously
 - Batch processing at tick close
@@ -86,12 +89,14 @@ Fees vary by role and order type:
 ## Market Data Feed
 
 ### Real-Time Data
+
 Each tick provides:
 - Current bid/ask for all instruments
 - Last trade price and size
 - Order book depth (5 levels)
 
 ### Historical Data
+
 - All previous tick snapshots
 - Complete trade history
 - Position tracking

@@ -85,23 +85,28 @@ Total: -$1.00 charge
 ## Order Lifecycle
 
 ### 1. Submission Phase
+
 - Order received by exchange
 - Timestamp assigned
 - Initial validation performed
 
 ### 2. Validation Checks
+
 ```python
 def validate_order(order, role, current_position):
     # Check role permissions
+
     if order.type == "QUOTE" and role != "MARKET_MAKER":
         return "REJECT: Only market makers can quote"
 
     # Check position limits
+
     new_position = current_position + order.quantity
     if abs(new_position) > role.position_limit:
         return "REJECT: Would exceed position limit"
 
     # Check price validity
+
     if order.price <= 0:
         return "REJECT: Invalid price"
 
@@ -109,11 +114,13 @@ def validate_order(order, role, current_position):
 ```
 
 ### 3. Book Interaction
+
 - Check for immediate execution
 - Place in book if not crossing
 - Update market data feed
 
 ### 4. Execution Reports
+
 ```json
 {
   "order_id": "ORD-12345",
@@ -141,6 +148,7 @@ Common rejection reasons:
 ## Priority Examples
 
 ### Example 1: Simple Match
+
 ```
 Bids:
 - 25.45 @ 10:30:00.100 (Trader A, 50 lots)
@@ -157,6 +165,7 @@ Execution:
 ```
 
 ### Example 2: Quote vs Limit
+
 ```
 Market Maker Quote: Bid 25.40 / Ask 25.60
 Hedge Fund Limit: Buy 100 @ 25.60

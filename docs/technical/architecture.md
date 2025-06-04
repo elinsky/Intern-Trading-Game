@@ -97,6 +97,7 @@ class OB,PD,MH,GS persistent
 ## Component Responsibilities
 
 ### Core Services
+
 **Tick Controller**
 - Orchestrates 5-minute tick cycles (T+0:00 to T+5:00)
 - Publishes tick events to all domain services at precise intervals
@@ -118,6 +119,7 @@ class OB,PD,MH,GS persistent
 - Returns detailed rejection reasons
 
 ### Domain Services
+
 **Price Model**
 - Generates synthetic SPX and SPY underlying prices only
 - Implements correlated Geometric Brownian Motion
@@ -162,6 +164,7 @@ class OB,PD,MH,GS persistent
 - Streams updates at tick boundaries
 
 ### Data Stores
+
 - **Order Books**: Active limit/quote orders per option
 - **Positions**: Player holdings with quantities, average prices, and P&L
 - **Market History**: Complete time series of prices, trades, and snapshots

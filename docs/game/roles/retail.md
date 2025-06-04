@@ -71,6 +71,7 @@ retail:
 ## Implementation Details
 
 ### Order Type Mix
+
 ```yaml
   order_types:
     market_orders: 0.40  # Retail uses more market orders
@@ -83,6 +84,7 @@ retail:
 ```
 
 ### Position Management
+
 ```yaml
   position_behavior:
     max_position: 50
@@ -110,6 +112,7 @@ retail:
 ## Configuration Examples
 
 ### Basic Configuration
+
 ```yaml
 retail:
   orders_per_tick:
@@ -126,6 +129,7 @@ retail:
 ## Monitoring and Metrics
 
 ### Key Metrics Tracked
+
 - Orders per tick (mean, std dev)
 - Size distribution
 - Product mix (calls vs puts)
@@ -133,6 +137,7 @@ retail:
 - P&L (for realism check)
 
 ### Calibration Goals
+
 - Realistic volume: 5-15% of total
 - No systematic profit/loss
 - Natural-looking flow
@@ -141,10 +146,13 @@ retail:
 ## Impact on Market
 
 ### For Market Makers
+
 - Additional flow to capture
 
 ### For Hedge Funds
+
 - Noise to filter out
 
 ### For Arbitrage Desks
+
 - Noise to filter out

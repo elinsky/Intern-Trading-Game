@@ -1,11 +1,13 @@
 # Role: Hedge Fund
 
 ## One-Line Mission
+
 Keep implied volatility aligned with realized volatility by trading gamma before regime changes.
 
 ---
 
 ## 1. Role Details
+
 - **Signal Access**:
   - Receives advance warning a configurable number of ticks before news events
   - Signal includes:
@@ -33,6 +35,7 @@ Keep implied volatility aligned with realized volatility by trading gamma before
 ---
 
 ## 2. Advantages
+
 - **Execution Flexibility**: Can use limit orders for better fills or market orders for immediacy.
 - **Signal Edge**: Gets advance warning before news events with:
   - Regime change predictions
@@ -45,6 +48,7 @@ Keep implied volatility aligned with realized volatility by trading gamma before
 ---
 
 ## 3. Disadvantages
+
 - **Signal Accuracy**: Signal is not perfect—accuracy is configurable (e.g., 66% correct).
 - **Standard Fee Structure**: Only standard fees (+\$0.01 maker / -\$0.02 taker) vs. Market Makers' enhanced rates.
 - **No Market Making**: Cannot quote two-sided markets, limiting ability to capture spreads.
@@ -56,6 +60,7 @@ Keep implied volatility aligned with realized volatility by trading gamma before
 ---
 
 ## 4. How to Make Money
+
 1. **Understand Your Edge**
    - You know when realized volatility will change (with advance warning)
    - Your job: ensure implied volatility reflects upcoming realized volatility
@@ -80,6 +85,7 @@ Keep implied volatility aligned with realized volatility by trading gamma before
 ---
 
 ## 5. Suggested Strategies
+
 - **Gamma Positioning**: Long gamma before high vol periods, short gamma before low vol
 - **Delta-Neutral Entry**: Start with straddles/strangles to isolate volatility exposure
 - **Active Rehedging**: In high vol, rehedge frequently to capture gamma profits

@@ -1,11 +1,13 @@
 # Role: Arbitrage Desk
 
 ## One-Line Mission
+
 Spot pricing mismatches between SPX and SPY, capturing small, consistent profits as prices converge.
 
 ---
 
 ## 1. Role Details
+
 - **Signal Access**: Instant SPX–SPY tracking-error signal with 80% accuracy (e.g., "SPY overpriced vs SPX by 0.15").
 - **Fees/Incentives**:
   - **Standard Maker Rebate**: +\$0.01 per filled side.
@@ -22,6 +24,7 @@ Spot pricing mismatches between SPX and SPY, capturing small, consistent profits
 ---
 
 ## 2. Advantages
+
 - **Signal Edge**: Instantaneous tracking-error data provides early entry advantage.
 - **Execution Choice**: Can quote passively for rebates or take aggressively when opportunity is large.
 - **Immediate Signals**: Tracking error signal arrives instantly.
@@ -30,12 +33,14 @@ Spot pricing mismatches between SPX and SPY, capturing small, consistent profits
 ---
 
 ## 3. Disadvantages
+
 - **Balance Requirement**: Must maintain balanced SPX/SPY positions within 2:1 ratio.
 - **Small Margins**: Reliant on thin mispricings; profits per trade are minimal.
 
 ---
 
 ## 4. How to Make Money
+
 1. **Understand the Tracking-Error Signal**
    - Signal shows realized volatility divergence between SPX and SPY
    - E.g., "SPY tracking error +0.15" means SPY is moving more than expected vs SPX
@@ -60,6 +65,7 @@ Spot pricing mismatches between SPX and SPY, capturing small, consistent profits
 ---
 
 ## 5. Suggested Strategies
+
 - **React to Signal Immediately**: With 80% accuracy and instant delivery, act fast when tracking error appears
 - **Trade the Vol Difference**: If SPY shows higher realized vol, buy SPY options and sell SPX options at same strikes
 - **Size Based on Signal Strength**: Larger tracking errors should drive larger positions (within 2:1 limits)

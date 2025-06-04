@@ -16,6 +16,7 @@ The game includes differentiated information access to create realistic advantag
 ## Public Information (All Roles)
 
 ### Market Data Feed
+
 Everyone receives the same market data:
 ```json
 {
@@ -33,6 +34,7 @@ Everyone receives the same market data:
 ```
 
 ### News Headlines
+
 Published to all participants simultaneously:
 ```json
 {
@@ -43,6 +45,7 @@ Published to all participants simultaneously:
 ```
 
 ### Probability Tables
+
 Static reference data available to all:
 - Event probabilities for regime shifts
 - Historical impact statistics

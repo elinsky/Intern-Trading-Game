@@ -40,15 +40,19 @@ class SimpleMarketMaker(TradingStrategy):
         context: TradingContext
     ) -> StrategyAction:
         # For now, just return empty action
+
         # Real strategies would analyze market_data
+
         return StrategyAction()
 
     def on_signal(self, signal: Signal) -> None:
         # Market makers don't receive signals
+
         pass
 
     def on_news(self, event: NewsEvent) -> None:
         # Store news for future decisions
+
         pass
 ```
 
@@ -56,6 +60,7 @@ class SimpleMarketMaker(TradingStrategy):
 
 ```python
 # Create game configuration
+
 config = GameConfig(
     session_name="my_first_game",
     total_ticks=10,  # Short game for testing
@@ -64,12 +69,15 @@ config = GameConfig(
 )
 
 # Create exchange (using existing implementation)
+
 exchange = ExchangeVenue()
 
 # Create strategy instances
+
 strategies = [
     SimpleMarketMaker(),
     # Add more strategies here
+
 ]
 ```
 
@@ -77,6 +85,7 @@ strategies = [
 
 ```python
 # Create game loop
+
 game = GameLoop(
     config=config,
     exchange=exchange,
@@ -85,6 +94,7 @@ game = GameLoop(
 )
 
 # Run the full session
+
 game.run_session()
 ```
 
@@ -94,12 +104,15 @@ For more control, you can run ticks individually:
 
 ```python
 # Run ticks one at a time
+
 for i in range(config.total_ticks):
     print(f"Starting tick {i}")
     game.run_tick()
 
     # Do something between ticks
+
     # e.g., save state, analyze results
+
 ```
 
 ## Understanding Tick Phases
@@ -127,6 +140,7 @@ Each tick follows this timeline:
 
 ```python
 # Real-time mode (enforces actual delays)
+
 game_realtime = GameLoop(
     config=config,
     exchange=exchange,
@@ -135,6 +149,7 @@ game_realtime = GameLoop(
 )
 
 # Fast mode (no delays, good for testing)
+
 game_fast = GameLoop(
     config=config,
     exchange=exchange,
