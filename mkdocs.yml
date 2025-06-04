@@ -74,25 +74,38 @@ plugins:
 
 nav:
   - Home: index.md
-  - Tutorials:
-      - Market Maker Tutorial: tutorials/market-maker-tutorial.md
-  - How-To Guides:
-      - How to Submit Orders: how-to/how-to-submit-orders.md
-  - Reference:
-      - Exchange API: reference/exchange-api.md
-      - Math Examples: reference/math-examples.md
-      - API Reference:
-          - Order Book: reference/order_book.md
-          - Order: reference/order.md
-          - Trade: reference/trade.md
-          - Venue: reference/venue.md
-          - Instrument: reference/instrument.md
-  - Explanation:
-      - Explaining Order Matching: explanation/explaining-order-matching.md
-  - Contributing:
-      - Math in Docstrings: contributing/docstring-math-guide.md
+  - Game Documentation:
+      - Overview: game/overview.md
+      - Fundamentals:
+          - Core Concepts: game/fundamentals/core-concepts.md
+          - Game Mechanics: game/fundamentals/game-mechanics.md
+          - Market Structure: game/fundamentals/market-structure.md
+      - Trading:
+          - Constraints: game/trading/constraints.md
+          - Execution Rules: game/trading/execution-rules.md
+          - Order Types: game/trading/order-types.md
+      - Roles:
+          - Overview: game/roles/overview.md
+          - Market Maker: game/roles/market-maker.md
+          - Hedge Fund: game/roles/hedge-fund.md
+          - Arbitrage Desk: game/roles/arbitrage-desk.md
+          - Retail: game/roles/retail.md
+  - Technical Documentation:
+      - Architecture: technical/architecture.md
+      - Build Order: technical/build-order.md
+      - Tutorials:
+          - Market Maker Tutorial: technical/tutorials/market-maker-tutorial.md
+      - How-To Guides:
+          - How to Submit Orders: technical/how-to/how-to-submit-orders.md
+      - Reference:
+          - Exchange API: technical/reference/exchange-api.md
+          - Math Examples: technical/reference/math-examples.md
+      - Explanation:
+          - Order Matching: technical/explanation/order-matching.md
+      - Contributing:
+          - Math in Docstrings: technical/contributing/docstring-math-guide.md
 
 extra_javascript:
-  - javascripts/mathjax.js
+  - technical/javascripts/mathjax.js
   - https://polyfill.io/v3/polyfill.min.js?features=es6
   - https://cdn.jsdelivr.net/npm/mathjax@3/es5/tex-mml-chtml.js

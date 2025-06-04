@@ -113,4 +113,4 @@ Role-specific signals:
 
 - Review [Simulation Details](../simulation/)
 - Understand [Trading Rules](../trading/)
-- Begin [Strategy Development](../technical/)
+- Begin [Strategy Development](../../technical/)
