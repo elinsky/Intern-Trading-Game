@@ -66,20 +66,11 @@ nav:
           - Market Maker: game/roles/market-maker.md
           - Hedge Fund: game/roles/hedge-fund.md
           - Arbitrage Desk: game/roles/arbitrage-desk.md
-          - Retail: game/roles/retail.md
-      - Simulation:
-          - Price Generation: game/simulation/price-generation.md
-          - Volatility Regimes: game/simulation/volatility-regimes.md
-          - News Events: game/simulation/news-events.md
-          - Correlation Model: game/simulation/correlation-model.md
       - Scoring:
           - Overview: game/scoring/overview.md
-      - Configuration:
-          - Game Parameters: game/configuration/game-parameters.md
       - Appendix:
           - Formulas: game/appendix/formulas.md
           - Glossary: game/appendix/glossary.md
-          - Probability Tables: game/appendix/probability-tables.md
 
 extra_javascript:
   - technical/javascripts/mathjax.js
