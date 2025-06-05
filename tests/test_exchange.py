@@ -206,7 +206,7 @@ def test_order_matching(exchange):
     )
 
     result = exchange.submit_order(buy_order)
-    assert result.status == "accepted"
+    assert result.status == "new"
     assert result.remaining_quantity == 10
     assert len(result.fills) == 0
 

@@ -5,31 +5,17 @@ This module defines the ExchangeVenue class, which is the main entry point for
 the exchange.
 """
 
-from dataclasses import dataclass, field
 from typing import Dict, List, Optional, Set
 
+from intern_trading_game.exchange.matching_engine import (
+    ContinuousMatchingEngine,
+    MatchingEngine,
+)
 from intern_trading_game.exchange.order import Order
 from intern_trading_game.exchange.order_book import OrderBook
+from intern_trading_game.exchange.order_result import OrderResult
 from intern_trading_game.exchange.trade import Trade
 from intern_trading_game.instruments.instrument import Instrument
-
-
-@dataclass
-class OrderResult:
-    """
-    Represents the result of submitting an order.
-
-    Attributes:
-        order_id (str): The ID of the submitted order.
-        status (str): The status of the order ('accepted' or 'filled').
-        fills (List[Trade]): Any trades that were generated.
-        remaining_quantity (float): The unfilled quantity of the order.
-    """
-
-    order_id: str
-    status: str
-    fills: List[Trade] = field(default_factory=list)
-    remaining_quantity: float = 0
 
 
 class ExchangeVenue:
@@ -47,7 +33,9 @@ class ExchangeVenue:
 
     Parameters
     ----------
-    None
+    matching_engine : MatchingEngine, optional
+        The matching engine to use for order processing. If not provided,
+        defaults to ContinuousMatchingEngine for immediate order matching.
 
     Attributes
     ----------
@@ -57,6 +45,8 @@ class ExchangeVenue:
         Map of instrument IDs to their instrument objects.
     all_order_ids : Set[str]
         Set of all order IDs across all books.
+    matching_engine : MatchingEngine
+        The engine responsible for order matching logic.
 
     Notes
     -----
@@ -76,7 +66,7 @@ class ExchangeVenue:
     -------------
     This implementation assumes:
     - A central limit order book model
-    - Continuous trading (no auctions or opening/closing procedures)
+    - Configurable matching mode (continuous or batch)
     - No circuit breakers or trading halts
     - No fees or commissions
     - No position limits or risk checks
@@ -84,33 +74,54 @@ class ExchangeVenue:
     - All orders can be partially filled
     - No cross-instrument strategies or basket orders
 
+    The matching engine can be switched between continuous and batch modes
+    to support different trading scenarios. Batch mode is particularly useful
+    for fair order processing in game environments.
+
     Examples
     --------
-    Creating an exchange and listing an instrument:
+    Creating an exchange with continuous matching (default):
 
     >>> exchange = ExchangeVenue()
     >>> apple_stock = Instrument(symbol="AAPL", underlying="AAPL")
     >>> exchange.list_instrument(apple_stock)
 
-    Submitting orders and checking the market:
+    Using batch matching for fair order processing:
 
-    >>> buy_order = Order(
-    ...     instrument_id="AAPL",
-    ...     side="buy",
-    ...     quantity=10,
-    ...     price=150.0,
-    ...     trader_id="trader1"
-    ... )
-    >>> result = exchange.submit_order(buy_order)
-    >>> result.status
+    >>> from intern_trading_game.exchange.matching_engine import BatchMatchingEngine
+    >>> batch_exchange = ExchangeVenue(matching_engine=BatchMatchingEngine())
+    >>>
+    >>> # Orders are collected during submission
+    >>> order1 = Order(instrument_id="AAPL", side="buy", quantity=10,
+    ...                price=150.0, trader_id="trader1")
+    >>> result1 = batch_exchange.submit_order(order1)
+    >>> result1.status
+    'pending'
+    >>>
+    >>> # Execute batch to process all orders
+    >>> batch_results = batch_exchange.execute_batch()
+    >>> batch_results["AAPL"][order1.order_id].status
     'accepted'
-    >>> market = exchange.get_market_summary("AAPL")
-    >>> market["best_bid"]
-    {'price': 150.0, 'quantity': 10.0}
     """
 
-    def __init__(self):
-        """Initialize the exchange venue."""
+    def __init__(self, matching_engine: Optional[MatchingEngine] = None):
+        """Initialize the exchange venue.
+
+        Parameters
+        ----------
+        matching_engine : MatchingEngine, optional
+            The matching engine to use. Defaults to ContinuousMatchingEngine
+            if not provided.
+
+        Notes
+        -----
+        The choice of matching engine determines how orders are processed:
+        - ContinuousMatchingEngine: Orders match immediately upon submission
+        - BatchMatchingEngine: Orders are collected and matched in batches
+
+        This design allows the exchange to support different trading scenarios
+        without changing the core order management logic.
+        """
         # Map of instrument IDs to their order books
         self.order_books: Dict[str, OrderBook] = {}
 
@@ -119,6 +130,10 @@ class ExchangeVenue:
 
         # Set of all order IDs across all books
         self.all_order_ids: Set[str] = set()
+
+        # Initialize matching engine - default to continuous if not specified
+        # This maintains backward compatibility while allowing batch mode
+        self.matching_engine = matching_engine or ContinuousMatchingEngine()
 
     def list_instrument(self, instrument: Instrument) -> None:
         """
@@ -153,6 +168,12 @@ class ExchangeVenue:
         Raises:
             ValueError: If the instrument doesn't exist or the order ID is
                 already in use.
+
+        Notes
+        -----
+        This method delegates the actual matching logic to the configured
+        matching engine. In continuous mode, orders may match immediately.
+        In batch mode, orders are collected for later processing.
         """
         # Validate the order
         if order.instrument_id not in self.order_books:
@@ -167,19 +188,14 @@ class ExchangeVenue:
         # Get the order book for this instrument
         order_book = self.order_books[order.instrument_id]
 
-        # Add the order to the book and get any trades
-        trades = order_book.add_order(order)
+        # Delegate to the matching engine
+        # This is the key change - we no longer directly call order_book.add_order
+        # Instead, the matching engine decides how to handle the order
+        result = self.matching_engine.submit_order(order, order_book)
 
-        # Determine the status
-        status = "filled" if order.is_filled else "accepted"
-
-        # Create and return the result
-        return OrderResult(
-            order_id=order.order_id,
-            status=status,
-            fills=trades,
-            remaining_quantity=order.remaining_quantity,
-        )
+        # For batch mode, the order might be pending without fills
+        # For continuous mode, the order might have immediate fills
+        return result
 
     def cancel_order(self, order_id: str, trader_id: str) -> bool:
         """
@@ -287,3 +303,68 @@ class ExchangeVenue:
             List[Instrument]: All registered instruments.
         """
         return list(self.instruments.values())
+
+    def execute_batch(self) -> Dict[str, Dict[str, OrderResult]]:
+        """Execute batch matching for all instruments.
+
+        This method triggers the matching engine to process any pending
+        orders that have been collected. In continuous mode, this is a no-op
+        since orders are matched immediately. In batch mode, this processes
+        all pending orders with fair randomization.
+
+        Returns
+        -------
+        Dict[str, Dict[str, OrderResult]]
+            Results organized by instrument ID, then order ID.
+            Empty dict for continuous mode.
+
+        Notes
+        -----
+        This method should be called at designated times in the trading
+        cycle (e.g., T+3:30 in the game loop). The exact behavior depends
+        on the configured matching engine.
+
+        For batch mode:
+        - All pending orders are processed simultaneously
+        - Orders at the same price are randomized fairly
+        - Results include the final status of each order
+
+        Examples
+        --------
+        >>> # In batch mode
+        >>> exchange = ExchangeVenue(BatchMatchingEngine())
+        >>> # ... submit multiple orders ...
+        >>> results = exchange.execute_batch()
+        >>> for instrument_id, instrument_results in results.items():
+        ...     for order_id, result in instrument_results.items():
+        ...         print(f"Order {order_id}: {result.status}")
+        """
+        # Delegate to the matching engine
+        # The engine knows whether it has pending orders to process
+        return self.matching_engine.execute_batch(self.order_books)
+
+    def get_matching_mode(self) -> str:
+        """Get the current matching mode of the exchange.
+
+        Returns
+        -------
+        str
+            Either "continuous" or "batch"
+
+        Notes
+        -----
+        This is useful for strategies or systems that need to adapt their
+        behavior based on the matching mode. For example, a strategy might
+        submit orders differently if it knows they won't match immediately.
+
+        Examples
+        --------
+        >>> exchange = ExchangeVenue()
+        >>> exchange.get_matching_mode()
+        'continuous'
+        >>>
+        >>> batch_exchange = ExchangeVenue(BatchMatchingEngine())
+        >>> batch_exchange.get_matching_mode()
+        'batch'
+        """
+        return self.matching_engine.get_mode()

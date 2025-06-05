@@ -98,6 +98,13 @@ class OB,PD,MH,GS persistent
 
 ### Core Services
 
+**Matching Engine** (Strategy Pattern)
+- Abstract interface for order matching algorithms
+- ContinuousMatchingEngine: Immediate order matching as orders arrive
+- BatchMatchingEngine: Collects orders and matches at designated time
+- Ensures price priority in all modes
+- Provides fair randomization within price levels for batch mode
+
 **Tick Controller**
 - Orchestrates 5-minute tick cycles (T+0:00 to T+5:00)
 - Publishes tick events to all domain services at precise intervals
@@ -106,10 +113,12 @@ class OB,PD,MH,GS persistent
 - Triggers batch matching at T+3:30
 
 **Exchange Engine**
-- Executes price-time priority matching for OPTIONS only
+- Executes order matching via configurable MatchingEngine strategy
+- Supports both continuous (immediate) and batch matching modes
 - Maintains separate order books for each option instrument
 - Processes market, limit, and quote orders
 - Creates trade records with appropriate fees/rebates
+- In batch mode, randomizes orders at same price for fairness
 
 **Order Validator**
 - Pre-validates all incoming orders before submission
