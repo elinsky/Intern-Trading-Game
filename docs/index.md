@@ -1,6 +1,6 @@
 # Intern Trading Game
 
-Welcome to the Intern Trading Game documentation! This site contains comprehensive documentation for the core simulation engine, matching logic, and reference tools for a role-based, options market-making game.
+Welcome to the Intern Trading Game! This is a role-based options trading simulation where intern teams compete by building trading bots.
 
 ## Game Overview
 
@@ -23,15 +23,19 @@ Each intern team plays one of the following:
 
 ## Documentation Structure
 
-This documentation is organized into four main sections:
+This documentation covers:
 
-1. **Tutorials**: Step-by-step guides to help you get started with the Intern Trading Game.
-2. **How-To Guides**: Practical guides for accomplishing specific tasks.
-3. **Reference**: Detailed API documentation and technical specifications.
-4. **Explanation**: In-depth explanations of concepts and design decisions.
+1. **Game Fundamentals**: Core concepts, mechanics, and market structure
+2. **Trading Rules**: Constraints, execution rules, and order types
+3. **Role Details**: Specific requirements and strategies for each role
+4. **Game Configuration**: Parameters and settings
 
 ## Getting Started
 
-To get started with the Intern Trading Game, check out the [Market Maker Tutorial](tutorials/market-maker-tutorial.md).
+To understand the game mechanics, start with:
 
-For more information on how to submit orders, see the [How to Submit Orders](how-to/how-to-submit-orders.md) guide.
+1. [Game Overview](game/overview.md) - High-level introduction
+2. [Core Concepts](game/fundamentals/core-concepts.md) - Key terminology and ideas
+3. [Your Role](game/roles/overview.md) - Choose and understand your trading role
+
+Good luck, and may the best trading strategy win!

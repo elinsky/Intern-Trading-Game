@@ -71,7 +71,7 @@ plugins:
         - docs/technical/gen_ref_pages.py
 
 nav:
-  - Home: index.md
+  - Home: index-private.md
   - Game Documentation:
       - Overview: game/overview.md
       - Fundamentals:

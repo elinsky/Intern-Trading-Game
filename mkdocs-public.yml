@@ -49,7 +49,7 @@ plugins:
   - section-index
 
 nav:
-  - Home: index-public.md
+  - Home: index.md
   - Game Documentation:
       - Overview: game/overview.md
       - Fundamentals:
