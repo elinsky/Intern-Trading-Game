@@ -2,7 +2,7 @@
 
 ## Exchange Components
 
-<div class="doc-api-card">
+<div class="doc-api-card" markdown="1">
 
 ### ExchangeVenue
 
@@ -56,7 +56,7 @@ result = exchange.submit_order(order)
 
 </div>
 
-<div class="doc-api-card">
+<div class="doc-api-card" markdown="1">
 
 ### BatchMatchingEngine
 
@@ -102,7 +102,7 @@ Batch matching is ideal for game environments where fairness is paramount. It el
 
 ## Core Models
 
-<div class="doc-api-card">
+<div class="doc-api-card" markdown="1">
 
 ### Order
 
@@ -156,7 +156,7 @@ market_order = Order(
 
 </div>
 
-<div class="doc-api-card">
+<div class="doc-api-card" markdown="1">
 
 ### Trade
 
@@ -201,7 +201,7 @@ trade = Trade(
 
 ## Game Components
 
-<div class="doc-api-card">
+<div class="doc-api-card" markdown="1">
 
 ### GameLoop
 

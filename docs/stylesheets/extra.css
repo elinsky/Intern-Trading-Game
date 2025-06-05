@@ -28,7 +28,6 @@ body {
 .md-typeset {
     font-size: 1rem;  /* 16px base like doc */
     line-height: 1.6;
-    color: var(--doc-gray-dark);
 }
 
 /* Headers with doc styling */
@@ -36,7 +35,6 @@ body {
     font-weight: 300;
     font-size: 2.5rem;
     margin: 2rem 0 1.5rem;
-    color: var(--doc-gray-dark);
     border-bottom: 1px solid var(--doc-border);
     padding-bottom: 0.5rem;
 }
@@ -45,19 +43,17 @@ body {
     font-weight: 400;
     font-size: 1.8rem;
     margin: 2rem 0 1rem;
-    color: var(--doc-gray-dark);
 }
 
 .md-typeset h3 {
     font-weight: 500;
     font-size: 1.3rem;
     margin: 1.5rem 0 0.8rem;
-    color: var(--doc-gray-dark);
 }
 
-/* Content area - doc-like centered layout */
+/* Content area - use available width */
 .md-content {
-    max-width: 1200px;
+    max-width: calc(100% - 4rem);
     margin: 0 auto;
 }
 
@@ -66,7 +62,7 @@ body {
     padding: 2rem 0;
 }
 
-/* Narrower sidebars like doc */
+/* Sidebar configuration */
 @media screen and (min-width: 76.25em) {
     .md-sidebar--primary {
         width: 13rem;
@@ -75,12 +71,24 @@ body {
     .md-sidebar--secondary {
         width: 13rem;
     }
+}
 
-    /* Center content between sidebars */
-    .md-content__inner {
-        margin-left: 3rem;
-        margin-right: 3rem;
-        max-width: 850px;
+/* Responsive width settings for different screen sizes */
+@media screen and (min-width: 1220px) and (max-width: 1400px) {
+    .md-content {
+        max-width: 1200px;
+    }
+}
+
+@media screen and (min-width: 1400px) and (max-width: 1700px) {
+    .md-content {
+        max-width: 1320px;
+    }
+}
+
+@media screen and (min-width: 1700px) {
+    .md-content {
+        max-width: 1500px;
     }
 }
 
@@ -98,17 +106,24 @@ body {
 
 /* Code blocks - doc style */
 .md-typeset pre {
-    background-color: var(--doc-gray-light);
     border: 1px solid var(--doc-border);
     border-radius: 4px;
 }
 
 .md-typeset code {
-    background-color: var(--doc-gray-light);
-    color: var(--doc-gray-dark);
     padding: 0.1rem 0.3rem;
     border-radius: 3px;
     font-size: 0.875rem;
+}
+
+/* Light mode code styling */
+[data-md-color-scheme="default"] .md-typeset pre {
+    background-color: var(--doc-gray-light);
+}
+
+[data-md-color-scheme="default"] .md-typeset code {
+    background-color: var(--doc-gray-light);
+    color: var(--doc-gray-dark);
 }
 
 /* Tables - doc style with alternating rows */
@@ -119,14 +134,23 @@ body {
 }
 
 .md-typeset table:not([class]) th {
-    background-color: var(--doc-gray-light);
     font-weight: 600;
-    color: var(--doc-gray-dark);
     border-bottom: 2px solid var(--doc-border);
 }
 
-.md-typeset table:not([class]) tbody tr:nth-child(odd) {
+/* Light mode table styling */
+[data-md-color-scheme="default"] .md-typeset table:not([class]) th {
+    background-color: var(--doc-gray-light);
+    color: var(--doc-gray-dark);
+}
+
+[data-md-color-scheme="default"] .md-typeset table:not([class]) tbody tr:nth-child(odd) {
     background-color: rgba(248, 248, 248, 0.5);
+}
+
+/* Dark mode table styling */
+[data-md-color-scheme="slate"] .md-typeset table:not([class]) tbody tr:nth-child(odd) {
+    background-color: rgba(255, 255, 255, 0.03);
 }
 
 /* API Reference boxes - doc style */
@@ -138,15 +162,26 @@ body {
 }
 
 .md-typeset .admonition-title {
-    background-color: var(--doc-gray-light);
     border-bottom: 1px solid var(--doc-border);
-    color: var(--doc-gray-dark);
     font-weight: 600;
 }
 
+/* Light mode admonition styling */
+[data-md-color-scheme="default"] .md-typeset .admonition-title {
+    background-color: var(--doc-gray-light);
+    color: var(--doc-gray-dark);
+}
+
 /* Links - doc blue with orange hover */
-.md-typeset a {
+[data-md-color-scheme="default"] .md-typeset a {
     color: var(--doc-blue);
+}
+
+[data-md-color-scheme="slate"] .md-typeset a {
+    color: #4db8ff;  /* Lighter blue for dark mode */
+}
+
+.md-typeset a {
     text-decoration: none;
 }
 
@@ -155,19 +190,19 @@ body {
     text-decoration: underline;
 }
 
-/* Header/nav bar - clean white like doc */
-.md-header {
+/* Header/nav bar */
+[data-md-color-scheme="default"] .md-header {
     background-color: #FFFFFF;
     color: var(--doc-gray-dark);
     box-shadow: 0 1px 3px rgba(0,0,0,0.1);
 }
 
-.md-header__title {
+[data-md-color-scheme="default"] .md-header__title {
     color: var(--doc-gray-dark);
 }
 
-/* Search - doc style */
-.md-search__input {
+/* Search - let Material handle dark mode */
+[data-md-color-scheme="default"] .md-search__input {
     background-color: var(--doc-gray-light);
     color: var(--doc-gray-dark);
 }
@@ -175,12 +210,15 @@ body {
 /* Parameter/attribute lists - doc style */
 .md-typeset dl dt {
     font-weight: 600;
-    color: var(--doc-gray-dark);
     font-family: monospace;
-    background-color: var(--doc-gray-light);
     padding: 0.3rem 0.5rem;
     border-radius: 3px;
     margin-bottom: 0.5rem;
+}
+
+[data-md-color-scheme="default"] .md-typeset dl dt {
+    color: var(--doc-gray-dark);
+    background-color: var(--doc-gray-light);
 }
 
 /* Custom class for API reference cards */
@@ -189,12 +227,23 @@ body {
     border-radius: 4px;
     padding: 1.5rem;
     margin: 1.5rem 0;
-    background-color: #FFFFFF;
+    background-color: var(--md-default-bg-color);
 }
 
 .doc-api-card h3 {
     margin-top: 0;
     color: var(--doc-orange);
+}
+
+/* Dark mode overrides */
+[data-md-color-scheme="slate"] {
+    --doc-gray-light: #2d2d2d;
+    --doc-border: #494949;
+}
+
+[data-md-color-scheme="slate"] .doc-api-card {
+    background-color: var(--md-code-bg-color);
+    border-color: var(--doc-border);
 }
 
 /* Remove Material shadows for cleaner look */
