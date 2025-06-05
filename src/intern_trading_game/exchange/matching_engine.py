@@ -402,7 +402,7 @@ class BatchContext:
 
 
 class BatchMatchingEngine(MatchingEngine):
-    """Implements batch order matching with fair randomization.
+    r"""Implements batch order matching with fair randomization.
 
     This engine collects orders during a submission window and processes
     them all simultaneously at a designated time. Orders at the same price
@@ -435,6 +435,19 @@ class BatchMatchingEngine(MatchingEngine):
     - Delayed execution feedback
     - No real-time price discovery during batch window
     - More complex implementation
+
+    Mathematical Fairness Guarantees
+    --------------------------------
+    For orders at the same price level:
+
+    $$P(\text{Order A fills before Order B}) = \frac{1}{2}$$
+
+    For n orders at the same price competing for limited liquidity:
+
+    $$P(\text{Order i in position j}) = \frac{1}{n}$$
+
+    This ensures uniform distribution of execution priority within each
+    price level, eliminating timing advantages.
 
     Implementation notes:
     - We use a single-pass sort with random keys for efficiency,

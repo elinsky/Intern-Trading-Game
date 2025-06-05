@@ -119,6 +119,8 @@ class OB,PD,MH,GS persistent
 - Processes market, limit, and quote orders
 - Creates trade records with appropriate fees/rebates
 - In batch mode, randomizes orders at same price for fairness
+- ExchangeVenue delegates matching logic to pluggable MatchingEngine
+- Clean separation allows easy addition of new matching algorithms (e.g., pro-rata)
 
 **Order Validator**
 - Pre-validates all incoming orders before submission

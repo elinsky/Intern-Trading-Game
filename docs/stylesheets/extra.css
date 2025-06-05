@@ -1,0 +1,89 @@
+/* Optimize for laptop screens - use available space effectively */
+
+/* Main content area - optimized for typical laptop screens (1366px - 1920px) */
+.md-content {
+    max-width: calc(100% - 4rem);  /* Use full width minus padding */
+}
+
+/* Ensure consistent width across all components */
+.md-header__inner,
+.md-tabs__list,
+.md-footer-meta__inner,
+.md-footer-nav__inner,
+.md-grid {
+    max-width: calc(100% - 4rem);
+}
+
+/* For smaller laptops (around 1366px wide) */
+@media screen and (min-width: 1220px) and (max-width: 1400px) {
+    .md-content {
+        max-width: 1200px;  /* Comfortable reading width */
+    }
+
+    /* Adjust code blocks to use more space */
+    .highlight {
+        margin: 0 -1rem;  /* Extend code blocks slightly */
+    }
+}
+
+/* For standard laptops (1440px - 1600px) */
+@media screen and (min-width: 1400px) and (max-width: 1700px) {
+    .md-content {
+        max-width: 1320px;  /* Use most of the screen */
+    }
+}
+
+/* For larger laptops/external monitors */
+@media screen and (min-width: 1700px) {
+    .md-content {
+        max-width: 1500px;  /* Cap at readable width */
+    }
+}
+
+/* Make code blocks and tables use full content width */
+.md-typeset .highlight,
+.md-typeset table:not([class]) {
+    max-width: 100%;
+}
+
+/* Optimize navigation sidebar for laptops */
+@media screen and (min-width: 76.25em) {
+    .md-sidebar--primary {
+        width: 15rem;  /* Slightly wider navigation */
+    }
+
+    .md-sidebar--secondary {
+        width: 15rem;  /* Match TOC width */
+    }
+
+    /* Adjust content margins for wider sidebars */
+    .md-content__inner {
+        margin-left: 1rem;
+        margin-right: 1rem;
+    }
+}
+
+/* Better spacing for content elements */
+.md-typeset {
+    font-size: 0.8rem;  /* Slightly smaller for more content */
+    line-height: 1.6;
+}
+
+.md-typeset h1 {
+    margin: 1rem 0 1.5rem;
+}
+
+.md-typeset h2 {
+    margin: 1.5rem 0 1rem;
+}
+
+/* Optimize tables for data display */
+.md-typeset table {
+    font-size: 0.75rem;  /* Smaller tables to fit more data */
+}
+
+/* Make admonitions more compact */
+.md-typeset .admonition,
+.md-typeset details {
+    font-size: 0.75rem;
+}

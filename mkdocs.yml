@@ -102,6 +102,7 @@ nav:
           - Math Examples: technical/reference/math-examples.md
       - Explanation:
           - Order Matching: technical/explanation/order-matching.md
+          - Batch Matching: technical/explanation/batch-matching.md
       - Contributing:
           - Math in Docstrings: technical/contributing/docstring-math-guide.md
 
@@ -109,3 +110,6 @@ extra_javascript:
   - technical/javascripts/mathjax.js
   - https://polyfill.io/v3/polyfill.min.js?features=es6
   - https://cdn.jsdelivr.net/npm/mathjax@3/es5/tex-mml-chtml.js
+
+extra_css:
+  - stylesheets/extra.css
