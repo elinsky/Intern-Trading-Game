@@ -56,6 +56,7 @@ class PriceLevel:
 
     In a limit order book, price levels are typically organized in two separate
     lists:
+
     1. Bid price levels (buy orders) - sorted in descending order (highest first)
     2. Ask price levels (sell orders) - sorted in ascending order (lowest first)
 
@@ -228,6 +229,7 @@ class OrderBook:
     a queue of orders at that price, sorted by time priority.
 
     The matching algorithm follows these steps:
+
     1. Determine the opposite side of the book to match against
     2. Check if the incoming order's price is acceptable
     3. Match against the best price level until filled or no more matches
@@ -317,6 +319,7 @@ class OrderBook:
         Notes
         -----
         The order matching process follows price-time priority:
+
         1. For buy orders, match against asks in ascending price order
         2. For sell orders, match against bids in descending price order
         3. At each price level, match against orders in time priority (FIFO)

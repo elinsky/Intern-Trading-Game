@@ -234,6 +234,7 @@ class TradingStrategy(ABC):
         are rejected with appropriate error messages.
 
         Processing order:
+
         1. Cancel orders (specific IDs or all)
         2. Submit new orders
         3. Post/update quotes

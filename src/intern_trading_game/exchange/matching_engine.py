@@ -533,6 +533,7 @@ class BatchMatchingEngine(MatchingEngine):
         """Execute all pending orders using a clear pipeline pattern.
 
         The batch matching process follows these steps:
+
         1. Create context with pending orders and order books
         2. Match crossing orders within the batch
         3. Add remaining orders to order books

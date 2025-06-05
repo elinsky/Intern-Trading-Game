@@ -85,6 +85,7 @@ class Order:
     represent the intention of a trader to execute a transaction in the market.
 
     The order lifecycle typically follows these stages:
+
     1. Creation - Order is created with initial parameters
     2. Validation - Order is checked for validity (positive quantity, etc.)
     3. Submission - Order is submitted to the exchange

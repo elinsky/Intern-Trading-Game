@@ -76,6 +76,7 @@ class Trade:
     matched first.
 
     Trade records are essential for:
+
     1. Market data dissemination
     2. Trade reporting to regulatory authorities
     3. Settlement and clearing processes
