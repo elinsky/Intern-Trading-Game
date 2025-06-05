@@ -74,22 +74,31 @@ def create_test_order(
     )
 
 
-# Core Functionality Tests
+# ============================================================================
+# CORE FUNCTIONALITY TESTS
+# ============================================================================
 
 
 def test_continuous_matching_engine_immediate_fill(
     continuous_engine, order_book
 ):
     """Test that continuous engine matches orders immediately when possible."""
-    # Given - Order book with a resting sell order
+    # GIVEN - Order book with a resting sell order
+    # A seller has placed a limit sell order at $99.00 for 10 units.
+    # This order is resting in the order book waiting for a buyer.
     sell_order = create_test_order(side="sell", price=99.0, trader_id="seller")
     order_book.add_order(sell_order)
 
-    # When - Submit a buy order that crosses
+    # WHEN - Submit a buy order that crosses the spread
+    # A buyer submits a limit buy order at $100.00 for 10 units.
+    # Since the buy price ($100) exceeds the sell price ($99),
+    # these orders should match immediately in continuous mode.
     buy_order = create_test_order(side="buy", price=100.0, trader_id="buyer")
     result = continuous_engine.submit_order(buy_order, order_book)
 
-    # Then - Order should be filled immediately
+    # THEN - Order should be filled immediately at the sell price
+    # The trade executes at the passive (resting) order's price of $99.
+    # Both orders are completely filled with no remaining quantity.
     assert result.status == "filled"
     assert len(result.fills) == 1
     assert result.fills[0].price == 99.0  # Matches at sell price
@@ -100,15 +109,21 @@ def test_continuous_matching_engine_partial_fill(
     continuous_engine, order_book
 ):
     """Test partial fills in continuous mode."""
-    # Given - Small sell order in the book
+    # GIVEN - Small sell order in the book
+    # A seller offers only 5 units at $100.00.
+    # This creates limited liquidity on the sell side.
     sell_order = create_test_order(side="sell", price=100.0, quantity=5)
     order_book.add_order(sell_order)
 
-    # When - Submit larger buy order
+    # WHEN - Submit a larger buy order
+    # A buyer wants to purchase 10 units at $100.00.
+    # This buy order exceeds the available sell liquidity.
     buy_order = create_test_order(side="buy", price=100.0, quantity=10)
     result = continuous_engine.submit_order(buy_order, order_book)
 
-    # Then - Partial fill should occur
+    # THEN - Partial fill should occur
+    # Only 5 units can be matched (the available sell quantity).
+    # The remaining 5 units of the buy order stay in the book.
     assert result.status == "partially_filled"  # Not fully filled
     assert len(result.fills) == 1
     assert result.fills[0].quantity == 5
@@ -117,14 +132,24 @@ def test_continuous_matching_engine_partial_fill(
 
 def test_batch_matching_engine_collects_orders(batch_engine, order_book):
     """Test that batch engine collects orders without immediate matching."""
-    # When - Submit multiple orders
+    # GIVEN - A batch matching engine in collection phase
+    # The batch engine is designed to collect all orders during
+    # the submission window without executing any matches.
+
+    # WHEN - Submit multiple crossing orders
+    # A buyer wants 10 units at $100.00 and a seller offers at $99.00.
+    # These orders would match immediately in continuous mode,
+    # but batch mode holds them for later processing.
     order1 = create_test_order(side="buy", price=100.0)
     order2 = create_test_order(side="sell", price=99.0)
 
     result1 = batch_engine.submit_order(order1, order_book)
     result2 = batch_engine.submit_order(order2, order_book)
 
-    # Then - Orders should be pending, not matched
+    # THEN - Orders should be pending, not matched
+    # Both orders receive 'pending_new' status indicating they're
+    # queued for batch processing. No trades occur yet.
+    # The engine tracks 2 pending orders for this instrument.
     assert result1.status == "pending_new"
     assert result2.status == "pending_new"
     assert len(result1.fills) == 0
@@ -216,7 +241,9 @@ def test_batch_matching_engine_clears_after_batch(batch_engine, order_book):
     assert batch_engine.get_pending_count("TEST") == 0
 
 
-# Edge Cases & Scenarios
+# ============================================================================
+# EDGE CASES & SCENARIOS
+# ============================================================================
 
 
 def test_batch_matching_empty_batch(batch_engine):
@@ -358,7 +385,9 @@ def test_batch_matching_more_buyers_than_sellers(batch_engine):
     assert filled_buys == 2  # Only 2 buys can fill
 
 
-# Order Priority Tests
+# ============================================================================
+# ORDER PRIORITY TESTS
+# ============================================================================
 
 
 def test_batch_matching_buy_price_priority(batch_engine):
@@ -498,7 +527,9 @@ def test_batch_matching_partial_fills_multiple_orders(batch_engine):
     assert results["TEST"][partial_order.order_id].remaining_quantity == 5
 
 
-# Randomization Testing
+# ============================================================================
+# RANDOMIZATION TESTING
+# ============================================================================
 
 
 def test_batch_randomization_is_fair():
@@ -603,7 +634,9 @@ def test_batch_randomization_different_each_time():
     assert unique_sequences > 1, "Randomization appears to be deterministic"
 
 
-# State Management Tests
+# ============================================================================
+# STATE MANAGEMENT TESTS
+# ============================================================================
 
 
 def test_batch_engine_pending_orders_isolated_by_instrument(batch_engine):
@@ -666,7 +699,9 @@ def test_exchange_venue_batch_matching_preserves_order_ids():
         assert order_id in results["TEST"]
 
 
-# Integration Tests
+# ============================================================================
+# INTEGRATION TESTS
+# ============================================================================
 
 
 def test_exchange_venue_with_continuous_engine():
@@ -797,7 +832,9 @@ def test_exchange_venue_multiple_batches_sequential():
     assert "BATCH2-1" not in results1["TEST"]
 
 
-# Error Cases
+# ============================================================================
+# ERROR CASES
+# ============================================================================
 
 
 def test_batch_engine_duplicate_order_id_rejected():
@@ -827,7 +864,9 @@ def test_continuous_engine_with_none_order_book():
         engine.submit_order(order, None)
 
 
-# Performance/Stress Tests
+# ============================================================================
+# PERFORMANCE/STRESS TESTS
+# ============================================================================
 
 
 @pytest.mark.slow
@@ -913,7 +952,9 @@ def test_batch_matching_large_order_book_depth():
     assert all(r.status == "new" for r in results["TEST"].values())
 
 
-# Parameterized Tests
+# ============================================================================
+# PARAMETERIZED TESTS
+# ============================================================================
 
 
 @pytest.mark.parametrize(
@@ -1014,7 +1055,9 @@ def test_batch_matching_scenarios(buy_orders, sell_orders, expected_trades):
     assert filled_count == expected_trades * 2  # Each trade involves 2 orders
 
 
-# Business Logic Tests
+# ============================================================================
+# BUSINESS LOGIC TESTS
+# ============================================================================
 
 
 def test_batch_matching_fair_allocation():
@@ -1086,3 +1129,88 @@ def test_get_mode_returns_correct_value():
 
     assert continuous.get_mode() == "continuous"
     assert batch.get_mode() == "batch"
+
+
+# ============================================================================
+# ORDERRESULT STATUS COVERAGE TESTS
+# ============================================================================
+
+
+def test_all_order_result_statuses_covered():
+    """Verify that all OrderResult statuses are tested in the matching engine.
+
+    This test ensures we have comprehensive coverage of all statuses that can
+    be returned by the matching engine:
+    - 'pending_new': Orders awaiting batch execution (batch mode only)
+    - 'new': Orders resting in the order book with no fills
+    - 'partially_filled': Orders with some fills but quantity remaining
+    - 'filled': Orders completely filled with no remaining quantity
+
+    Note: 'rejected' and 'cancelled' are not implemented in the current
+    matching engine as validation happens before reaching the engine.
+    """
+    # GIVEN - Different matching scenarios for each status
+
+    # TEST 1: 'pending_new' status - batch mode only
+    # WHEN - An order is submitted to batch engine
+    batch_engine = BatchMatchingEngine()
+    order_book = OrderBook("TEST")
+
+    order = create_test_order(side="buy", price=100.0)
+    result = batch_engine.submit_order(order, order_book)
+
+    # THEN - Status should be pending_new
+    assert result.status == "pending_new"
+
+    # TEST 2: 'new' status - continuous mode, no match
+    # WHEN - An order is submitted with no crossing orders
+    continuous_engine = ContinuousMatchingEngine()
+    order_book = OrderBook("TEST")
+
+    order = create_test_order(side="buy", price=100.0)
+    result = continuous_engine.submit_order(order, order_book)
+
+    # THEN - Status should be new (resting in book)
+    assert result.status == "new"
+
+    # TEST 3: 'new' status - batch mode after execution, no match
+    # WHEN - Batch executes with no crossing orders
+    batch_engine = BatchMatchingEngine()
+    order_books = {"TEST": OrderBook("TEST")}
+
+    order = create_test_order(side="buy", price=100.0)
+    batch_engine.submit_order(order, order_books["TEST"])
+    results = batch_engine.execute_batch(order_books)
+
+    # THEN - Status should transition from pending_new to new
+    assert results["TEST"][order.order_id].status == "new"
+
+    # TEST 4: 'partially_filled' status
+    # WHEN - Order matches but not completely
+    continuous_engine = ContinuousMatchingEngine()
+    order_book = OrderBook("TEST")
+
+    sell_order = create_test_order(side="sell", price=100.0, quantity=5)
+    buy_order = create_test_order(side="buy", price=100.0, quantity=10)
+
+    order_book.add_order(sell_order)
+    result = continuous_engine.submit_order(buy_order, order_book)
+
+    # THEN - Status should be partially_filled with remaining quantity
+    assert result.status == "partially_filled"
+    assert result.remaining_quantity == 5
+
+    # TEST 5: 'filled' status
+    # WHEN - Order matches completely
+    continuous_engine = ContinuousMatchingEngine()
+    order_book = OrderBook("TEST")
+
+    sell_order = create_test_order(side="sell", price=100.0, quantity=10)
+    buy_order = create_test_order(side="buy", price=100.0, quantity=10)
+
+    order_book.add_order(sell_order)
+    result = continuous_engine.submit_order(buy_order, order_book)
+
+    # THEN - Status should be filled with zero remaining
+    assert result.status == "filled"
+    assert result.remaining_quantity == 0
