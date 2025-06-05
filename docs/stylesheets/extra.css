@@ -1,89 +1,218 @@
-/* Optimize for laptop screens - use available space effectively */
+/* Custom theme for Intern Trading Game documentation */
 
-/* Main content area - optimized for typical laptop screens (1366px - 1920px) */
-.md-content {
-    max-width: calc(100% - 4rem);  /* Use full width minus padding */
+/* Color Variables */
+:root {
+    --doc-orange: #FF6600;
+    --doc-orange-light: #FFA500;
+    --doc-blue: #0066CC;
+    --doc-blue-dark: #003d7a;
+    --doc-gray-dark: #333333;
+    --doc-gray-medium: #666666;
+    --doc-gray-light: #F8F8F8;
+    --doc-border: #E0E0E0;
 }
 
-/* Ensure consistent width across all components */
-.md-header__inner,
-.md-tabs__list,
-.md-footer-meta__inner,
-.md-footer-nav__inner,
-.md-grid {
-    max-width: calc(100% - 4rem);
+/* Override Material theme colors */
+[data-md-color-scheme="default"] {
+    --md-primary-fg-color: #FFFFFF;
+    --md-primary-bg-color: var(--doc-gray-dark);
+    --md-accent-fg-color: var(--doc-orange);
+    --md-accent-fg-color--transparent: rgba(255, 102, 0, 0.1);
 }
 
-/* For smaller laptops (around 1366px wide) */
-@media screen and (min-width: 1220px) and (max-width: 1400px) {
-    .md-content {
-        max-width: 1200px;  /* Comfortable reading width */
-    }
-
-    /* Adjust code blocks to use more space */
-    .highlight {
-        margin: 0 -1rem;  /* Extend code blocks slightly */
-    }
+/* Typography */
+body {
+    font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", "Helvetica Neue", Arial, sans-serif;
 }
 
-/* For standard laptops (1440px - 1600px) */
-@media screen and (min-width: 1400px) and (max-width: 1700px) {
-    .md-content {
-        max-width: 1320px;  /* Use most of the screen */
-    }
-}
-
-/* For larger laptops/external monitors */
-@media screen and (min-width: 1700px) {
-    .md-content {
-        max-width: 1500px;  /* Cap at readable width */
-    }
-}
-
-/* Make code blocks and tables use full content width */
-.md-typeset .highlight,
-.md-typeset table:not([class]) {
-    max-width: 100%;
-}
-
-/* Optimize navigation sidebar for laptops */
-@media screen and (min-width: 76.25em) {
-    .md-sidebar--primary {
-        width: 15rem;  /* Slightly wider navigation */
-    }
-
-    .md-sidebar--secondary {
-        width: 15rem;  /* Match TOC width */
-    }
-
-    /* Adjust content margins for wider sidebars */
-    .md-content__inner {
-        margin-left: 1rem;
-        margin-right: 1rem;
-    }
-}
-
-/* Better spacing for content elements */
 .md-typeset {
-    font-size: 0.8rem;  /* Slightly smaller for more content */
+    font-size: 1rem;  /* 16px base like doc */
     line-height: 1.6;
+    color: var(--doc-gray-dark);
 }
 
+/* Headers with doc styling */
 .md-typeset h1 {
-    margin: 1rem 0 1.5rem;
+    font-weight: 300;
+    font-size: 2.5rem;
+    margin: 2rem 0 1.5rem;
+    color: var(--doc-gray-dark);
+    border-bottom: 1px solid var(--doc-border);
+    padding-bottom: 0.5rem;
 }
 
 .md-typeset h2 {
-    margin: 1.5rem 0 1rem;
+    font-weight: 400;
+    font-size: 1.8rem;
+    margin: 2rem 0 1rem;
+    color: var(--doc-gray-dark);
 }
 
-/* Optimize tables for data display */
-.md-typeset table {
-    font-size: 0.75rem;  /* Smaller tables to fit more data */
+.md-typeset h3 {
+    font-weight: 500;
+    font-size: 1.3rem;
+    margin: 1.5rem 0 0.8rem;
+    color: var(--doc-gray-dark);
 }
 
-/* Make admonitions more compact */
-.md-typeset .admonition,
-.md-typeset details {
-    font-size: 0.75rem;
+/* Content area - doc-like centered layout */
+.md-content {
+    max-width: 1200px;
+    margin: 0 auto;
+}
+
+.md-content__inner {
+    margin: 0 2rem;
+    padding: 2rem 0;
+}
+
+/* Narrower sidebars like doc */
+@media screen and (min-width: 76.25em) {
+    .md-sidebar--primary {
+        width: 13rem;
+    }
+
+    .md-sidebar--secondary {
+        width: 13rem;
+    }
+
+    /* Center content between sidebars */
+    .md-content__inner {
+        margin-left: 3rem;
+        margin-right: 3rem;
+        max-width: 850px;
+    }
+}
+
+/* Navigation styling - doc orange accents */
+.md-nav__link--active,
+.md-nav__link:active,
+.md-nav__link:hover {
+    color: var(--doc-orange);
+}
+
+.md-nav__item .md-nav__link--active {
+    font-weight: 600;
+    color: var(--doc-orange);
+}
+
+/* Code blocks - doc style */
+.md-typeset pre {
+    background-color: var(--doc-gray-light);
+    border: 1px solid var(--doc-border);
+    border-radius: 4px;
+}
+
+.md-typeset code {
+    background-color: var(--doc-gray-light);
+    color: var(--doc-gray-dark);
+    padding: 0.1rem 0.3rem;
+    border-radius: 3px;
+    font-size: 0.875rem;
+}
+
+/* Tables - doc style with alternating rows */
+.md-typeset table:not([class]) {
+    border: 1px solid var(--doc-border);
+    border-radius: 4px;
+    overflow: hidden;
+}
+
+.md-typeset table:not([class]) th {
+    background-color: var(--doc-gray-light);
+    font-weight: 600;
+    color: var(--doc-gray-dark);
+    border-bottom: 2px solid var(--doc-border);
+}
+
+.md-typeset table:not([class]) tbody tr:nth-child(odd) {
+    background-color: rgba(248, 248, 248, 0.5);
+}
+
+/* API Reference boxes - doc style */
+.md-typeset .admonition {
+    border: 1px solid var(--doc-border);
+    border-radius: 4px;
+    box-shadow: none;
+    margin: 1.5rem 0;
+}
+
+.md-typeset .admonition-title {
+    background-color: var(--doc-gray-light);
+    border-bottom: 1px solid var(--doc-border);
+    color: var(--doc-gray-dark);
+    font-weight: 600;
+}
+
+/* Links - doc blue with orange hover */
+.md-typeset a {
+    color: var(--doc-blue);
+    text-decoration: none;
+}
+
+.md-typeset a:hover {
+    color: var(--doc-orange);
+    text-decoration: underline;
+}
+
+/* Header/nav bar - clean white like doc */
+.md-header {
+    background-color: #FFFFFF;
+    color: var(--doc-gray-dark);
+    box-shadow: 0 1px 3px rgba(0,0,0,0.1);
+}
+
+.md-header__title {
+    color: var(--doc-gray-dark);
+}
+
+/* Search - doc style */
+.md-search__input {
+    background-color: var(--doc-gray-light);
+    color: var(--doc-gray-dark);
+}
+
+/* Parameter/attribute lists - doc style */
+.md-typeset dl dt {
+    font-weight: 600;
+    color: var(--doc-gray-dark);
+    font-family: monospace;
+    background-color: var(--doc-gray-light);
+    padding: 0.3rem 0.5rem;
+    border-radius: 3px;
+    margin-bottom: 0.5rem;
+}
+
+/* Custom class for API reference cards */
+.doc-api-card {
+    border: 1px solid var(--doc-border);
+    border-radius: 4px;
+    padding: 1.5rem;
+    margin: 1.5rem 0;
+    background-color: #FFFFFF;
+}
+
+.doc-api-card h3 {
+    margin-top: 0;
+    color: var(--doc-orange);
+}
+
+/* Remove Material shadows for cleaner look */
+.md-sidebar__scrollwrap,
+.md-content__inner,
+.md-search__output {
+    box-shadow: none;
+}
+
+/* Buttons - doc style */
+.md-button {
+    background-color: var(--doc-orange);
+    color: white;
+    border: none;
+    border-radius: 4px;
+    font-weight: 500;
+}
+
+.md-button:hover {
+    background-color: var(--doc-orange-light);
 }

@@ -16,17 +16,15 @@ theme:
     - search.highlight
     - search.share
   palette:
-    - media: "(prefers-color-scheme: light)"
-      scheme: default
-      primary: indigo
-      accent: indigo
+    - scheme: default
+      primary: white
+      accent: orange
       toggle:
         icon: material/brightness-7
         name: Switch to dark mode
-    - media: "(prefers-color-scheme: dark)"
-      scheme: slate
-      primary: indigo
-      accent: indigo
+    - scheme: slate
+      primary: grey
+      accent: orange
       toggle:
         icon: material/brightness-4
         name: Switch to light mode
@@ -98,6 +96,7 @@ nav:
       - How-To Guides:
           - How to Submit Orders: technical/how-to/how-to-submit-orders.md
       - Reference:
+          - API Overview: technical/reference/api-overview.md
           - Exchange API: technical/reference/exchange-api.md
           - Math Examples: technical/reference/math-examples.md
       - Explanation:
