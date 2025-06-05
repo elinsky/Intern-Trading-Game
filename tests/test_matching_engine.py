@@ -536,23 +536,17 @@ def test_batch_randomization_is_fair():
     """Statistical test for randomization fairness."""
     # Run many iterations to ensure statistical fairness
     position_counts = {i: Counter() for i in range(3)}
-    iterations = 300
+    iterations = 1000  # More iterations for better statistical confidence
 
     for _ in range(iterations):
-        engine = BatchMatchingEngine()
-        order_books = {"TEST": OrderBook("TEST")}
-
         # Three orders at same price
         orders = [
             create_test_order(side="buy", price=100.0, trader_id=f"trader{i}")
             for i in range(3)
         ]
 
-        # Track which position each order gets after randomization
-        for order in orders:
-            engine.submit_order(order, order_books["TEST"])
-
-        # Use internal method to test randomization
+        # Use the engine's sorting method directly on the orders
+        engine = BatchMatchingEngine()
         sorted_orders = engine._randomize_same_price_orders(
             orders, descending=True
         )
@@ -563,7 +557,7 @@ def test_batch_randomization_is_fair():
 
     # Check that each trader gets each position roughly equally
     expected = iterations / 3
-    tolerance = 0.2  # 20% tolerance
+    tolerance = 0.2  # 20% tolerance with 1000 iterations should be stable
 
     for trader_index, counts in position_counts.items():
         for position, count in counts.items():
@@ -587,7 +581,7 @@ def test_batch_randomization_preserves_price_priority():
         create_test_order(side="buy", price=100.0, trader_id="mid2"),
     ]
 
-    # Randomize
+    # Randomize using the engine's method
     sorted_orders = engine._randomize_same_price_orders(
         orders, descending=True
     )

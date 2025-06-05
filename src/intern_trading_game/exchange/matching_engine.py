@@ -259,19 +259,6 @@ def _create_trade(
     )
 
 
-def _sort_orders(orders: List[Order], descending: bool) -> List[Order]:
-    """Sort orders by price with randomization at same level."""
-    # Filter out market orders (price=None) - they should be handled separately
-    # For batch matching, we only sort limit orders
-    return sorted(
-        orders,
-        key=lambda o: (
-            -o.price if descending and o.price is not None else (o.price or 0),
-            random.random(),  # nosec B311 - Not cryptographic use
-        ),
-    )
-
-
 @dataclass
 class BatchContext:
     """Context for batch matching pipeline - manages state through processing steps.
@@ -287,10 +274,13 @@ class BatchContext:
         Available order books for matching
     results : Dict[str, Dict[str, OrderResult]]
         Results being built, using defaultdict for simplicity
+    engine : BatchMatchingEngine
+        Reference to the engine for accessing sorting methods
     """
 
     pending_orders: Dict[str, List[Order]]
     order_books: Dict[str, OrderBook]
+    engine: "BatchMatchingEngine"
     results: Dict[str, Dict[str, OrderResult]] = field(
         default_factory=lambda: defaultdict(dict)
     )
@@ -332,11 +322,11 @@ class BatchContext:
             if instrument_id not in self.order_books:
                 continue
 
-            # Separate and sort orders
-            buy_orders = _sort_orders(
+            # Separate and sort orders using engine's randomization method
+            buy_orders = self.engine._randomize_same_price_orders(
                 [o for o in orders if o.side == "buy"], descending=True
             )
-            sell_orders = _sort_orders(
+            sell_orders = self.engine._randomize_same_price_orders(
                 [o for o in orders if o.side == "sell"], descending=False
             )
 
@@ -573,6 +563,7 @@ class BatchMatchingEngine(MatchingEngine):
         ctx = BatchContext(
             pending_orders=self.pending_orders.copy(),  # Copy to avoid mutations
             order_books=order_books,
+            engine=self,
         )
 
         # Execute pipeline steps
