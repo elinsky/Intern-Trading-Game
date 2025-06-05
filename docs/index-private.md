@@ -25,6 +25,7 @@ Each intern team plays one of the following:
 
 This documentation is organized into four main sections:
 
+
 1. **Tutorials**: Step-by-step guides to help you get started with the Intern Trading Game.
 2. **How-To Guides**: Practical guides for accomplishing specific tasks.
 3. **Reference**: Detailed API documentation and technical specifications.

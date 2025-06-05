@@ -47,6 +47,7 @@ Published to all participants simultaneously:
 ### Probability Tables
 
 Static reference data available to all:
+
 - Event probabilities for regime shifts
 - Historical impact statistics
 - Published in game documentation
@@ -72,12 +73,14 @@ Static reference data available to all:
 ```
 
 **Characteristics**:
+
 - Accuracy: ~66%
 - Lead time: 1-5 ticks
 - Updates when forecast changes
 - Silent during stable regimes
 
 **Strategic Value**:
+
 - Position before volatility increases
 - Adjust option strategies
 - Size trades appropriately
@@ -109,12 +112,14 @@ Static reference data available to all:
 ```
 
 **Characteristics**:
+
 - Accuracy: ~80%
 - Real-time updates
 - Includes statistical measures
 - Historical mean reversion data
 
 **Strategic Value**:
+
 - Immediate arbitrage opportunities
 - Sizing based on z-score
 - Timing exits with convergence

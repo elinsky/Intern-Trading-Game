@@ -48,6 +48,7 @@ High      0.01   0.09     0.90
 ### Event-Triggered Changes
 
 News events can force regime transitions:
+
 - Override natural transition probabilities
 - Immediate effect at next tick
 - Known probabilities (see [News Events](news-events.md))
@@ -55,6 +56,7 @@ News events can force regime transitions:
 ### Transition Patterns
 
 Common patterns observed:
+
 - **Low to Medium**: Gradual uncertainty increase
 - **Medium to High**: Sudden market stress
 - **High to Medium**: Volatility normalization
@@ -65,6 +67,7 @@ Common patterns observed:
 ### Hedge Fund Advantage
 
 Hedge funds receive advance warning of regime changes:
+
 - **Timing**: 1-5 ticks before transition
 - **Content**: Next regime and transition probability
 - **Accuracy**: ~66% reliable

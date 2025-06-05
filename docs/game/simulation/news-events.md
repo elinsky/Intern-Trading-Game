@@ -54,6 +54,7 @@ All participants have access to these published probabilities:
 ### What Everyone Sees
 
 When an event occurs, all participants immediately see:
+
 - News headline text
 - Timestamp
 - Historical probability table
@@ -66,6 +67,7 @@ Example broadcast:
 ### What Hedge Funds See
 
 With their volatility signal, hedge funds also receive:
+
 - Actual outcome (regime shift: yes/no)
 - New regime (if changing)
 - Advance timing (1-5 ticks early)
@@ -84,6 +86,7 @@ Example signal:
 ### Market Maker Challenge
 
 Market makers must:
+
 - React only to the headline
 - Use probability tables
 - Infer actual impact from price action
@@ -94,6 +97,7 @@ Market makers must:
 ### Regime Shift Events
 
 When a regime shift occurs:
+
 1. Current tick continues in old regime
 2. Transition happens at tick boundary
 3. New regime persists until next event
@@ -102,6 +106,7 @@ When a regime shift occurs:
 ### Price Jump Events
 
 Immediate price impacts:
+
 - Magnitude: 0.5-2.0% move
 - Direction: Correlated with news sentiment
 - SPY follows with lag and noise
@@ -110,6 +115,7 @@ Immediate price impacts:
 ### False Signals
 
 No actual market impact:
+
 - Tests participant reaction
 - Can trigger overtrading
 - Reveals strategy robustness

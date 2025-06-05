@@ -10,13 +10,16 @@ Spot pricing mismatches between SPX and SPY, capturing small, consistent profits
 
 - **Signal Access**: Instant SPX–SPY tracking-error signal with 80% accuracy (e.g., "SPY overpriced vs SPX by 0.15").
 - **Fees/Incentives**:
+
   - **Standard Maker Rebate**: +\$0.01 per filled side.
   - **Standard Taker Fee**: -\$0.02 per executed contract.
   - **Extra Points**: Scoring bonus for successful round-trip trades that net out risk.
 - **Constraints**:
+
   - SPX and SPY positions must be roughly balanced (within 2:1 ratio).
   - Position limits: Maximum 100 contracts per leg of paired trades.
 - **Scoring Focus**:
+
   - **Signal P&L**: Profit/loss when trading on tracking error signals
   - **Balance Ratio**: Penalty if SPX/SPY positions exceed 2:1 ratio
   - **Signal Response Time**: Bonus for acting within 1 tick of signal
@@ -53,6 +56,7 @@ Spot pricing mismatches between SPX and SPY, capturing small, consistent profits
 
 3. **Execute the Arbitrage**
    - If SPY showing excess realized vol but options equally priced:
+
      - **Buy** SPY options (underpriced given higher realized vol)
      - **Sell** SPX options (overpriced given lower realized vol)
    - Maintain position balance within 2:1 ratio

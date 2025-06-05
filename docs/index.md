@@ -25,6 +25,7 @@ Each intern team plays one of the following:
 
 This documentation covers:
 
+
 1. **Game Fundamentals**: Core concepts, mechanics, and market structure
 2. **Trading Rules**: Constraints, execution rules, and order types
 3. **Role Details**: Specific requirements and strategies for each role
@@ -33,6 +34,7 @@ This documentation covers:
 ## Getting Started
 
 To understand the game mechanics, start with:
+
 
 1. [Game Overview](game/overview.md) - High-level introduction
 2. [Core Concepts](game/fundamentals/core-concepts.md) - Key terminology and ideas

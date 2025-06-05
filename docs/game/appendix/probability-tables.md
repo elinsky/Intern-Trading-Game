@@ -107,6 +107,7 @@ Actual Stable    34%             66%
 ### News Event Timing
 
 **Poisson Distribution Parameters**:
+
 - Average interval: 2.5 hours
 - Minimum gap: 30 minutes
 - Maximum gap: 6 hours
@@ -135,6 +136,7 @@ Actual Stable    34%             66%
 ```
 Jump Size = Sign × exp(μ + σ × Z)
 Where:
+
 - μ = log(expected_magnitude)
 - σ = 0.3 (volatility of jump size)
 - Z = standard normal random
@@ -143,6 +145,7 @@ Where:
 ### SPY Tracking Error Distribution
 
 **Normal Distribution**:
+
 - Mean: 0%
 - Daily Std Dev: 0.15%
 - Intraday Autocorrelation: 0.85

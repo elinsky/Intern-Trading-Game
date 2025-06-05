@@ -7,6 +7,7 @@ Create a realistic, role-based market simulation where each intern team acts as 
 ## What You'll Build
 
 Each team develops a trading bot that:
+
 - Connects to the market simulation
 - Analyzes real-time market data and signals
 - Executes trades based on your strategy
@@ -25,6 +26,7 @@ The game simulates two correlated underlyings with options:
 ## How It Works
 
 Every **5 minutes**, a new market tick occurs with precise timing:
+
 
 1. **T+0:00 - Price Generation**: New underlying prices calculated
 2. **T+0:30 to T+3:00 - Order Window**: Bots submit orders (2.5 minute window)
@@ -45,6 +47,7 @@ Each team is assigned one trading role with unique advantages and constraints:
 ## Evaluation
 
 Teams are scored on:
+
 - **Quantitative Performance**: Role-specific metrics (P&L, Sharpe, spread capture)
 - **Strategy Development**: Code quality, innovation, and adaptation
 - **Research & Analysis**: Backtesting, signal validation, risk management

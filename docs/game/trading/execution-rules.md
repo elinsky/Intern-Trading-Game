@@ -6,6 +6,7 @@
 
 The exchange uses a standard price-time priority algorithm:
 
+
 1. **Price Priority**: Best prices execute first
    - Highest bids match before lower bids
    - Lowest asks match before higher asks
@@ -19,6 +20,7 @@ The exchange uses a standard price-time priority algorithm:
 
 ```
 For each instrument:
+
 1. Sort buy orders by price (descending) then time (ascending)
 2. Sort sell orders by price (ascending) then time (ascending)
 3. Match crossing orders until no more crosses exist
@@ -53,6 +55,7 @@ Result: Order rests as best bid
 ### Fill Allocation
 
 When multiple orders exist at the same price:
+
 - Strict time priority (no pro-rata)
 - Full fills before partial fills
 - Minimum fill size: 1 contract
@@ -142,6 +145,7 @@ def validate_order(order, role, current_position):
 ### Order Rejection
 
 Common rejection reasons:
+
 - Position limit exceeded
 - Invalid instrument
 
@@ -151,6 +155,7 @@ Common rejection reasons:
 
 ```
 Bids:
+
 - 25.45 @ 10:30:00.100 (Trader A, 50 lots)
 - 25.45 @ 10:30:00.200 (Trader B, 30 lots)
 - 25.40 @ 10:30:00.050 (Trader C, 100 lots)
@@ -158,6 +163,7 @@ Bids:
 New Sell Order: 60 @ 25.40
 
 Execution:
+
 1. Fill 50 @ 25.45 with Trader A
 2. Fill 10 @ 25.45 with Trader B
 3. Trader B has 20 remaining
@@ -171,6 +177,7 @@ Market Maker Quote: Bid 25.40 / Ask 25.60
 Hedge Fund Limit: Buy 100 @ 25.60
 
 Result:
+
 - HF order takes liquidity, fills @ 25.60
 - HF pays taker fee
 - MM earns maker rebate

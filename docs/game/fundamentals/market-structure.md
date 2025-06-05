@@ -14,6 +14,7 @@ The game features two correlated equity indices:
 ### Correlation Model
 
 SPY is designed to track SPX with imperfections:
+
 - Base correlation: ~0.98
 - Tracking error: 0.1-0.3% daily
 - Lag: 1-2 ticks
@@ -25,10 +26,12 @@ This creates arbitrage opportunities between the two products.
 
 Each underlying has listed options with:
 
+
 **Strike Selection**
 - Sufficient strikes to cover ±30% moves
 - Ensures all delta ranges (0.05 to 0.95) are tradeable
 - Typical setup for SPX at 4400:
+
   - Downside: 3080, 3300, 3520, 3740, 3960, 4180
   - ATM area: 4290, 4400, 4510
   - Upside: 4620, 4840, 5060, 5280, 5500, 5720
@@ -91,6 +94,7 @@ Fees vary by role and order type:
 ### Real-Time Data
 
 Each tick provides:
+
 - Current bid/ask for all instruments
 - Last trade price and size
 - Order book depth (5 levels)

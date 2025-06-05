@@ -69,6 +69,7 @@ This engine collects orders during a submission window and processes them all si
 **Mathematical Guarantees:**
 
 For orders at the same price level:
+
 - P(Order A fills before Order B) = 1/2
 - P(Order i in position j) = 1/n for n orders
 

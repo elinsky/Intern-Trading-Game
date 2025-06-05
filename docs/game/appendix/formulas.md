@@ -11,6 +11,7 @@ S(t+Δt) = S(t) × exp((μ - σ²/2)Δt + σ√Δt × Z)
 ```
 
 Where:
+
 - `S(t)` = Price at time t
 - `μ` = Drift (typically 0 for intraday)
 - `σ` = Volatility (depends on regime)
@@ -24,6 +25,7 @@ SPY(t) = (SPX(t) / 10) × (1 + ε(t)) + η(t)
 ```
 
 Where:
+
 - `ε(t)` = Tracking error (~N(0, 0.0015²) daily)
 - `η(t)` = Additional noise (~N(0, 0.0005²) per tick)
 
@@ -32,6 +34,7 @@ Where:
 ### Black-Scholes Formula
 
 For European options:
+
 
 **Call Option**:
 ```
@@ -50,6 +53,7 @@ d₂ = d₁ - σ√T
 ```
 
 Parameters:
+
 - `S₀` = Current underlying price
 - `K` = Strike price
 - `r` = Risk-free rate (assume 0 for simplicity)
@@ -62,6 +66,7 @@ Parameters:
 ### Delta (Δ)
 
 Rate of change of option price with respect to underlying:
+
 
 **Call Delta**:
 ```
@@ -95,6 +100,7 @@ Sensitivity to volatility:
 
 Time decay:
 
+
 **Call Theta**:
 ```
 Θ_call = -(S₀ × φ(d₁) × σ) / (2√T) - rK × e^(-rT) × N(d₂)
@@ -109,6 +115,7 @@ Sharpe = (R_p - R_f) / σ_p
 ```
 
 Where:
+
 - `R_p` = Portfolio return
 - `R_f` = Risk-free rate (typically 0 for intraday)
 - `σ_p` = Standard deviation of returns
@@ -145,6 +152,7 @@ f* = (p × b - q) / b
 ```
 
 Where:
+
 - `f*` = Fraction of capital to bet
 - `p` = Probability of win
 - `q` = Probability of loss (1-p)
@@ -284,6 +292,7 @@ Spread* = 2/γ × ln(1 + γ/k)
 ```
 
 Where:
+
 - `γ` = Risk aversion parameter
 - `k` = Order arrival rate
 

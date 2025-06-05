@@ -7,6 +7,7 @@ Understanding these fundamental concepts is essential for success in the Intern 
 ### Trading Desks
 
 Each intern team operates as one of three specialized trading desks:
+
 - **Market Makers**: Provide liquidity by continuously quoting bid/ask prices
 - **Hedge Funds**: Take directional or volatility positions using signals
 - **Arbitrage Desks**: Exploit price discrepancies between SPX and SPY
@@ -43,6 +44,7 @@ Automated simulation adds realistic retail trading patterns, market noise, and l
 ### Market Data
 
 All participants receive:
+
 - Current bid/ask prices for all instruments
 - Last trade prices and volumes
 - Order book depth (top 5 levels)
@@ -51,6 +53,7 @@ All participants receive:
 ### News Events
 
 Published every 1-4 hours with known probability impacts:
+
 - May trigger volatility regime changes
 - May cause price jumps
 - Create trading opportunities
@@ -58,6 +61,7 @@ Published every 1-4 hours with known probability impacts:
 ### Alpha Signals
 
 Role-specific information advantages:
+
 - **Hedge Funds**: Advance volatility regime warnings
 - **Arbitrage Desks**: SPX-SPY tracking error signals
 - **Market Makers**: Must infer from price action
@@ -67,6 +71,7 @@ Role-specific information advantages:
 ### Position Limits
 
 Each role has specific constraints:
+
 - Maximum positions per instrument
 - Total portfolio limits
 - Inventory management requirements
@@ -81,6 +86,7 @@ Each role has specific constraints:
 ## Next Steps
 
 With these concepts understood, explore:
+
 - [Market Structure](market-structure.md) - Detailed instrument specifications
 - [Game Mechanics](game-mechanics.md) - How the simulation operates
 - Your specific [role documentation](../roles/)

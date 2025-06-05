@@ -208,6 +208,7 @@ def calculate_option_price(S, K, r, q, T, sigma):
 ### Why Raw Strings Are Required
 
 Without the `r` prefix, Python interprets backslashes as escape sequences:
+
 - `\t` becomes a tab character
 - `\f` becomes a form feed character
 - `\n` becomes a newline
@@ -231,6 +232,7 @@ $$\text{Value} = \text{Price} \times \text{Quantity}$$
 ## Resources
 
 For more information on using math in documentation:
+
 
 - [MathJax Documentation](https://docs.mathjax.org/)
 - [LaTeX Math Symbols Cheat Sheet](https://www.caam.rice.edu/~heinken/latex/symbols.pdf)

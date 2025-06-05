@@ -9,25 +9,30 @@ Keep implied volatility aligned with realized volatility by trading gamma before
 ## 1. Role Details
 
 - **Signal Access**:
+
   - Receives advance warning a configurable number of ticks before news events
   - Signal includes:
+
     - **Regime Change Prediction**: Whether the news event will trigger a volatility regime change
     - **Probability Transition Matrix**: Shows transition probabilities from current state to next state
     - **Three Volatility States**: Low vol, medium vol, and high vol (all configurable)
     - **Signal Accuracy**: Configurable (e.g., 66% accuracy means signal is correct 66% of the time)
   - Signal timing is configurable (e.g., arrives 2 ticks before the actual news event)
 - **Fees/Incentives**:
+
   - **Standard Maker Rebate**: +\$0.01 per filled side (on single-sided limit orders).
   - **Standard Taker Fee**: -\$0.02 per executed contract.
   - **Position Limits**: Maximum 150 contracts per option, 500 total across all options.
   - **Fee Structure**: Standard fees (no enhanced rebates like Market Makers).
 - **Constraints**:
+
   - **No Market Making**: Cannot quote two-sided markets (no simultaneous bid and ask).
   - Can only place single-sided limit orders or market orders.
   - Position limits: 150 per option, 500 total options, 200 underlying contracts.
   - **Delta Neutrality**: Must maintain portfolio delta within ±50 deltas at each tick.
   - **Rehedging Required**: Must adjust underlying position when delta exceeds limits.
 - **Scoring Focus**:
+
   - **Window P&L**: Total profit/loss from event to event (complete regime cycles)
   - **Rehedging Profits**: P&L specifically from delta hedging trades
   - **Delta Penalty**: Deduction for exceeding ±50 delta limit per tick
@@ -38,6 +43,7 @@ Keep implied volatility aligned with realized volatility by trading gamma before
 
 - **Execution Flexibility**: Can use limit orders for better fills or market orders for immediacy.
 - **Signal Edge**: Gets advance warning before news events with:
+
   - Regime change predictions
   - Full probability transition matrix between volatility states
   - Configurable lead time to position before the market reacts

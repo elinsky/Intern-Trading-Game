@@ -6,6 +6,7 @@ This document explains the order matching algorithm used in the Intern Trading G
 
 The order matching engine is the core of any trading system. It's responsible for:
 
+
 1. Maintaining the order book (the collection of all outstanding buy and sell orders)
 2. Matching incoming orders against existing orders
 3. Generating trades when orders match
@@ -14,6 +15,7 @@ The order matching engine is the core of any trading system. It's responsible fo
 ## Price-Time Priority
 
 The Intern Trading Game exchange uses a **price-time priority** matching algorithm, which is the standard for most financial exchanges. This means:
+
 
 1. **Price Priority**: Better prices get matched first
    - For buy orders (bids): Higher prices have priority
@@ -57,6 +59,7 @@ When a new order arrives, the matching process follows these steps:
 ### 2. Check for Matching Prices
 
 For a limit order to match:
+
 - A buy order's price must be >= the best ask price
 - A sell order's price must be <= the best bid price
 
@@ -65,6 +68,7 @@ Market orders always match at the best available price.
 ### 3. Execute Trades
 
 When a match is found:
+
 - Create a trade at the price of the resting order
 - Reduce the quantities of both orders
 - If the resting order is fully filled, remove it from the book
@@ -77,6 +81,7 @@ If the new order is not fully filled and it's a limit order, add the remaining q
 ## Example: Order Matching Process
 
 Let's walk through an example of the matching process:
+
 
 **Current Order Book:**
 - Best Bid: $5.25 (10 contracts)
@@ -180,6 +185,7 @@ In real exchanges, market orders often have protections to prevent them from exe
 ## TradingContext
 
 The order matching algorithm operates within the following trading context:
+
 
 - European-style options on simulated SPX and SPY underlyings
 - Tick-based simulation (not continuous time)

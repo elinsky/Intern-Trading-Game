@@ -6,6 +6,7 @@ This directory contains the documentation for the Intern Trading Game project. T
 
 The documentation follows a four-quadrant structure:
 
+
 1. **Tutorials**: Step-by-step guides to help you get started with the Intern Trading Game.
 2. **How-To Guides**: Practical guides for accomplishing specific tasks.
 3. **Reference**: Detailed API documentation and technical specifications.
@@ -16,6 +17,7 @@ The documentation follows a four-quadrant structure:
 ### Local Development
 
 To build and serve the documentation locally:
+
 
 1. Install the required dependencies:
 
@@ -48,6 +50,7 @@ The documentation is automatically deployed to GitHub Pages when changes are pus
 ### Adding New Pages
 
 1. Create a new Markdown file in the appropriate directory:
+
    - `tutorials/` for tutorials
    - `how-to/` for how-to guides
    - `reference/` for reference documentation
@@ -57,8 +60,10 @@ The documentation is automatically deployed to GitHub Pages when changes are pus
 
 ```yaml
 nav:
+
   - Home: index.md
   - Tutorials:
+
       - Your New Tutorial: tutorials/your-new-tutorial.md
   # ...
 ```
@@ -67,8 +72,10 @@ nav:
 
 The API reference documentation is automatically generated from docstrings in the code. To ensure your code is properly documented:
 
+
 1. Use NumPy-style docstrings for all classes, methods, and functions.
 2. Include the following sections in your docstrings:
+
    - Summary line
    - Extended description
    - Parameters
@@ -90,6 +97,7 @@ The theme is configured in `mkdocs.yml`. You can customize the colors, fonts, an
 ### Extensions
 
 The documentation uses several Markdown extensions to enhance the content:
+
 
 - `admonition`: For adding notes, warnings, and other callouts
 - `pymdownx.superfences`: For code blocks with syntax highlighting

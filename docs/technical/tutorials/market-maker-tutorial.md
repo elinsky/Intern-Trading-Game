@@ -34,6 +34,7 @@ jupyter notebook notebooks/market_maker_starter.ipynb
 
 As a market maker, your objective is to:
 
+
 1. Quote fair prices for options
 2. Manage inventory risk
 3. Profit from the bid-ask spread
@@ -102,6 +103,7 @@ def simple_market_maker(exchange, instrument_id, spread_percentage=0.02):
 ## Performance Evaluation
 
 Your market making strategy will be evaluated on:
+
 
 - P&L
 - Quote width and uptime

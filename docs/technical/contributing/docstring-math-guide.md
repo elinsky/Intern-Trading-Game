@@ -21,6 +21,7 @@ def calculate_option_price(S, K, r, T, sigma):
 ### Why Raw Strings Are Required
 
 Without the `r` prefix, Python interprets backslashes as escape sequences:
+
 - `\t` becomes a tab character
 - `\f` becomes a form feed character
 - `\n` becomes a newline

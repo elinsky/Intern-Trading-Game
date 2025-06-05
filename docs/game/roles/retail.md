@@ -7,6 +7,7 @@ The Retail Flow represents automated, random trading activity that simulates typ
 ## Purpose
 
 Retail flow simulation serves critical market functions:
+
 - Creates realistic order flow patterns
 - Adds liquidity at various price levels
 - Generates market noise and unpredictability

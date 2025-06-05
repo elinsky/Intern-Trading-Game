@@ -125,6 +125,7 @@ Net Fee = (Maker Rebate × Maker Volume) - (Taker Fee × Taker Volume)
 ### Pre-Trade Checks
 
 All orders validated for:
+
 - Position limit compliance
 - Order size limits
 - Role permissions

@@ -16,6 +16,7 @@ T+5:00    Next Tick Begins
 ```
 
 **Critical Timing**:
+
 - Orders submitted before T+0:30 are rejected
 - Orders submitted after T+3:00 are rejected
 - No modifications allowed after submission
@@ -55,6 +56,7 @@ T+5:00    Next Tick Begins
 
 Orders are matched using price-time priority:
 
+
 1. **Best Price First**: Orders offering better prices execute first
 2. **Time Priority**: Among same-priced orders, earlier orders execute first
 3. **Pro-Rata**: Large orders may be partially filled
@@ -77,6 +79,7 @@ Orders are matched using price-time priority:
 ### Public Information
 
 Available to all participants:
+
 - Current market prices
 - Order book (top 5 levels)
 - Trade prints
@@ -85,6 +88,7 @@ Available to all participants:
 ### Private Information
 
 Role-specific signals:
+
 - Hedge Fund: Volatility regime predictions
 - Arbitrage Desk: Tracking error measurements
 - Market Maker: Order flow (from their own trades)

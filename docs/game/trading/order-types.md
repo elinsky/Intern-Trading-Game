@@ -190,6 +190,7 @@ Bot → API → Validation → Order Book
 ### Order Tracking
 
 Each order receives:
+
 - Unique order ID
 - Timestamp
 - Status updates

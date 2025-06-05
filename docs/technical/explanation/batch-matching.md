@@ -4,6 +4,7 @@
 
 The Intern Trading Game supports two order matching modes:
 
+
 1. **Continuous Matching**: Orders match immediately upon submission (traditional exchange behavior)
 2. **Batch Matching**: Orders are collected during a window and matched simultaneously
 
@@ -63,11 +64,13 @@ At 10:03:30: Batch execution
 
 The Intern Trading Game uses 5-minute ticks with specific phases:
 
+
 1. **T+0:00**: New prices published
 2. **T+0:30 to T+3:00**: Order submission window
 3. **T+3:30**: Batch matching execution
 
 Batch matching ensures:
+
 
 - All strategies have equal opportunity to react to new prices
 - No advantage from submitting orders milliseconds faster
@@ -81,6 +84,7 @@ The key innovation in our batch matching is fair randomization:
 ### Traditional Approach (Time Priority)
 ```python
 # Orders at price $100 in submission order:
+
 1. Trader A (submitted at 0:31)
 2. Trader B (submitted at 0:45)
 3. Trader C (submitted at 1:30)
@@ -150,6 +154,7 @@ sorted_sells = [Sell@101]  # Ascending
 ```
 
 In both cases Trader A gets the fill, but the key difference is:
+
 - Sequential: Orders are processed one by one, each seeing the book state left by previous orders
 - Batch: All orders are matched simultaneously against each other
 
@@ -159,6 +164,7 @@ The distinction becomes critical when there are multiple crossing orders:
 
 ```text
 Batch contains:
+
 - Buy 10 @ $100 (Trader A)
 - Buy 10 @ $100 (Trader B)
 - Buy 10 @ $100 (Trader C)
@@ -185,6 +191,7 @@ def _randomize_same_price_orders(self, orders: List[Order], descending: bool) ->
 ```
 
 This approach:
+
 - Maintains strict price priority
 - Randomizes only within same price
 - O(n log n) complexity
@@ -207,6 +214,7 @@ This pre-organization makes batch execution more efficient.
 
 For orders at the same price level:
 
+
 - **Fairness**: P(Order A executes before Order B) = 0.5
 - **Uniform Distribution**: Each order has equal probability of any position
 - **Independence**: Previous batch results don't affect future batches
@@ -214,6 +222,7 @@ For orders at the same price level:
 ## Example Scenario
 
 Consider a batch with:
+
 - 3 buy orders at $100 (from traders A, B, C)
 - 1 sell order at $100 with quantity for only 1 buyer
 

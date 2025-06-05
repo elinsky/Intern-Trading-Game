@@ -119,6 +119,7 @@ for i in range(config.total_ticks):
 
 Each tick follows this timeline:
 
+
 - **T+0:00** - Price Publication
   - New SPX/SPY prices generated
   - Market data prepared

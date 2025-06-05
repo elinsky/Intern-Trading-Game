@@ -77,6 +77,7 @@ Arbitrage desks receive a proprietary signal indicating current mispricing:
 
 Since options exist on both underlyings:
 
+
 **Relative Value**
 - SPX calls vs SPY calls (scaled)
 - Put spread arbitrage
@@ -86,6 +87,7 @@ Since options exist on both underlyings:
 ```
 Signal: SPY overvalued by 0.3%
 Action:
+
 - Sell 10 SPY 440 calls
 - Buy 1 SPX 4400 calls
 - Hold until convergence

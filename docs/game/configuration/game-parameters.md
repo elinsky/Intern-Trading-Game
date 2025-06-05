@@ -169,6 +169,7 @@ From High  0.01    0.09    0.90
 ### Dynamic Adjustments
 
 Some parameters may be adjusted during the game:
+
 - Volatility regime probabilities
 - Event frequencies
 - Signal accuracies
@@ -177,6 +178,7 @@ Some parameters may be adjusted during the game:
 ### Fixed Parameters
 
 These remain constant throughout:
+
 - Position limits
 - Role constraints
 - Tick duration

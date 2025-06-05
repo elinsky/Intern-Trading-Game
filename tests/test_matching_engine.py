@@ -189,20 +189,30 @@ def test_batch_matching_engine_randomizes_same_price(batch_engine):
     # and check that order execution is roughly uniform
 
     fill_counts = Counter()
-    iterations = 100
+    iterations = 1000  # More iterations for stable statistics
 
-    for _ in range(iterations):
+    for iter_num in range(iterations):
         # Reset engine for each iteration
         engine = BatchMatchingEngine()
         order_books = {"TEST": OrderBook("TEST")}
 
         # Create 3 buy orders at same price, 1 sell order
+        # Use iter_num to ensure unique order IDs
         buy_orders = [
-            create_test_order(side="buy", price=100.0, trader_id=f"buyer{i}")
+            create_test_order(
+                side="buy",
+                price=100.0,
+                trader_id=f"buyer{i}",
+                order_id=f"BUY-{iter_num}-{i}",
+            )
             for i in range(3)
         ]
         sell_order = create_test_order(
-            side="sell", price=100.0, quantity=10, trader_id="seller"
+            side="sell",
+            price=100.0,
+            quantity=10,
+            trader_id="seller",
+            order_id=f"SELL-{iter_num}",
         )
 
         # Submit orders

@@ -5,6 +5,7 @@ This guide explains how to create and submit orders to the Intern Trading Game e
 ## Order Types
 
 The exchange supports two types of orders:
+
 - **Limit Orders**: Specify a price at which you're willing to buy or sell
 - **Market Orders**: Execute immediately at the best available price
 
