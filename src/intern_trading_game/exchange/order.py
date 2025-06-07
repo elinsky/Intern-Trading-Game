@@ -177,6 +177,12 @@ class Order:
         ):
             raise ValueError("Limit orders must have a positive price")
 
+        # Validate price is in penny increments (for limit orders)
+        if self.order_type == OrderType.LIMIT and self.price is not None:
+            # Check if price has more than 2 decimal places
+            if round(self.price, 2) != self.price:
+                raise ValueError("Order price must be in penny increments")
+
         # Validate quantity
         if self.quantity <= 0:
             raise ValueError("Order quantity must be positive")
@@ -243,6 +249,18 @@ class Order:
             True if the order is filled, False otherwise.
         """
         return self.remaining_quantity == 0
+
+    @property
+    def filled_quantity(self) -> float:
+        """
+        Get the quantity that has been filled.
+
+        Returns
+        -------
+        float
+            The quantity that has been filled (original quantity minus remaining).
+        """
+        return self.quantity - self.remaining_quantity
 
     def fill(self, quantity: float) -> None:
         """
