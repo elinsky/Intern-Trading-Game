@@ -28,18 +28,18 @@ class TestTickPhase:
         # Given - TickPhase enum is imported
 
         # When - We check each phase value
-        price_pub = TickPhase.PRICE_PUBLICATION.value
-        order_open = TickPhase.ORDER_WINDOW_OPEN.value
-        order_close = TickPhase.ORDER_WINDOW_CLOSE.value
-        matching = TickPhase.BATCH_MATCHING.value
-        tick_end = TickPhase.TICK_END.value
+        market_data = TickPhase.MARKET_DATA.value
+        pre_open = TickPhase.PRE_OPEN.value
+        open_phase = TickPhase.OPEN.value
+        trading = TickPhase.TRADING.value
+        closed = TickPhase.CLOSED.value
 
         # Then - Values match expected timing
-        assert price_pub == (0, 0), "Price publication at T+0:00"
-        assert order_open == (0, 30), "Order window opens at T+0:30"
-        assert order_close == (3, 0), "Order window closes at T+3:00"
-        assert matching == (3, 30), "Batch matching at T+3:30"
-        assert tick_end == (5, 0), "Tick ends at T+5:00"
+        assert market_data == (0, 0), "Market data update at T+0:00"
+        assert pre_open == (0, 30), "Pre-open phase at T+0:30"
+        assert open_phase == (3, 0), "Open phase at T+3:00"
+        assert trading == (3, 30), "Trading phase at T+3:30"
+        assert closed == (5, 0), "Closed phase at T+5:00"
 
     def test_total_seconds_calculation(self):
         """Test conversion of phase timing to total seconds.
@@ -53,11 +53,11 @@ class TestTickPhase:
         # When - We calculate total seconds for each phase
 
         # Then - Calculations are correct
-        assert TickPhase.PRICE_PUBLICATION.total_seconds == 0
-        assert TickPhase.ORDER_WINDOW_OPEN.total_seconds == 30
-        assert TickPhase.ORDER_WINDOW_CLOSE.total_seconds == 180
-        assert TickPhase.BATCH_MATCHING.total_seconds == 210
-        assert TickPhase.TICK_END.total_seconds == 300
+        assert TickPhase.MARKET_DATA.total_seconds == 0
+        assert TickPhase.PRE_OPEN.total_seconds == 30
+        assert TickPhase.OPEN.total_seconds == 180
+        assert TickPhase.TRADING.total_seconds == 210
+        assert TickPhase.CLOSED.total_seconds == 300
 
 
 class TestMarketData:

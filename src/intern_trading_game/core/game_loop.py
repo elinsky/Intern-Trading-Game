@@ -47,11 +47,11 @@ class GameLoop:
     Notes
     -----
     The game loop follows a strict 5-minute tick cycle:
-    - T+0:00: Trigger price generation
-    - T+0:30: Signal order window open
-    - T+3:00: Signal order window close
-    - T+3:30: Trigger batch matching
-    - T+5:00: Signal tick end
+    - T+0:00: Market data phase - new prices generated
+    - T+0:30: Pre-open phase - orders accepted
+    - T+3:00: Open phase - order acceptance ends
+    - T+3:30: Trading phase - matching occurs
+    - T+5:00: Closed phase - tick completes
 
     The Tick Controller does not handle orders directly - it only
     publishes timing events that other services respond to.
@@ -138,24 +138,24 @@ class GameLoop:
         print(f"TICK {self.current_tick} - {self.tick_start_time}")
         print(f"{'='*50}")
 
-        # T+0:00 - Price Publication Phase
-        self._trigger_price_generation()
-        self._wait_until_phase(TickPhase.ORDER_WINDOW_OPEN)
+        # T+0:00 - Market Data Phase
+        self._trigger_market_data_update()
+        self._wait_until_phase(TickPhase.PRE_OPEN)
 
-        # T+0:30 - Order Window Opens
-        self._signal_order_window_open()
-        self._wait_until_phase(TickPhase.ORDER_WINDOW_CLOSE)
+        # T+0:30 - Pre-Open Phase
+        self._signal_pre_open()
+        self._wait_until_phase(TickPhase.OPEN)
 
-        # T+3:00 - Order Window Closes
-        self._signal_order_window_close()
-        self._wait_until_phase(TickPhase.BATCH_MATCHING)
+        # T+3:00 - Open Phase
+        self._signal_open()
+        self._wait_until_phase(TickPhase.TRADING)
 
-        # T+3:30 - Batch Matching
-        self._trigger_batch_matching()
-        self._wait_until_phase(TickPhase.TICK_END)
+        # T+3:30 - Trading Phase
+        self._trigger_trading()
+        self._wait_until_phase(TickPhase.CLOSED)
 
-        # T+5:00 - Tick End
-        self._signal_tick_end()
+        # T+5:00 - Closed Phase
+        self._signal_closed()
 
         self.current_tick += 1
 
@@ -179,14 +179,14 @@ class GameLoop:
             print(f"  Waiting {wait_seconds:.1f}s until {phase.name}...")
             time.sleep(wait_seconds)
 
-    def _trigger_price_generation(self) -> None:
-        """Signal price model to generate new prices.
+    def _trigger_market_data_update(self) -> None:
+        """Signal market data update phase.
 
         Publishes event at T+0:00 that triggers:
         - Price Model to generate new SPX/SPY prices
         - Market Data Service to prepare distribution
         """
-        print("T+0:00 - Triggering price generation...")
+        print("T+0:00 - Market data update...")
 
         if self.price_model:
             # Trigger: price_model.on_tick_start(self.current_tick)
@@ -198,15 +198,15 @@ class GameLoop:
             # Trigger: market_data_service.prepare_tick_data()
             print("  Market Data Service triggered (stub)")
 
-    def _signal_order_window_open(self) -> None:
-        """Signal that order submission window is open.
+    def _signal_pre_open(self) -> None:
+        """Signal pre-open phase where orders are accepted.
 
         Publishes event at T+0:30 that triggers:
         - Strategies can begin submitting orders
         - Order Validator begins accepting orders
         - Market Data Service distributes data to strategies
         """
-        print("T+0:30 - Order window OPEN")
+        print("T+0:30 - PRE-OPEN phase")
 
         # In full implementation, this would publish an event
         # that strategies and other services subscribe to
@@ -220,33 +220,34 @@ class GameLoop:
             for strategy in self.strategies:
                 print(f"    - {strategy.get_name()} notified")
 
-    def _signal_order_window_close(self) -> None:
-        """Signal that order submission window is closed.
+    def _signal_open(self) -> None:
+        """Signal open phase - order submission ends.
 
         Publishes event at T+3:00 that triggers:
         - Order Validator stops accepting new orders
         - Strategies cannot submit new orders
         """
-        print("T+3:00 - Order window CLOSED")
+        print("T+3:00 - OPEN phase - order submission closed")
         print("  No new orders accepted")
 
-    def _trigger_batch_matching(self) -> None:
-        """Signal exchange to execute batch matching.
+    def _trigger_trading(self) -> None:
+        """Signal trading phase - execute matching.
 
         Publishes event at T+3:30 that triggers:
-        - Exchange Engine to match all resting orders
+        - Exchange Engine to match orders (batch or continuous)
         - Position Service to update from trades
         """
-        print("T+3:30 - Triggering batch matching...")
+        print("T+3:30 - TRADING phase - executing matches...")
 
         if self.exchange:
             # In full implementation:
-            # self.exchange.execute_batch_matching()
-            print("  Exchange batch matching triggered (stub)")
+            # self.exchange.execute_batch_matching() for batch mode
+            # or continuous matching already active
+            print("  Exchange matching triggered (stub)")
         else:
             print("  No Exchange connected")
 
-    def _signal_tick_end(self) -> None:
+    def _signal_closed(self) -> None:
         """Signal end of current tick.
 
         Publishes event at T+5:00 that triggers:

@@ -9,8 +9,8 @@ The following interfaces and models were defined to establish the project struct
 ### 1. Define Core Interfaces
 
 - [x] **TickController** - Implemented as `GameLoop` class with `run_tick()` and phase event publishing
-- [ ] **ExchangeEngine** - Methods: `process_orders()`, `execute_batch_matching()`
-- [ ] **OrderValidator** - Methods: `validate_order()`, `check_constraints()`
+- [x] **ExchangeEngine** - Methods: `process_orders()`, `execute_batch_matching()`
+- [x] **OrderValidator** - Methods: `validate_order()`, `check_constraints()`
 
 ### 2. Define Domain Service Interfaces
 
@@ -109,13 +109,15 @@ The following interfaces and models were defined to establish the project struct
 - [ ] Implement market data snapshots after matching
 - [ ] Add support for role-specific order handling
 
-### Order Validator (Phase 2 Component)
+### Order Validator (Phase 2 Component) - COMPLETED
 
-- [ ] Implement role-based position limit checking
-- [ ] Add order size validation per role constraints
-- [ ] Validate trading window enforcement (T+0:30 to T+3:00)
-- [ ] Check instrument availability and validity
-- [ ] Implement fee calculation based on role type
-- [ ] Add margin/capital requirement validation
-- [ ] Create validation error response system
-- [ ] Add order amendment and cancellation rules
+- [x] Implement constraint-based validation system (role-agnostic)
+- [x] Add position limit checking (symmetric and absolute)
+- [x] Add order size validation with min/max bounds
+- [x] Validate trading window enforcement (PRE_OPEN phase)
+- [x] Add order rate limiting per tick
+- [x] Add order type validation per role
+- [x] Create validation error response system with error codes
+- [x] Add configuration loading from YAML
+- [ ] Add order amendment and cancellation validation (future)
+- [ ] Integrate with ExchangeVenue and GameLoop (next step)

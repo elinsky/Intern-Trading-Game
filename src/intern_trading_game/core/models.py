@@ -14,24 +14,27 @@ from ..exchange.order_book import OrderBook
 
 
 class TickPhase(Enum):
-    """Enumeration of tick phases within a 5-minute trading cycle.
+    """Enumeration of trading phases that work for both batch and continuous markets.
 
-    Each tick follows a strict sequence of phases that control when
-    different game activities occur. The tuple values represent
-    (minutes, seconds) offset from tick start.
+    Phases are named to align with standard exchange conventions (like CBOE)
+    while being generic enough to support different market structures.
+    The tuple values represent (minutes, seconds) offset from tick start
+    for batch markets.
 
     Attributes
     ----------
-    PRICE_PUBLICATION : tuple[int, int]
-        T+0:00 - New underlying prices published
-    ORDER_WINDOW_OPEN : tuple[int, int]
-        T+0:30 - Trading strategies can submit orders
-    ORDER_WINDOW_CLOSE : tuple[int, int]
-        T+3:00 - No new orders accepted after this point
-    BATCH_MATCHING : tuple[int, int]
-        T+3:30 - Exchange processes all orders
-    TICK_END : tuple[int, int]
-        T+5:00 - Tick completes, prepare for next tick
+    MARKET_DATA : tuple[int, int]
+        T+0:00 - Market data update (prices, signals, etc.)
+    PRE_OPEN : tuple[int, int]
+        T+0:30 - Accepts orders but no matching (like CBOE Pre-Open)
+    OPEN : tuple[int, int]
+        T+3:00 - Order acceptance phase ends (batch) or continuous trading (continuous)
+    TRADING : tuple[int, int]
+        T+3:30 - Active matching phase (batch execution or continuous trading)
+    CLOSING : tuple[int, int]
+        T+4:30 - Closing process, cleanup, no new orders
+    CLOSED : tuple[int, int]
+        T+5:00 - Market closed, prepare for next period
 
     TradingContext
     --------------
@@ -41,17 +44,28 @@ class TickPhase(Enum):
         - No latency advantages between participants
 
     Trading Rules
-        - Orders submitted outside window are rejected
-        - Unfilled limit orders persist across ticks
+        - Orders only accepted during PRE_OPEN phase
+        - Matching occurs during TRADING phase
         - Position limits checked at order submission
         - Bot response time limited to maintain game clock
+
+    Notes
+    -----
+    For batch markets:
+    - PRE_OPEN: Accept orders for batch
+    - TRADING: Execute batch matching
+
+    For continuous markets:
+    - PRE_OPEN: Accept orders without matching
+    - TRADING: Continuous matching active
     """
 
-    PRICE_PUBLICATION = (0, 0)
-    ORDER_WINDOW_OPEN = (0, 30)
-    ORDER_WINDOW_CLOSE = (3, 0)
-    BATCH_MATCHING = (3, 30)
-    TICK_END = (5, 0)
+    MARKET_DATA = (0, 0)
+    PRE_OPEN = (0, 30)
+    OPEN = (3, 0)
+    TRADING = (3, 30)
+    CLOSING = (4, 30)
+    CLOSED = (5, 0)
 
     @property
     def total_seconds(self) -> int:

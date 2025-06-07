@@ -184,12 +184,12 @@ class TestGameLoop:
         with patch("builtins.print") as mock_print:
             game.run_tick()
 
-        # Then - Batch matching is triggered
+        # Then - Trading phase is triggered
         print_output = " ".join(
             call[0][0] for call in mock_print.call_args_list
         )
-        assert "T+3:30 - Triggering batch matching" in print_output
-        assert "Exchange batch matching triggered" in print_output
+        assert "T+3:30 - TRADING phase - executing matches" in print_output
+        assert "Exchange matching triggered" in print_output
 
     def test_full_session_execution(self):
         """Test running a complete multi-tick session.

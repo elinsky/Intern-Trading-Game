@@ -6,7 +6,7 @@ to avoid circular imports between venue.py and matching_engine.py.
 """
 
 from dataclasses import dataclass, field
-from typing import List
+from typing import List, Optional
 
 from intern_trading_game.exchange.trade import Trade
 
@@ -36,6 +36,10 @@ class OrderResult:
     remaining_quantity : float
         The unfilled quantity of the order. Equal to original quantity
         for pending orders, 0 for fully filled orders.
+    error_code : Optional[str]
+        Error code if order was rejected (None otherwise).
+    error_message : Optional[str]
+        Human-readable error message if order was rejected.
 
     Notes
     -----
@@ -52,3 +56,5 @@ class OrderResult:
     status: str
     fills: List[Trade] = field(default_factory=list)
     remaining_quantity: float = 0
+    error_code: Optional[str] = None
+    error_message: Optional[str] = None
