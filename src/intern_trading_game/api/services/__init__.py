@@ -1,0 +1,70 @@
+"""Service layer for API thread business logic extraction.
+
+This package contains abstract interfaces for the service-oriented
+architecture that extracts business logic from the monolithic thread
+functions in main.py.
+
+The service layer follows SOLID principles with clear separation of concerns:
+- Each service interface represents a single responsibility
+- Services depend on abstractions, not concrete implementations
+- All data types are reused from existing modules (no new DTOs!)
+
+Architecture Overview
+--------------------
+The services correspond to the threading model defined in architecture-v2.md:
+
+- OrderValidationService: Thread 2 business logic (order validation)
+- OrderMatchingService: Thread 3 business logic (exchange interaction)
+- TradeProcessingService: Thread 4 business logic (trade processing)
+- WebSocketMessagingService: Thread 8 business logic (message routing)
+
+Each service extracts pure business logic while thread functions remain
+as thin infrastructure controllers managing queues and coordination.
+
+Type Reuse Strategy
+------------------
+This package creates NO new data transfer objects. Instead, it reuses:
+- ValidationResult from core.order_validator
+- OrderResult from exchange.order_result
+- OrderResponse from api.models
+
+This approach follows DRY principle and leverages well-tested existing types.
+
+Examples
+--------
+>>> from intern_trading_game.api.services import (
+...     OrderValidationServiceInterface,
+...     ValidationResult,  # Re-exported from core
+...     OrderResult,       # Re-exported from exchange
+...     OrderResponse      # Re-exported from api
+... )
+>>>
+>>> # Services will be injected into thread functions
+>>> validation_service: OrderValidationServiceInterface = get_validation_service()
+>>> result: ValidationResult = validation_service.validate_new_order(order, team)
+"""
+
+# Re-export existing types for convenience
+from ...core.order_validator import ValidationResult
+from ...exchange.order_result import OrderResult
+from ..models import OrderResponse
+
+# Import interfaces (to be created in interfaces.py)
+from .interfaces import (
+    OrderMatchingServiceInterface,
+    OrderValidationServiceInterface,
+    TradeProcessingServiceInterface,
+    WebSocketMessagingServiceInterface,
+)
+
+__all__ = [
+    # Interfaces
+    "OrderValidationServiceInterface",
+    "OrderMatchingServiceInterface",
+    "TradeProcessingServiceInterface",
+    "WebSocketMessagingServiceInterface",
+    # Re-exported existing types
+    "ValidationResult",  # From core.order_validator
+    "OrderResult",  # From exchange.order_result
+    "OrderResponse",  # From api.models
+]

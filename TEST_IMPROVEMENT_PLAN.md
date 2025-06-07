@@ -36,6 +36,7 @@ Add critical unit tests for core domain models and missing constraint tests to e
 - [x] Added filled_quantity property - *Enhancement completed*
 
 #### 1.3 Trade Model Tests
+
 - [ ] Test validation of prices and quantities
 - [ ] Test aggressor side validation
 - [ ] Test value calculation
@@ -96,6 +97,7 @@ Refactor the API layer to extract business logic from threading code, making it 
 - [ ] Test trade formatting and distribution
 
 #### 2.4 Extract WebSocket Message Handling
+
 - [ ] Create message handler functions for each message type
 - [ ] Extract business logic from `websocket_thread()`
 - [ ] Add unit tests for message handlers
