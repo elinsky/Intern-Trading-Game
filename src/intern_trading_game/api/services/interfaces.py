@@ -19,7 +19,6 @@ All interfaces follow SOLID principles, particularly:
 from abc import ABC, abstractmethod
 from typing import Dict, Optional, Tuple
 
-from ...core.order_validator import ValidationResult
 from ...exchange.order import Order
 from ...exchange.order_result import OrderResult
 from ..models import OrderResponse, TeamInfo
@@ -66,7 +65,7 @@ class OrderValidationServiceInterface(ABC):
     >>> # In thread controller (infrastructure)
     >>> validation_service = get_validation_service()
     >>> result = validation_service.validate_new_order(order, team)
-    >>> if result.is_valid:
+    >>> if result.status == "accepted":
     ...     match_queue.put((order, team_info))
     >>> else:
     ...     # Send rejection via WebSocket
@@ -74,9 +73,7 @@ class OrderValidationServiceInterface(ABC):
     """
 
     @abstractmethod
-    def validate_new_order(
-        self, order: Order, team: TeamInfo
-    ) -> ValidationResult:
+    def validate_new_order(self, order: Order, team: TeamInfo) -> OrderResult:
         """Validate a new order against all configured constraints.
 
         Performs comprehensive validation of an incoming order including
@@ -94,10 +91,12 @@ class OrderValidationServiceInterface(ABC):
 
         Returns
         -------
-        ValidationResult
-            Result from core.order_validator containing:
-            - is_valid: bool indicating if order passed all constraints
-            - error_detail: Optional[str] with constraint violation details
+        OrderResult
+            Result from exchange.order_result containing:
+            - status: str ("accepted" or "rejected")
+            - order_id: str identifying the order
+            - error_code: Optional[str] for rejections
+            - error_message: Optional[str] with constraint violation details
 
         Notes
         -----

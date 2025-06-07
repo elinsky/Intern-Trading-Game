@@ -24,7 +24,6 @@ as thin infrastructure controllers managing queues and coordination.
 Type Reuse Strategy
 ------------------
 This package creates NO new data transfer objects. Instead, it reuses:
-- ValidationResult from core.order_validator
 - OrderResult from exchange.order_result
 - OrderResponse from api.models
 
@@ -34,22 +33,20 @@ Examples
 --------
 >>> from intern_trading_game.api.services import (
 ...     OrderValidationServiceInterface,
-...     ValidationResult,  # Re-exported from core
 ...     OrderResult,       # Re-exported from exchange
 ...     OrderResponse      # Re-exported from api
 ... )
 >>>
 >>> # Services will be injected into thread functions
 >>> validation_service: OrderValidationServiceInterface = get_validation_service()
->>> result: ValidationResult = validation_service.validate_new_order(order, team)
+>>> result: OrderResult = validation_service.validate_new_order(order, team)
 """
 
 # Re-export existing types for convenience
-from ...core.order_validator import ValidationResult
 from ...exchange.order_result import OrderResult
 from ..models import OrderResponse
 
-# Import interfaces (to be created in interfaces.py)
+# Import interfaces
 from .interfaces import (
     OrderMatchingServiceInterface,
     OrderValidationServiceInterface,
@@ -57,14 +54,18 @@ from .interfaces import (
     WebSocketMessagingServiceInterface,
 )
 
+# Import concrete implementations
+from .order_validation_service import OrderValidationService
+
 __all__ = [
     # Interfaces
     "OrderValidationServiceInterface",
     "OrderMatchingServiceInterface",
     "TradeProcessingServiceInterface",
     "WebSocketMessagingServiceInterface",
+    # Concrete implementations
+    "OrderValidationService",
     # Re-exported existing types
-    "ValidationResult",  # From core.order_validator
     "OrderResult",  # From exchange.order_result
     "OrderResponse",  # From api.models
 ]

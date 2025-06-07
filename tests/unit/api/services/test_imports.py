@@ -49,12 +49,6 @@ class TestPackageImports:
         """Test that re-exported types are accessible from package."""
         from intern_trading_game.api import services
 
-        # Test ValidationResult re-export
-        assert hasattr(services, "ValidationResult")
-        validation_result = services.ValidationResult(is_valid=True)
-        assert hasattr(validation_result, "is_valid")
-        assert hasattr(validation_result, "error_detail")
-
         # Test OrderResult re-export
         assert hasattr(services, "OrderResult")
         order_result = services.OrderResult(order_id="ORD_123", status="new")
@@ -76,11 +70,9 @@ class TestPackageImports:
         """Test that re-exported types are same as originals."""
         from intern_trading_game.api import services
         from intern_trading_game.api.models import OrderResponse
-        from intern_trading_game.core.order_validator import ValidationResult
         from intern_trading_game.exchange.order_result import OrderResult
 
         # Verify they are the same classes, not copies
-        assert services.ValidationResult is ValidationResult
         assert services.OrderResult is OrderResult
         assert services.OrderResponse is OrderResponse
 
@@ -94,8 +86,9 @@ class TestPackageImports:
             "OrderMatchingServiceInterface",
             "TradeProcessingServiceInterface",
             "WebSocketMessagingServiceInterface",
+            # Concrete implementations
+            "OrderValidationService",
             # Re-exported types
-            "ValidationResult",
             "OrderResult",
             "OrderResponse",
         ]
@@ -109,7 +102,6 @@ class TestPackageImports:
         modules_to_clear = [
             "intern_trading_game.api.services",
             "intern_trading_game.api.services.interfaces",
-            "intern_trading_game.core.order_validator",
             "intern_trading_game.exchange.order_result",
             "intern_trading_game.api.models",
         ]
@@ -125,12 +117,10 @@ class TestPackageImports:
             import intern_trading_game.api.services
 
             # Then import the source modules
-            import intern_trading_game.core.order_validator
             import intern_trading_game.exchange.order_result
 
             # Verify modules loaded (satisfies F401)
             assert intern_trading_game.api.services is not None
-            assert intern_trading_game.core.order_validator is not None
             assert intern_trading_game.exchange.order_result is not None
             assert intern_trading_game.api.models is not None
 
@@ -152,10 +142,8 @@ class TestPackageImports:
         from intern_trading_game.api.services import (
             OrderResponse,
             OrderResult,
-            ValidationResult,
         )
 
-        assert ValidationResult is not None
         assert OrderResult is not None
         assert OrderResponse is not None
 
@@ -167,8 +155,8 @@ class TestPackageImports:
             # This tests that the imports work for type checking
             from intern_trading_game.api.models import TeamInfo
             from intern_trading_game.api.services import (
+                OrderResult,
                 OrderValidationServiceInterface,
-                ValidationResult,
             )
             from intern_trading_game.exchange.order import Order
 
@@ -177,7 +165,7 @@ class TestPackageImports:
                 service: OrderValidationServiceInterface,
                 order: Order,
                 team: TeamInfo,
-            ) -> ValidationResult:
+            ) -> OrderResult:
                 return service.validate_new_order(order, team)
 
         # Test passes if no import errors occur
