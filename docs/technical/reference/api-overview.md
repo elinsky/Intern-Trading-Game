@@ -45,6 +45,9 @@ order = Order(
     trader_id="MM1"
 )
 result = exchange.submit_order(order)
+
+# Cancel an order
+cancelled = exchange.cancel_order(order.order_id, "MM1")
 ```
 
 **See Also:**

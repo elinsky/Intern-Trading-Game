@@ -60,7 +60,9 @@ elif result.status == "accepted":
 
 ## Cancelling Orders
 
-To cancel an order that hasn't been fully filled:
+### Via Direct Exchange API
+
+To cancel an order directly through the exchange:
 
 ```python
 # Cancel an order (requires the order ID and your trader ID)
@@ -70,6 +72,25 @@ if success:
     print("Order cancelled successfully")
 else:
     print("Failed to cancel order (may not exist or already filled)")
+```
+
+### Via REST API
+
+To cancel an order through the REST API:
+
+```python
+import requests
+
+# Cancel an order using DELETE request
+response = requests.delete(
+    f"http://localhost:8000/orders/{order_id}",
+    headers={"X-API-Key": "your_api_key"}
+)
+
+if response.json()["status"] == "cancelled":
+    print("Order cancelled successfully")
+else:
+    print(f"Cancel failed: {response.json()['error_message']}")
 ```
 
 ## Checking the Order Book

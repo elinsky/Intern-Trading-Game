@@ -95,6 +95,14 @@ class TradingBot:
         )
         return response.json()
 
+    def cancel_order(self, order_id):
+        """Cancel an existing order."""
+        response = requests.delete(
+            f"{self.base_url}/orders/{order_id}",
+            headers=self.headers
+        )
+        return response.json()
+
     def get_positions(self):
         """Get current positions."""
         response = requests.get(
@@ -204,6 +212,23 @@ Submit a new order.
   "timestamp": "2024-01-15T10:00:01Z",
   "filled_quantity": 0,
   "average_price": null,
+  "error_code": null,
+  "error_message": null
+}
+```
+
+#### DELETE /orders/{order_id}
+Cancel an existing order.
+
+**Headers:**
+- `X-API-Key`: Your API key
+
+**Response:**
+```json
+{
+  "order_id": "ORD_123456",
+  "status": "cancelled",
+  "timestamp": "2024-01-15T10:00:02Z",
   "error_code": null,
   "error_message": null
 }

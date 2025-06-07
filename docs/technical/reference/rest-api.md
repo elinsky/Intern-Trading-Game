@@ -177,6 +177,47 @@ Submit a new order to the exchange.
 - `401`: Missing/invalid API key
 - `504`: Processing timeout
 
+#### DELETE /orders/{order_id}
+
+Cancel an existing order.
+
+**Headers:**
+
+- `X-API-Key`: Required
+
+**Path Parameters:**
+
+- `order_id`: Exchange-assigned order ID (e.g., "ORD_123456")
+
+**Response:** `OrderResponse`
+
+```json
+{
+  "order_id": "ORD_123456",
+  "status": "cancelled",
+  "timestamp": "2024-01-15T10:00:02Z",
+  "filled_quantity": 0,
+  "error_code": null,
+  "error_message": null
+}
+```
+
+**Status Values:**
+
+- `cancelled`: Order successfully cancelled
+- `rejected`: Cancellation failed (with error details)
+
+**Errors:**
+
+- `401`: Missing/invalid API key
+- `504`: Processing timeout
+
+**Common rejection reasons:**
+
+- Order not found
+- Order already filled
+- Unauthorized (not your order)
+
 ### Market Data
 
 #### GET /positions/{team_id}
@@ -274,15 +315,17 @@ Get current positions for a team.
 
 The API uses a multi-threaded queue architecture:
 
-1. **Order Queue**: API → Validator thread
+1. **Order Queue**: API → Validator thread (handles both new orders and cancellations)
 2. **Validation Queue**: Validator → Matching thread
 3. **Match Queue**: For matching engine
 4. **Trade Queue**: Matching → Publisher thread
 
 This ensures:
+
 - Non-blocking order submission
 - Thread-safe processing
 - Consistent state updates
+- FIFO processing (cancellations don't jump ahead of orders)
 
 ## Constraints
 
@@ -318,6 +361,10 @@ curl -X POST http://localhost:8000/orders \
 # Get positions
 curl http://localhost:8000/positions/TEAM_001 \
   -H "X-API-Key: itg_your_key"
+
+# Cancel order
+curl -X DELETE http://localhost:8000/orders/ORD_123456 \
+  -H "X-API-Key: itg_your_key"
 ```
 
 ### Python
@@ -344,6 +391,14 @@ resp = requests.post(
         "quantity": 10,
         "price": 25.50
     }
+)
+order = resp.json()
+print(order)
+
+# Cancel order
+resp = requests.delete(
+    f"http://localhost:8000/orders/{order['order_id']}",
+    headers=headers
 )
 print(resp.json())
 ```

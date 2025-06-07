@@ -80,7 +80,7 @@ subgraph "Thread Communication (Queues)"
 end
 
 %% Fast Path - In-Memory Stores
-subgraph "In-Memory State (Nanosecond Access)"
+subgraph "In-Memory State"
     POS[Position Cache<br/>Dict with RLock]
     OB_STATE[Order Book State<br/>SortedLists]
     CACHE[Price Cache<br/>Latest Prices]

@@ -13,6 +13,8 @@ from fastapi import WebSocket
 from intern_trading_game.api.models import TeamInfo
 from intern_trading_game.api.websocket import ws_manager
 from intern_trading_game.api.websocket_messages import (
+    build_cancel_ack,
+    build_cancel_reject,
     build_execution_report,
     build_new_order_ack,
     build_new_order_reject,
@@ -127,6 +129,74 @@ class TestWebSocketMessages:
         assert "client_order_id" not in msg
         assert msg["order_id"] == "ORD-126"
         assert "price" not in msg  # Market order has no price
+
+    def test_cancel_ack_message(self):
+        """Test order cancellation acknowledgment message.
+
+        When - Order successfully cancelled
+        The exchange removed the order from the book.
+
+        Then - ACK message contains confirmation
+        Includes order ID and optional client order ID.
+        """
+        # Given - Successful cancellation
+        msg = build_cancel_ack(
+            order_id="ORD-127",
+            client_order_id="CLIENT-4",
+            cancelled_quantity=10,
+        )
+
+        # Then - Message confirms cancellation
+        assert msg["order_id"] == "ORD-127"
+        assert msg["client_order_id"] == "CLIENT-4"
+        assert msg["status"] == "cancelled"
+        assert msg["cancelled_quantity"] == 10
+        assert "timestamp" in msg
+
+    def test_cancel_reject_message(self):
+        """Test order cancellation rejection message.
+
+        When - Cancel request fails
+        Order might be filled, not found, or unauthorized.
+
+        Then - Reject message explains failure
+        Clear error code and human-readable reason.
+        """
+        # Given - Failed cancellation
+        msg = build_cancel_reject(
+            order_id="ORD-128",
+            client_order_id="CLIENT-5",
+            reason="Order already filled",
+        )
+
+        # Then - Message contains rejection details
+        assert msg["order_id"] == "ORD-128"
+        assert msg["client_order_id"] == "CLIENT-5"
+        assert msg["status"] == "cancel_rejected"
+        assert msg["reason"] == "Order already filled"
+        assert "timestamp" in msg
+
+    def test_partial_cancel_ack_message(self):
+        """Test partial cancellation acknowledgment.
+
+        When - Order partially filled then cancelled
+        Some quantity executed, remainder cancelled.
+
+        Then - Message shows both quantities
+        Clear breakdown of executed vs cancelled.
+        """
+        # Given - Partial fill before cancel
+        msg = build_cancel_ack(
+            order_id="ORD-129",
+            client_order_id=None,
+            cancelled_quantity=7,
+        )
+
+        # Then - Both quantities reported
+        assert msg["order_id"] == "ORD-129"
+        assert "client_order_id" not in msg
+        assert msg["cancelled_quantity"] == 7
+        assert msg["status"] == "cancelled"
 
 
 class TestWebSocketManager:
@@ -370,3 +440,77 @@ class TestWebSocketManager:
         # Then - Team is disconnected
         assert not manager.is_connected(team_info.team_id)
         assert manager.get_connection_count() == 0
+
+    @pytest.mark.asyncio
+    async def test_broadcast_cancel_ack(self, mock_websocket, team_info):
+        """Test broadcasting cancel acknowledgment to specific team.
+
+        When - Order successfully cancelled
+        The team that requested cancel gets notified.
+
+        Then - Only that team receives the message
+        Other teams don't see cancellations they didn't request.
+        """
+        # Given - Multiple connected teams
+        manager = ws_manager
+        await manager.connect(mock_websocket, team_info)
+
+        # Another team
+        other_team = TeamInfo(
+            team_id="TEAM-002",
+            team_name="OtherBot",
+            role="market_maker",
+            api_key="other-key",
+            created_at=datetime.now(),
+        )
+        other_ws = AsyncMock(spec=WebSocket)
+        other_ws.accept = AsyncMock()
+        other_ws.send_json = AsyncMock()
+        await manager.connect(other_ws, other_team)
+
+        # When - Cancel ACK sent to specific team
+        await manager.broadcast_cancel_ack(
+            team_id=team_info.team_id,
+            order_id="ORD-200",
+            client_order_id="CLIENT-10",
+            cancelled_quantity=15,
+        )
+
+        # Then - Only target team receives message
+        mock_websocket.send_json.assert_called_once()
+        other_ws.send_json.assert_not_called()
+
+        # Verify message content
+        msg = mock_websocket.send_json.call_args[0][0]
+        assert msg["type"] == "cancel_ack"
+        assert msg["data"]["order_id"] == "ORD-200"
+        assert msg["data"]["cancelled_quantity"] == 15
+
+    @pytest.mark.asyncio
+    async def test_broadcast_cancel_reject(self, mock_websocket, team_info):
+        """Test broadcasting cancel rejection to specific team.
+
+        When - Cancel request fails
+        The requesting team needs to know why.
+
+        Then - Rejection sent with clear error
+        Team can handle the failure appropriately.
+        """
+        # Given - Connected team
+        manager = ws_manager
+        await manager.connect(mock_websocket, team_info)
+
+        # When - Cancel rejection broadcast
+        await manager.broadcast_cancel_reject(
+            team_id=team_info.team_id,
+            order_id="ORD-201",
+            client_order_id=None,
+            reason="Order not found",
+        )
+
+        # Then - Team receives rejection
+        mock_websocket.send_json.assert_called_once()
+        msg = mock_websocket.send_json.call_args[0][0]
+        assert msg["type"] == "cancel_reject"
+        assert msg["data"]["order_id"] == "ORD-201"
+        assert msg["data"]["reason"] == "Order not found"

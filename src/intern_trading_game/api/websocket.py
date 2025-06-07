@@ -591,18 +591,67 @@ class WebSocketManager:
     ):
         """Broadcast order cancellation acknowledgment.
 
+        Sends a cancellation confirmation message to the team that
+        successfully cancelled their order. This message indicates
+        that the order has been removed from the order book and
+        cannot be matched.
+
         Parameters
         ----------
         team_id : str
-            Team that owns the order
+            Team identifier that owns the cancelled order
         order_id : str
-            Exchange-assigned order ID
+            Exchange-assigned order ID that was cancelled
         client_order_id : Optional[str]
-            Client's order reference
+            Client's order reference for reconciliation. None if
+            the client didn't provide one with the original order
         cancelled_quantity : int
-            Quantity that was cancelled
-        reason : str
-            Cancellation reason
+            Number of contracts that were cancelled. For partially
+            filled orders, this is the unfilled remainder
+        reason : str, default="user_requested"
+            Reason for cancellation. Common values:
+
+            - "user_requested": Client initiated cancellation
+            - "tick_end": Automatic end-of-tick cancellation
+            - "session_end": Trading session closed
+
+        Notes
+        -----
+        Cancellation acknowledgments are only sent to the order owner.
+        Other market participants do not receive notifications about
+        cancelled orders to prevent information leakage.
+
+        The cancelled_quantity may be less than the original order
+        quantity if partial fills occurred before cancellation.
+
+        TradingContext
+        --------------
+        Successful cancellation means:
+
+        - The order is no longer visible in the order book
+        - No further matches can occur against this order
+        - Any unfilled quantity is permanently removed
+        - Position limits are updated to reflect the cancellation
+
+        Examples
+        --------
+        >>> # Cancel acknowledgment for fully cancelled order
+        >>> await ws_manager.broadcast_cancel_ack(
+        ...     team_id="TEAM_001",
+        ...     order_id="ORD_12345",
+        ...     client_order_id="CLIENT_001",
+        ...     cancelled_quantity=10,
+        ...     reason="user_requested"
+        ... )
+
+        >>> # Cancel acknowledgment for partially filled order
+        >>> await ws_manager.broadcast_cancel_ack(
+        ...     team_id="TEAM_001",
+        ...     order_id="ORD_12346",
+        ...     client_order_id=None,
+        ...     cancelled_quantity=7,  # 3 were already filled
+        ...     reason="user_requested"
+        ... )
         """
         data = build_cancel_ack(
             order_id=order_id,
@@ -621,16 +670,65 @@ class WebSocketManager:
     ):
         """Broadcast order cancellation rejection.
 
+        Sends a cancellation failure message to the team that
+        attempted to cancel an order. This indicates the order
+        could not be cancelled and remains active or was already
+        processed.
+
         Parameters
         ----------
         team_id : str
-            Team that requested cancellation
+            Team identifier that requested the cancellation
         order_id : str
-            Exchange-assigned order ID
+            Exchange-assigned order ID that could not be cancelled
         client_order_id : Optional[str]
-            Client's order reference
+            Client's order reference for reconciliation. None if
+            the client didn't provide one with the original order
         reason : str
-            Why cancellation failed
+            Human-readable explanation of why cancellation failed.
+            Common reasons include:
+
+            - "Order not found": Order ID doesn't exist
+            - "Order already filled": Too late, order executed
+            - "Unauthorized": Not the order owner
+            - "Order already cancelled": Duplicate cancel request
+
+        Notes
+        -----
+        Cancel rejections help bots understand the current state
+        of their orders and adjust their strategies accordingly.
+        The reason field should be specific enough for automated
+        handling by trading algorithms.
+
+        TradingContext
+        --------------
+        Cancel rejections occur in several scenarios:
+
+        - Racing with fills: Order matched before cancel processed
+        - Invalid order ID: Typo or stale reference
+        - Permission issues: Attempting to cancel another's order
+        - Duplicate requests: Order already cancelled
+
+        The FIFO queue ensures temporal fairness - a fill that
+        arrives before a cancel will always execute first.
+
+        Examples
+        --------
+        >>> # Rejection due to order already filled
+        >>> await ws_manager.broadcast_cancel_reject(
+        ...     team_id="TEAM_001",
+        ...     order_id="ORD_12345",
+        ...     client_order_id="CLIENT_001",
+        ...     reason="Order already filled"
+        ... )
+
+        >>> # Rejection due to invalid order ID
+        >>> await ws_manager.broadcast_cancel_reject(
+        ...     team_id="TEAM_001",
+        ...     order_id="ORD_INVALID",
+        ...     client_order_id=None,
+        ...     reason="Order not found"
+        ... )
         """
         data = build_cancel_reject(
             order_id=order_id,

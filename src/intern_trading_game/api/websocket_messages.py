@@ -393,6 +393,7 @@ def build_cancel_reject(
     """
     data = {
         "order_id": order_id,
+        "status": "cancel_rejected",  # Consistent with cancel_ack having "cancelled"
         "reason": reason,
         "timestamp": (timestamp or datetime.now()).isoformat(),
     }
