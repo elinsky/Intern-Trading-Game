@@ -35,6 +35,10 @@ class Trade:
         The ID of the buy order that participated in this trade.
     seller_order_id : str
         The ID of the sell order that participated in this trade.
+    aggressor_side : str
+        Which side initiated the trade ("buy" or "sell"). The aggressor
+        is the taker who crossed the spread, while the other side is
+        the maker who provided liquidity.
     timestamp : datetime, optional
         When the trade occurred. If not provided, the current time is used.
     trade_id : str, optional
@@ -56,6 +60,8 @@ class Trade:
         The ID of the buy order.
     seller_order_id : str
         The ID of the sell order.
+    aggressor_side : str
+        Which side initiated the trade ("buy" or "sell").
     timestamp : datetime
         When the trade occurred.
     trade_id : str
@@ -75,10 +81,17 @@ class Trade:
     matched first, and for orders at the same price, earlier orders are
     matched first.
 
+    The aggressor_side field indicates which side initiated the trade:
+    - If aggressor_side = "buy": Buyer was the taker (aggressor), seller was the maker
+    - If aggressor_side = "sell": Seller was the taker (aggressor), buyer was the maker
+
+    This distinction is crucial for fee calculations, as makers typically
+    receive rebates while takers pay fees.
+
     Trade records are essential for:
 
     1. Market data dissemination
-    2. Trade reporting to regulatory authorities
+    2. Trade reporting and fee calculation
     3. Settlement and clearing processes
     4. Historical analysis and backtesting
 
@@ -94,7 +107,7 @@ class Trade:
 
     Examples
     --------
-    Creating a trade:
+    Creating a trade where buyer was the aggressor (taker):
 
     >>> trade = Trade(
     ...     instrument_id="AAPL",
@@ -103,7 +116,8 @@ class Trade:
     ...     price=150.0,
     ...     quantity=10,
     ...     buyer_order_id="order1",
-    ...     seller_order_id="order2"
+    ...     seller_order_id="order2",
+    ...     aggressor_side="buy"  # Buyer crossed the spread
     ... )
     >>> trade.value
     1500.0
@@ -113,8 +127,8 @@ class Trade:
     >>> trade_dict = trade.to_dict()
     >>> trade_dict["instrument_id"]
     'AAPL'
-    >>> trade_dict["price"]
-    150.0
+    >>> trade_dict["aggressor_side"]
+    'buy'
     """
 
     instrument_id: str
@@ -124,6 +138,7 @@ class Trade:
     quantity: float
     buyer_order_id: str
     seller_order_id: str
+    aggressor_side: str  # "buy" or "sell"
     timestamp: datetime = field(default_factory=datetime.now)
     trade_id: str = field(default_factory=lambda: str(uuid.uuid4()))
 
@@ -134,6 +149,9 @@ class Trade:
 
         if self.quantity <= 0:
             raise ValueError("Trade quantity must be positive")
+
+        if self.aggressor_side not in ["buy", "sell"]:
+            raise ValueError("Aggressor side must be 'buy' or 'sell'")
 
     @property
     def value(self) -> float:
@@ -222,6 +240,7 @@ class Trade:
             "seller_id": self.seller_id,
             "price": self.price,
             "quantity": self.quantity,
+            "aggressor_side": self.aggressor_side,
             "timestamp": self.timestamp.isoformat(),
             "buyer_order_id": self.buyer_order_id,
             "seller_order_id": self.seller_order_id,

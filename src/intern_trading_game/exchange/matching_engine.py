@@ -256,6 +256,7 @@ def _create_trade(
         seller_id=sell_order.trader_id,
         price=sell_order.price,  # Match at passive (sell) side
         quantity=quantity,
+        aggressor_side="buy",  # Buy order crossed the spread
     )
 
 

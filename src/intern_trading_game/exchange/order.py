@@ -57,6 +57,9 @@ class Order:
     order_type : OrderType, optional, default=OrderType.LIMIT
         The type of order (limit or market). This is automatically set based on
         the price parameter, but can be explicitly provided.
+    client_order_id : str, optional, default=None
+        Client's reference ID for this order. Used by bots to track their
+        orders across the system.
 
     Attributes
     ----------
@@ -76,6 +79,8 @@ class Order:
         When the order was created.
     order_type : OrderType
         The type of order (limit or market).
+    client_order_id : Optional[str]
+        Client's reference ID for tracking.
     remaining_quantity : float
         The unfilled quantity of the order.
 
@@ -151,6 +156,7 @@ class Order:
     order_id: str = field(default_factory=lambda: str(uuid.uuid4()))
     timestamp: datetime = field(default_factory=datetime.now)
     order_type: OrderType = OrderType.LIMIT
+    client_order_id: Optional[str] = None
     remaining_quantity: float = field(init=False)
 
     def __post_init__(self):

@@ -95,9 +95,12 @@ nav:
           - Market Maker Tutorial: technical/tutorials/market-maker-tutorial.md
       - How-To Guides:
           - How to Submit Orders: technical/how-to/how-to-submit-orders.md
+          - Use WebSockets: technical/how-to/use-websockets.md
       - Reference:
           - API Overview: technical/reference/api-overview.md
           - Exchange API: technical/reference/exchange-api.md
+          - REST API: technical/reference/rest-api.md
+          - WebSocket API: technical/reference/websocket-api.md
           - Math Examples: technical/reference/math-examples.md
       - Explanation:
           - Order Matching: technical/explanation/order-matching.md

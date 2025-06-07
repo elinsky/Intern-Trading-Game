@@ -115,6 +115,7 @@ The `Order` class represents a trading order.
 - `order_id` (str): A unique identifier for this order.
 - `timestamp` (datetime): When the order was created.
 - `order_type` (OrderType): The type of order (limit or market).
+- `client_order_id` (Optional[str]): Client's reference ID for order tracking.
 - `remaining_quantity` (float): The unfilled quantity of the order.
 
 ### Methods
@@ -238,6 +239,9 @@ The `Trade` class represents an executed trade.
 - `trade_id` (str): A unique identifier for this trade.
 - `buyer_order_id` (str): The ID of the buy order.
 - `seller_order_id` (str): The ID of the sell order.
+- `aggressor_side` (str): Which side initiated the trade ('buy' or 'sell').
+
+The `aggressor_side` indicates which order crossed the spread to create the trade. This determines maker/taker status for fee calculations - the aggressor is always the taker.
 
 ### Properties
 

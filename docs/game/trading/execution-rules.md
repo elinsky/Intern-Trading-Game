@@ -126,6 +126,8 @@ def validate_order(order, role, current_position):
 
 ### 4. Execution Reports
 
+Execution reports are sent in real-time via WebSocket:
+
 ```json
 {
   "order_id": "ORD-12345",
@@ -133,9 +135,12 @@ def validate_order(order, role, current_position):
   "filled_quantity": 50,
   "average_price": 25.52,
   "fee": -1.00,
+  "liquidity_type": "taker",
   "timestamp": "2024-01-15T10:30:00.123Z"
 }
 ```
+
+The `liquidity_type` field indicates whether the order was a maker (provided liquidity) or taker (removed liquidity), which affects fee calculations.
 
 ## Special Situations
 

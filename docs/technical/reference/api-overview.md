@@ -123,6 +123,8 @@ Represents a trading order with all necessary attributes.
     - ID of the trader submitting the order
 - **order_id** : `str`, optional
     - Unique order identifier (auto-generated if not provided)
+- **client_order_id** : `str`, optional
+    - Client's reference ID for order tracking
 
 **Attributes:**
 
@@ -181,6 +183,8 @@ Represents an executed trade between two orders.
     - Number of contracts traded
 - **timestamp** : `datetime`
     - When the trade occurred
+- **aggressor_side** : `str`
+    - Which side initiated the trade ('buy' or 'sell')
 
 **Examples:**
 

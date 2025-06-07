@@ -16,6 +16,9 @@ class OrderRequest(BaseModel):
     price: Optional[float] = Field(
         None, gt=0, description="Limit price (required for limit orders)"
     )
+    client_order_id: Optional[str] = Field(
+        None, description="Client's order reference ID"
+    )
 
     model_config = {
         "json_schema_extra": {
@@ -38,6 +41,8 @@ class OrderResponse(BaseModel):
     timestamp: datetime
     filled_quantity: int = 0
     average_price: Optional[float] = None
+    fees: float = 0.0
+    liquidity_type: Optional[str] = None
     error_code: Optional[str] = None
     error_message: Optional[str] = None
 

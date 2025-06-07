@@ -131,18 +131,20 @@
 ## Phase 5: WebSocket Layer
 
 ### 5.1 WebSocket Server
-- [ ] **WebSocket endpoint setup** - /ws routes
-- [ ] **Connection manager** - Track active connections
-- [ ] **Authentication** - Validate on connect
+- [x] **WebSocket endpoint setup** - /ws routes (ready for integration)
+- [x] **Connection manager** - Track active connections
+- [x] **Authentication** - Validate on connect
 - [ ] **Heartbeat/ping** - Keep connections alive
 - [ ] **Reconnection support** - Handle disconnects
 
 ### 5.2 Data Streams
-- [ ] **/ws/market-data** - Price updates
-- [ ] **/ws/trades** - Execution notifications
-- [ ] **/ws/events** - News announcements
-- [ ] **/ws/signals** - Trading signals
-- [ ] **Subscription management** - Filter by team
+- [x] **Message types defined** - Following FIX conventions
+- [x] **Trade execution reports** - Real-time fills
+- [x] **Order acknowledgments** - new_order_ack/reject
+- [x] **Position snapshots** - On connection
+- [x] **Market data format** - Price updates structure
+- [ ] **Full integration** - Connect to main.py
+- [ ] **Signal distribution** - Role-based filtering
 
 ## Phase 6: Database Layer
 

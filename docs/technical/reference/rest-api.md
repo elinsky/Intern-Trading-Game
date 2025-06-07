@@ -155,6 +155,7 @@ Get current positions for a team.
   side: string              // "buy" | "sell"
   quantity: number          // > 0
   price?: number            // Required for limit orders
+  client_order_id?: string  // Optional client reference ID
 }
 ```
 
@@ -166,6 +167,8 @@ Get current positions for a team.
   timestamp: datetime
   filled_quantity: number   // Default: 0
   average_price?: number    // Present if filled > 0
+  fees: number              // Transaction fees (default: 0.0)
+  liquidity_type?: string   // "maker" | "taker" (present if filled)
   error_code?: string       // Present if rejected
   error_message?: string    // Present if rejected
 }

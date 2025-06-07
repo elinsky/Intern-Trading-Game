@@ -537,6 +537,7 @@ class OrderBook:
                     quantity=fill_qty,
                     buyer_order_id=order.order_id,
                     seller_order_id=matching_order.order_id,
+                    aggressor_side="buy",  # Buy order is the aggressor (taker)
                 )
             else:
                 trade = Trade(
@@ -547,6 +548,7 @@ class OrderBook:
                     quantity=fill_qty,
                     buyer_order_id=matching_order.order_id,
                     seller_order_id=order.order_id,
+                    aggressor_side="sell",  # Sell order is the aggressor (taker)
                 )
 
             trades.append(trade)
