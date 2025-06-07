@@ -80,3 +80,22 @@ line-ending = "auto"
 [tool.ruff.lint.isort]
 # Follow the Black profile for import sorting
 known-first-party = ["intern_trading_game"]
+
+[tool.coverage.run]
+source = ["intern_trading_game"]
+omit = [
+    "*/tests/*",
+    "*/__pycache__/*",
+    "*/.venv/*",
+    "*/venv/*",
+]
+
+[tool.coverage.report]
+exclude_lines = [
+    "pragma: no cover",
+    "def __repr__",
+    "if self.debug:",
+    "if __name__ == .__main__.:",
+    "raise AssertionError",
+    "raise NotImplementedError",
+]
