@@ -15,18 +15,21 @@ The market operates in one of three volatility regimes at any time, fundamentall
 ### Detailed Parameters
 
 **Low Volatility (σ ≈ 0.1)**
+
 - Annualized: 10%
 - Daily moves: ±0.5-1%
 - 5-minute moves: ±0.04%
 - Typical duration: 50-200 ticks
 
 **Medium Volatility (σ ≈ 0.2)**
+
 - Annualized: 20%
 - Daily moves: ±1-2%
 - 5-minute moves: ±0.09%
 - Typical duration: 30-100 ticks
 
 **High Volatility (σ ≈ 0.5)**
+
 - Annualized: 50%
 - Daily moves: ±3-5%
 - 5-minute moves: ±0.22%
@@ -85,11 +88,13 @@ Example signal:
 ### Signal Usage Strategies
 
 **Anticipatory Positioning**
+
 - Buy options before vol increase
 - Sell options before vol decrease
 - Adjust position sizes
 
 **Risk Management**
+
 - Reduce positions before high vol
 - Increase activity in low vol
 - Hedge existing positions

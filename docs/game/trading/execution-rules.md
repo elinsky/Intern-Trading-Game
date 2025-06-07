@@ -8,10 +8,12 @@ The exchange uses a standard price-time priority algorithm:
 
 
 1. **Price Priority**: Best prices execute first
+
    - Highest bids match before lower bids
    - Lowest asks match before higher asks
 
 2. **Time Priority**: Among same-priced orders
+
    - Earlier orders execute first
    - Microsecond timestamp precision
    - No queue jumping allowed

@@ -50,21 +50,25 @@ Quote fair, tight spreads and profit on every fill—while managing inventory wi
 ## 4. How to Make Money
 
 1. **Capture the Spread**
+
    - Post bid below fair value, ask above fair value
    - When both sides fill, you profit the spread difference
    - Enhanced rebates (+$0.02) boost profitability on every fill
 
 2. **Leverage Fee Advantage**
+
    - You get +$0.02 maker rebate vs +$0.01 for others
    - Pay only -$0.01 taker fee vs -$0.02 for others
    - This $0.01-0.03 edge per contract adds up quickly
 
 3. **Manage Inventory Risk**
+
    - Stay within ±50 net position limit per product
    - Skew quotes to push inventory back toward neutral
    - Use the underlying to hedge when needed
 
 4. **Quote Smart, Not Wide**
+
    - Tighter spreads attract more volume (more rebates)
    - But spreads must cover adverse selection risk
    - Balance volume vs risk for optimal profitability

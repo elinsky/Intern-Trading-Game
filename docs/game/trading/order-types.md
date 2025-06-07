@@ -7,6 +7,7 @@
 The most common order type, allowing precise price control.
 
 **Characteristics:**
+
 - Specify exact price (or better)
 - Rest in order book if not immediately fillable
 - Can partially fill
@@ -24,6 +25,7 @@ The most common order type, allowing precise price control.
 ```
 
 **Use Cases:**
+
 - Providing liquidity (earn maker rebate)
 - Precise entry/exit points
 - Building positions gradually
@@ -33,6 +35,7 @@ The most common order type, allowing precise price control.
 Execute immediately at best available price.
 
 **Characteristics:**
+
 - No price specification
 - Immediate execution (or reject)
 - Take liquidity from book
@@ -49,6 +52,7 @@ Execute immediately at best available price.
 ```
 
 **Use Cases:**
+
 - Urgent position changes
 - Capturing signals quickly
 - Risk management (stop-loss)
@@ -58,6 +62,7 @@ Execute immediately at best available price.
 Simultaneous two-sided markets providing both bid and ask.
 
 **Characteristics:**
+
 - Must specify both bid and ask
 - Counts as two orders for limits
 - Can be one-click cancelled
@@ -76,6 +81,7 @@ Simultaneous two-sided markets providing both bid and ask.
 ```
 
 **Requirements:**
+
 - Market Maker role only
 - Minimum 80% quote uptime
 - Reasonable spread widths
@@ -164,10 +170,12 @@ Bot → API → Validation → Order Book
 ### Price-Time Priority
 
 1. **Price Priority**: Better prices execute first
+
    - Higher bids ranked first
    - Lower asks ranked first
 
 2. **Time Priority**: Same price → earlier first
+
    - Microsecond timestamp precision
    - No queue jumping
 

@@ -28,6 +28,7 @@ Each underlying has listed options with:
 
 
 **Strike Selection**
+
 - Sufficient strikes to cover ±30% moves
 - Ensures all delta ranges (0.05 to 0.95) are tradeable
 - Typical setup for SPX at 4400:
@@ -38,11 +39,13 @@ Each underlying has listed options with:
 - Similar proportional coverage for SPY
 
 **Expirations**
+
 - Weekly expirations only
 - Typically 4-6 weeks available at any time
 - Rolling weekly cycle
 
 **Option Style**
+
 - European exercise only
 - Cash settlement at expiration
 - Standard multiplier (100 for SPY, 100 for SPX)

@@ -26,6 +26,7 @@ Actual SPY Price = Theoretical Price × (1 + tracking_error) + noise
 ### Systematic Factors
 
 **1. Execution Lag**
+
 - SPY updates 1-2 ticks after SPX moves
 - Creates temporary arbitrage windows
 - More pronounced during volatile periods
@@ -33,6 +34,7 @@ Actual SPY Price = Theoretical Price × (1 + tracking_error) + noise
 ### Random Factors
 
 **1. Microstructure Noise**
+
 - Independent random component
 - Zero mean over time
 - Increases intraday volatility
@@ -79,6 +81,7 @@ Since options exist on both underlyings:
 
 
 **Relative Value**
+
 - SPX calls vs SPY calls (scaled)
 - Put spread arbitrage
 - Volatility surface differences
@@ -96,11 +99,13 @@ Action:
 ### Risk Considerations
 
 **Execution Risk**
+
 - Need to leg into trades
 - Market impact on both sides
 - Timing crucial
 
 **Correlation Risk**
+
 - Relationship can break down
 - Events cause divergence
 - Position sizing important

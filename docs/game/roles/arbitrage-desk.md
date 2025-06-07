@@ -45,16 +45,19 @@ Spot pricing mismatches between SPX and SPY, capturing small, consistent profits
 ## 4. How to Make Money
 
 1. **Understand the Tracking-Error Signal**
+
    - Signal shows realized volatility divergence between SPX and SPY
    - E.g., "SPY tracking error +0.15" means SPY is moving more than expected vs SPX
    - In efficient markets, this realized vol difference should impact option prices
 
 2. **Identify Option Mispricings**
+
    - Higher realized vol in SPY → SPY options should be priced higher
    - If options don't reflect this difference, arbitrage opportunity exists
    - Compare same-strike options between SPX and SPY
 
 3. **Execute the Arbitrage**
+
    - If SPY showing excess realized vol but options equally priced:
 
      - **Buy** SPY options (underpriced given higher realized vol)
@@ -62,6 +65,7 @@ Spot pricing mismatches between SPX and SPY, capturing small, consistent profits
    - Maintain position balance within 2:1 ratio
 
 4. **Capture the Convergence**
+
    - As market recognizes the vol difference, option prices adjust
    - Close both legs when pricing normalizes
    - Profit from the option repricing, not underlying convergence

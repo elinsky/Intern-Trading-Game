@@ -101,11 +101,13 @@ retail:
 ### Expected Characteristics
 
 **Volume Distribution**
+
 - Daily volume: 100-500 contracts
 - Peak hours: 2-3x average
 - Quiet periods: 0.5x average
 
 **Price Impact**
+
 - Individual orders: Minimal
 - Cumulative effect: Can move markets in trends
 - Correlation with volatility: Positive

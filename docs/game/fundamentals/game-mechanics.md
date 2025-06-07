@@ -25,26 +25,31 @@ T+5:00    Next Tick Begins
 ### What Happens Each Tick
 
 **1. Price Generation**
+
 - New underlying prices calculated using geometric Brownian motion
 - Volatility regime determines price movement magnitude
 - SPY price derived from SPX with noise and lag
 
 **2. News & Events**
+
 - News headlines published (if any)
 - May trigger volatility regime changes
 - Some participants receive advance signals
 
 **3. Order Collection**
+
 - Bots read market data and signals
 - Submit orders based on strategy
 - All orders timestamped and queued
 
 **4. Order Matching**
+
 - Price-time priority matching
 - Crossed orders execute immediately
 - Partial fills allowed
 
 **5. Settlement**
+
 - Trades confirmed and booked
 - Positions updated
 - P&L calculated
