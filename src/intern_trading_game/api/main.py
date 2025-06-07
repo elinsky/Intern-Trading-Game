@@ -5,7 +5,7 @@ import threading
 from contextlib import asynccontextmanager
 from datetime import datetime
 from queue import Queue
-from typing import Dict
+from typing import Dict, Optional
 
 import uvicorn
 from fastapi import (
@@ -17,8 +17,6 @@ from fastapi import (
 )
 from fastapi.middleware.cors import CORSMiddleware
 
-from ..core.interfaces import ValidationContext
-from ..core.models import TickPhase
 from ..core.order_validator import (
     ConstraintBasedOrderValidator,
     ConstraintConfig,
@@ -36,6 +34,7 @@ from .models import (
     TeamInfo,
     TeamRegistration,
 )
+from .services import OrderValidationService
 from .websocket import ws_manager
 
 # Thread-safe queues
@@ -50,6 +49,9 @@ websocket_queue: Queue = Queue()  # Threads -> WebSocket
 exchange = ExchangeVenue(ContinuousMatchingEngine())
 validator = ConstraintBasedOrderValidator()
 
+# Service instances
+validation_service: Optional[OrderValidationService] = None
+
 # Position tracking (thread-safe)
 positions: Dict[str, Dict[str, int]] = {}
 positions_lock = threading.RLock()
@@ -63,17 +65,21 @@ pending_orders: Dict[str, threading.Event] = {}
 order_responses: Dict[str, OrderResponse] = {}
 
 
+# Helper functions for service dependency injection
+def get_team_positions(team_id: str) -> Dict[str, int]:
+    """Thread-safe retrieval of team positions."""
+    with positions_lock:
+        return positions.get(team_id, {}).copy()
+
+
+def get_team_order_count(team_id: str) -> int:
+    """Thread-safe retrieval of team order count for current tick."""
+    with orders_lock:
+        return orders_this_tick.get(team_id, 0)
+
+
 def validator_thread():
     """Thread 2: Order Validator - validates orders from queue.
-
-    TODO: Refactor this method to extract message handlers into separate
-    functions. The current implementation handles both new orders and
-    cancellations inline, making the method long and harder to test.
-    Consider extracting:
-
-    - _handle_new_order(order, team_info, response_event)
-    - _handle_cancel_order(order_id, team_info, response_event)
-    This would improve readability and make unit testing easier.
 
     This thread implements the order validation pipeline, continuously
     processing messages from the order queue. It handles both new order
@@ -145,27 +151,10 @@ def validator_thread():
                 # Handle new order submission
                 order = data
 
-                # Get current positions safely
-                with positions_lock:
-                    team_positions = positions.get(
-                        team_info.team_id, {}
-                    ).copy()
-
-                with orders_lock:
-                    team_orders = orders_this_tick.get(team_info.team_id, 0)
-
-                # Build validation context
-                context = ValidationContext(
-                    order=order,
-                    trader_id=team_info.team_id,
-                    trader_role=team_info.role,
-                    tick_phase=TickPhase.TRADING,
-                    current_positions=team_positions,
-                    orders_this_tick=team_orders,
+                # Validate order using service
+                result = validation_service.validate_new_order(
+                    order, team_info
                 )
-
-                # Validate order
-                result = validator.validate_order(context)
 
                 if result.status == "accepted":
                     # Send to matching engine
@@ -173,7 +162,10 @@ def validator_thread():
 
                     # Update order count
                     with orders_lock:
-                        orders_this_tick[team_info.team_id] = team_orders + 1
+                        current_count = orders_this_tick.get(
+                            team_info.team_id, 0
+                        )
+                        orders_this_tick[team_info.team_id] = current_count + 1
                 else:
                     # Send rejection via WebSocket
                     websocket_queue.put(
@@ -204,8 +196,10 @@ def validator_thread():
                 # Handle order cancellation
                 order_id = data
 
-                # Attempt to cancel at the exchange
-                success = exchange.cancel_order(order_id, team_info.team_id)
+                # Validate and attempt cancellation using service
+                success, reason = validation_service.validate_cancellation(
+                    order_id, team_info.team_id
+                )
 
                 if success:
                     # Send cancel acknowledgment via WebSocket
@@ -229,9 +223,7 @@ def validator_thread():
                         timestamp=datetime.now(),
                     )
                 else:
-                    # Determine failure reason
-                    # TODO: exchange.cancel_order could return more detail
-                    reason = "Order not found or unauthorized"
+                    # Use failure reason from service
                     error_code = "CANCEL_FAILED"
 
                     # Send cancel rejection via WebSocket
@@ -541,12 +533,23 @@ async def startup():
     """Initialize the game components on startup.
 
     This function handles all startup logic including:
+    - Initializing services
     - Starting processing threads
     - Configuring market maker constraints
     - Listing trading instruments
 
     Follows Single Responsibility Principle by focusing only on startup tasks.
     """
+    global validation_service
+
+    # Initialize services
+    validation_service = OrderValidationService(
+        validator=validator,
+        exchange=exchange,
+        get_positions_func=get_team_positions,
+        get_order_count_func=get_team_order_count,
+    )
+
     # Start processing threads
     validator_t.start()
     matching_t.start()
