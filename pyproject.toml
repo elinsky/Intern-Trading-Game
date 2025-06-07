@@ -7,7 +7,9 @@ name = "Intern-Trading-Game"
 version = "0.1.0"
 requires-python = ">=3.9,<3.13"
 dependencies = [
-  # No core dependencies yet
+    "fastapi>=0.100.0",
+    "uvicorn[standard]>=0.23.0",
+    "pydantic>=2.0.0",
 ]
 
 [project.optional-dependencies]
@@ -18,7 +20,8 @@ dev = [
   "ruff>=0.3.0",
   "mypy>=1.5.1",
   "bandit>=1.7.5",
-  "types-tqdm>=4.64.0"
+  "types-tqdm>=4.64.0",
+  "httpx>=0.24.0"
 ]
 
 # Documentation dependencies
