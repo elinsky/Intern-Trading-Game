@@ -2,6 +2,7 @@
 
 import asyncio
 import threading
+from contextlib import asynccontextmanager
 from datetime import datetime
 from queue import Queue
 from typing import Dict
@@ -36,22 +37,6 @@ from .models import (
     TeamRegistration,
 )
 from .websocket import ws_manager
-
-# Initialize FastAPI app
-app = FastAPI(
-    title="Intern Trading Game API",
-    description="REST API for algorithmic trading simulation",
-    version="1.0.0",
-)
-
-# Add CORS middleware
-app.add_middleware(
-    CORSMiddleware,
-    allow_origins=["*"],
-    allow_credentials=True,
-    allow_methods=["*"],
-    allow_headers=["*"],
-)
 
 # Thread-safe queues
 order_queue: Queue = Queue()  # API -> Validator
@@ -455,9 +440,16 @@ publisher_t = threading.Thread(target=trade_publisher_thread, daemon=True)
 websocket_t = threading.Thread(target=websocket_thread, daemon=True)
 
 
-@app.on_event("startup")
-async def startup_event():
-    """Initialize the game on startup."""
+async def startup():
+    """Initialize the game components on startup.
+
+    This function handles all startup logic including:
+    - Starting processing threads
+    - Configuring market maker constraints
+    - Listing trading instruments
+
+    Follows Single Responsibility Principle by focusing only on startup tasks.
+    """
     # Start processing threads
     validator_t.start()
     matching_t.start()
@@ -487,9 +479,15 @@ async def startup_event():
     )
 
 
-@app.on_event("shutdown")
-async def shutdown_event():
-    """Cleanup on shutdown."""
+async def shutdown():
+    """Cleanup resources on shutdown.
+
+    This function handles all cleanup logic including:
+    - Sending shutdown signals to threads
+    - Waiting for threads to complete
+
+    Follows Single Responsibility Principle by focusing only on cleanup tasks.
+    """
     # Send shutdown signals to threads
     order_queue.put(None)
     match_queue.put(None)
@@ -501,6 +499,39 @@ async def shutdown_event():
     matching_t.join(timeout=1)
     publisher_t.join(timeout=1)
     websocket_t.join(timeout=1)
+
+
+@asynccontextmanager
+async def lifespan(app: FastAPI):
+    """Manage the application lifecycle.
+
+    This context manager handles startup and shutdown events for the FastAPI
+    application, replacing the deprecated @app.on_event decorators.
+
+    The lifespan pattern ensures proper resource management and follows
+    SOLID principles by delegating to separate startup/shutdown functions.
+    """
+    await startup()
+    yield
+    await shutdown()
+
+
+# Initialize FastAPI app with lifespan management
+app = FastAPI(
+    title="Intern Trading Game API",
+    description="REST API for algorithmic trading simulation",
+    version="1.0.0",
+    lifespan=lifespan,
+)
+
+# Add CORS middleware
+app.add_middleware(
+    CORSMiddleware,
+    allow_origins=["*"],
+    allow_credentials=True,
+    allow_methods=["*"],
+    allow_headers=["*"],
+)
 
 
 @app.get("/")
