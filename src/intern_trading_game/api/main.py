@@ -1,12 +1,19 @@
 """REST API for the Intern Trading Game with queue-based architecture."""
 
+import asyncio
 import threading
 from datetime import datetime
 from queue import Queue
 from typing import Dict
 
 import uvicorn
-from fastapi import Depends, FastAPI, HTTPException
+from fastapi import (
+    Depends,
+    FastAPI,
+    HTTPException,
+    WebSocket,
+    WebSocketDisconnect,
+)
 from fastapi.middleware.cors import CORSMiddleware
 
 from ..core.interfaces import ValidationContext
@@ -28,6 +35,7 @@ from .models import (
     TeamInfo,
     TeamRegistration,
 )
+from .websocket import ws_manager
 
 # Initialize FastAPI app
 app = FastAPI(
@@ -51,6 +59,7 @@ validation_queue: Queue = Queue()  # Validator → Matcher
 match_queue: Queue = Queue()  # For matching engine
 trade_queue: Queue = Queue()  # Matcher → Publisher
 response_queue: Queue = Queue()  # For order responses back to API
+websocket_queue: Queue = Queue()  # Threads → WebSocket
 
 # Game components
 exchange = ExchangeVenue(ContinuousMatchingEngine())
@@ -148,6 +157,20 @@ def validator_thread():
                 with orders_lock:
                     orders_this_tick[team_info.team_id] = team_orders + 1
             else:
+                # Send rejection via WebSocket
+                websocket_queue.put(
+                    (
+                        "new_order_reject",
+                        team_info.team_id,
+                        {
+                            "order_id": order.order_id,
+                            "client_order_id": order.client_order_id,
+                            "reason": result.error_message,
+                            "error_code": result.error_code,
+                        },
+                    )
+                )
+
                 # Send rejection response
                 response = OrderResponse(
                     order_id=order.order_id,
@@ -179,6 +202,24 @@ def matching_thread():
             # Submit to exchange
             try:
                 result = exchange.submit_order(order)
+
+                # Send ACK if order accepted by exchange
+                if result.status in ["new", "partially_filled", "filled"]:
+                    websocket_queue.put(
+                        (
+                            "new_order_ack",
+                            team_info.team_id,
+                            {
+                                "order_id": order.order_id,
+                                "client_order_id": order.client_order_id,
+                                "instrument_id": order.instrument_id,
+                                "side": order.side,
+                                "quantity": order.quantity,
+                                "price": order.price,
+                                "status": result.status,
+                            },
+                        )
+                    )
 
                 # Send to trade publisher
                 trade_queue.put((result, order, team_info))
@@ -214,8 +255,54 @@ def trade_publisher_thread():
 
             result, order, team_info = trade_data
 
+            # Calculate fees and send execution reports
+            total_fees = 0.0
+            liquidity_type = None
+
             # Update positions if filled
             if result.filled_quantity > 0:
+                # Send execution reports for each fill
+                for trade in result.fills:
+                    # Determine liquidity type based on aggressor
+                    if trade.aggressor_side == order.side:
+                        liquidity_type = "taker"
+                    else:
+                        liquidity_type = "maker"
+
+                    # Calculate fees
+                    if (
+                        team_info.role == "market_maker"
+                        and liquidity_type == "maker"
+                    ):
+                        fees = -0.02 * trade.quantity  # Rebate
+                    else:
+                        fees = 0.05 * trade.quantity  # Taker fee
+
+                    total_fees += fees
+
+                    # Send execution report via WebSocket
+                    websocket_queue.put(
+                        (
+                            "execution_report",
+                            team_info.team_id,
+                            {
+                                "trade": trade,
+                                "buyer_order_id": trade.buyer_order_id,
+                                "seller_order_id": trade.seller_order_id,
+                                "client_order_id": order.client_order_id
+                                if order.order_id
+                                in [
+                                    trade.buyer_order_id,
+                                    trade.seller_order_id,
+                                ]
+                                else None,
+                                "liquidity_type": liquidity_type,
+                                "fees": fees,
+                            },
+                        )
+                    )
+
+                # Update positions
                 with positions_lock:
                     if team_info.team_id not in positions:
                         positions[team_info.team_id] = {}
@@ -231,13 +318,15 @@ def trade_publisher_thread():
                     )
                     positions[team_info.team_id][instrument] += position_delta
 
-            # Create response
+            # Create response with fees and liquidity_type
             response = OrderResponse(
                 order_id=order.order_id,
                 status=result.status,
                 timestamp=datetime.now(),
                 filled_quantity=result.filled_quantity,
                 average_price=result.average_price,
+                fees=total_fees,
+                liquidity_type=liquidity_type,
             )
 
             # Send response back
@@ -249,19 +338,122 @@ def trade_publisher_thread():
             print(f"Trade publisher thread error: {e}")
 
 
-# Start threads
+def websocket_thread():
+    """Thread 8: WebSocket Publisher - sends async messages to connected clients.
+
+    This thread bridges the synchronous trading threads with the asynchronous
+    WebSocket connections. It receives messages from other threads via a
+    thread-safe queue and broadcasts them to connected clients based on
+    team ID and message type.
+
+    The thread runs an asyncio event loop to handle WebSocket operations,
+    using asyncio.to_thread to safely retrieve messages from the synchronous
+    queue without blocking the event loop.
+
+    Message flow:
+    1. Trading threads put messages on websocket_queue
+    2. This thread retrieves messages asynchronously
+    3. Messages are routed to appropriate WebSocket broadcast methods
+    4. Connected clients receive real-time updates
+
+    Notes
+    -----
+    The thread uses a None sentinel value in the queue to signal shutdown,
+    allowing graceful termination during API shutdown.
+
+    Messages are only sent to connected clients - disconnected clients are
+    silently skipped to prevent blocking the queue.
+
+    The thread handles all WebSocket message types:
+    - new_order_ack: Order accepted by exchange
+    - new_order_reject: Order failed validation
+    - execution_report: Trade executed
+    - position_snapshot: Current positions on connect
+
+    TradingContext
+    --------------
+    In production, this thread would also handle:
+    - Market data updates (bid/ask changes)
+    - News events and signals
+    - System announcements
+    - Heartbeat messages for connection health
+
+    Examples
+    --------
+    Message format in queue:
+    >>> websocket_queue.put((
+    ...     'new_order_ack',  # message type
+    ...     'TEAM_001',       # team_id
+    ...     {                 # data dict
+    ...         'order_id': 'ORD_123',
+    ...         'client_order_id': 'MY_ORDER_1',
+    ...         'status': 'new'
+    ...     }
+    ... ))
+    """
+    print("WebSocket thread started")
+    asyncio.run(websocket_async_loop())
+
+
+async def websocket_async_loop():
+    """Async event loop for WebSocket operations.
+
+    Continuously processes messages from the websocket_queue and sends
+    them to connected clients via the WebSocketManager.
+
+    This coroutine bridges the synchronous thread world with the async
+    WebSocket world using asyncio.to_thread for non-blocking queue access.
+
+    Notes
+    -----
+    The loop runs until a None message is received, signaling shutdown.
+    All exceptions are caught and logged to prevent thread termination
+    on individual message failures.
+    """
+    while True:
+        try:
+            # Bridge sync to async - get from queue without blocking event loop
+            msg = await asyncio.to_thread(websocket_queue.get)
+            if msg is None:  # Shutdown signal
+                break
+
+            msg_type, team_id, data = msg
+
+            # Route to appropriate WebSocket method
+            if ws_manager.is_connected(team_id):
+                if msg_type == "new_order_ack":
+                    await ws_manager.broadcast_new_order_ack(team_id, **data)
+                elif msg_type == "new_order_reject":
+                    await ws_manager.broadcast_new_order_reject(
+                        team_id, **data
+                    )
+                elif msg_type == "execution_report":
+                    await ws_manager.broadcast_trade_execution(**data)
+                elif msg_type == "position_snapshot":
+                    await ws_manager.broadcast_position_snapshot(
+                        team_id, data["positions"]
+                    )
+
+        except Exception as e:
+            print(f"WebSocket thread error: {e}")
+
+
+# Create threads but don't start them yet
 validator_t = threading.Thread(target=validator_thread, daemon=True)
 matching_t = threading.Thread(target=matching_thread, daemon=True)
 publisher_t = threading.Thread(target=trade_publisher_thread, daemon=True)
-
-validator_t.start()
-matching_t.start()
-publisher_t.start()
+websocket_t = threading.Thread(target=websocket_thread, daemon=True)
 
 
 @app.on_event("startup")
 async def startup_event():
     """Initialize the game on startup."""
+    # Start processing threads
+    validator_t.start()
+    matching_t.start()
+    publisher_t.start()
+    websocket_t.start()
+
     # Setup market maker constraints
     mm_constraint = ConstraintConfig(
         constraint_type=ConstraintType.POSITION_LIMIT,
@@ -281,7 +473,7 @@ async def startup_event():
         exchange.list_instrument(instrument)
 
     print(
-        f"✓ API started with {len(instruments)} instruments and 3 processing threads"
+        f"✓ API started with {len(instruments)} instruments and 4 processing threads"
     )
 
 
@@ -292,11 +484,13 @@ async def shutdown_event():
     order_queue.put(None)
     match_queue.put(None)
     trade_queue.put(None)
+    websocket_queue.put(None)
 
     # Wait for threads to finish
     validator_t.join(timeout=1)
     matching_t.join(timeout=1)
     publisher_t.join(timeout=1)
+    websocket_t.join(timeout=1)
 
 
 @app.get("/")
@@ -309,6 +503,7 @@ async def root():
             "validator": validator_t.is_alive(),
             "matching": matching_t.is_alive(),
             "publisher": publisher_t.is_alive(),
+            "websocket": websocket_t.is_alive(),
         },
     }
 
@@ -372,6 +567,7 @@ async def submit_order(
         side=side,
         quantity=request.quantity,
         price=request.price,
+        client_order_id=request.client_order_id,
     )
 
     # Create response event
@@ -410,6 +606,87 @@ async def get_positions(
     return PositionResponse(
         team_id=team_id, positions=team_positions, last_updated=datetime.now()
     )
+
+
+@app.websocket("/ws")
+async def websocket_endpoint(websocket: WebSocket, api_key: str):
+    """WebSocket endpoint for real-time trading updates.
+
+    Establishes a persistent WebSocket connection for a trading team,
+    enabling real-time streaming of order updates, trade executions,
+    and position changes.
+
+    Parameters
+    ----------
+    websocket : WebSocket
+        The WebSocket connection instance from FastAPI
+    api_key : str
+        Team's API key provided as query parameter (?api_key=...)
+
+    Notes
+    -----
+    Connection lifecycle:
+    1. Validate API key against team registry
+    2. Register connection with WebSocketManager
+    3. Send initial position snapshot
+    4. Keep connection alive until disconnect
+
+    Only one WebSocket connection is allowed per team. New connections
+    will automatically close any existing connection for that team.
+
+    The connection uses query parameter authentication because WebSocket
+    headers are not consistently supported across all client libraries.
+
+    TradingContext
+    --------------
+    Teams receive only their own order updates and trades. Market data
+    and public events are broadcast to all connected teams.
+
+    Message types sent to clients:
+    - position_snapshot: Initial positions on connect
+    - new_order_ack: Order accepted by exchange
+    - new_order_reject: Order validation failed
+    - execution_report: Trade executed
+
+    Examples
+    --------
+    Connect using JavaScript:
+    >>> const ws = new WebSocket('ws://localhost:8000/ws?api_key=YOUR_KEY');
+    >>> ws.onmessage = (event) => {
+    ...     const msg = JSON.parse(event.data);
+    ...     console.log(`Received ${msg.type}:`, msg.data);
+    ... };
+
+    Connect using Python:
+    >>> import websockets
+    >>> async with websockets.connect('ws://localhost:8000/ws?api_key=YOUR_KEY') as ws:
+    ...     async for message in ws:
+    ...         msg = json.loads(message)
+    ...         print(f"Received {msg['type']}")
+    """
+    # Validate API key
+    team = team_registry.get_team_by_api_key(api_key)
+    if not team:
+        await websocket.close(code=1008, reason="Invalid API key")
+        return
+
+    # Connect
+    await ws_manager.connect(websocket, team)
+
+    # Send position snapshot via queue
+    with positions_lock:
+        team_positions = positions.get(team.team_id, {}).copy()
+
+    websocket_queue.put(
+        ("position_snapshot", team.team_id, {"positions": team_positions})
+    )
+
+    try:
+        # Keep connection alive
+        while True:
+            await websocket.receive_text()
+    except WebSocketDisconnect:
+        await ws_manager.disconnect(team.team_id)
 
 
 if __name__ == "__main__":

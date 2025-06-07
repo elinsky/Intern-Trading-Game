@@ -65,6 +65,67 @@ Register a new trading team.
 **Errors:**
 - `400`: Invalid role specified
 
+### WebSocket
+
+#### WS /ws
+
+Real-time updates for order status, executions, and market data.
+
+**Connection URL:**
+```
+ws://localhost:8000/ws?api_key=YOUR_API_KEY
+```
+
+**Authentication:**
+Pass API key as query parameter.
+
+**Message Flow:**
+
+1. Connect with valid API key
+2. Receive position snapshot immediately
+3. Receive real-time updates for:
+   - Order acknowledgments
+   - Order rejections
+   - Trade executions
+   - Market data updates
+
+**Example Messages:**
+
+Position Snapshot (on connect):
+```json
+{
+  "seq": 1,
+  "type": "position_snapshot",
+  "timestamp": "2024-01-15T10:00:00.123456Z",
+  "data": {
+    "positions": {
+      "SPX_4500_CALL": 10,
+      "SPX_4500_PUT": -5
+    }
+  }
+}
+```
+
+Order Acknowledgment:
+```json
+{
+  "seq": 2,
+  "type": "new_order_ack",
+  "timestamp": "2024-01-15T10:00:01.234567Z",
+  "data": {
+    "order_id": "ORD_123456",
+    "client_order_id": "MY_ORDER_001",
+    "instrument_id": "SPX_4500_CALL",
+    "side": "buy",
+    "quantity": 10,
+    "price": 100.0,
+    "status": "new"
+  }
+}
+```
+
+See [WebSocket API Reference](websocket-api.md) for complete message documentation.
+
 ### Trading
 
 #### POST /orders
@@ -94,10 +155,14 @@ Submit a new order to the exchange.
   "timestamp": "2024-01-15T10:00:01Z",
   "filled_quantity": 10,
   "average_price": 25.50,
+  "fees": -0.20,
+  "liquidity_type": "maker",
   "error_code": null,
   "error_message": null
 }
 ```
+
+**Note:** Real-time updates for this order will be sent via WebSocket if connected.
 
 **Status Values:**
 

@@ -60,6 +60,11 @@ subgraph "Core Processing (Threads)"
     subgraph "Thread 7: Database Writer"
         DBW[DB Writer<br/>Batch Inserts]
     end
+
+    subgraph "Thread 8: WebSocket Publisher"
+        WSP[WebSocket Publisher<br/>Async Message Delivery]
+        WSQ[Message Router<br/>Type-based Dispatch]
+    end
 end
 
 %% Thread-Safe Queues
@@ -71,6 +76,7 @@ subgraph "Thread Communication (Queues)"
     PQ[Price Queue<br/>Thread-Safe]
     EQ[Event Queue<br/>Thread-Safe]
     SQ[Signal Queue<br/>Thread-Safe]
+    WQ[WebSocket Queue<br/>Thread-Safe]
 end
 
 %% Fast Path - In-Memory Stores
@@ -302,15 +308,19 @@ CREATE TABLE position_snapshots (
 - Checks position limits (via OrderValidator constraints)
 - Enforces trading rules
 - Fast-fail invalid orders
+- Sends rejection notifications to WebSocket queue
 
 ### Thread 3: Matching Engine
 - Continuous order matching
 - Maintains order books
 - Executes trades immediately
 - Price-time priority algorithm
+- Sends order acknowledgments to WebSocket queue
 
 ### Thread 4: Trade Publisher & Position Service
 - Broadcasts executions to bots
+- Sends execution reports to WebSocket queue
+- Calculates fees based on maker/taker status
 - Updates position tracking
 - Calculates P&L
 - Triggers async database writes
@@ -332,6 +342,12 @@ CREATE TABLE position_snapshots (
 - Saves price history asynchronously
 - Stores event logs
 - Takes periodic position snapshots
+
+### Thread 8: WebSocket Publisher
+- Bridges sync threads with async WebSocket connections
+- Routes messages by type to appropriate broadcast methods
+- Handles connection lifecycle per team
+- Ensures message delivery to connected clients only
 
 ## Configuration
 
