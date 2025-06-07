@@ -1,123 +1,192 @@
-# Build Order Checklist
+# Build Order Checklist - v2 API Architecture
 
-This document outlines the recommended build order for implementing the Intern Trading Game components.
+## Phase 1: Core Foundation ✅ COMPLETE
 
-## Initial Setup Phase (Partially Complete)
+### Exchange Infrastructure
+- [x] **Order** - Basic order data model
+- [x] **Trade** - Trade execution record
+- [x] **OrderBook** - Bid/ask order storage
+- [x] **OrderResult** - Enhanced with error_code, error_message fields
+- [x] **ExchangeVenue** - Core exchange with submit_order()
+- [x] **MatchingEngine Interface** - Strategy pattern for swappable engines
+- [x] **BatchMatchingEngine** - Fair randomized batch matching
+- [x] **Exchange Tests** - 45+ comprehensive test cases
 
-The following interfaces and models were defined to establish the project structure. Items marked complete have been implemented, while unchecked items will be defined as needed during component implementation.
+### Validation System
+- [x] **OrderValidator Interface** - Base validation contract
+- [x] **ValidationContext** - Order validation state container
+- [x] **ConstraintBasedOrderValidator** - Role-agnostic validation
+- [x] **8 Constraint Types**:
+  - [x] POSITION_LIMIT - Per-instrument position limits
+  - [x] PORTFOLIO_LIMIT - Total portfolio constraints
+  - [x] ORDER_SIZE - Min/max order quantities
+  - [x] ORDER_RATE - Orders per tick limiting
+  - [x] ORDER_TYPE_ALLOWED - Role-specific order types
+  - [x] TRADING_WINDOW - Phase-based order acceptance
+  - [x] INSTRUMENT_ALLOWED - Instrument restrictions
+  - [x] PRICE_RANGE - Limit order price bounds
+- [x] **Validation Tests** - Complete test coverage
 
-### 1. Define Core Interfaces
+### Game Loop (Legacy)
+- [x] **GameLoop** - 5-minute tick orchestration
+- [x] **TickPhase Enum** - PRE_OPEN, TRADING, etc.
+- [x] **GameConfig** - Configuration data model
+- [x] **TradingStrategy Interface** - Bot interface
 
-- [x] **TickController** - Implemented as `GameLoop` class with `run_tick()` and phase event publishing
-- [x] **ExchangeEngine** - Methods: `process_orders()`, `execute_batch_matching()`
-- [x] **OrderValidator** - Methods: `validate_order()`, `check_constraints()`
+### Documentation
+- [x] **Architecture v2** - Complete system design with 7 threads
+- [x] **Validation API Reference** - Constraint documentation
+- [x] **Trading Phases Guide** - Batch/continuous market modes
 
-### 2. Define Domain Service Interfaces
+## Phase 2: REST API Foundation
 
-- [ ] **PriceModel** - Method: `generate_prices(tick) -> dict`
-- [ ] **VolatilityStateMachine** - Methods: `get_current_regime()`, `process_event()`
-- [ ] **EventSystem** - Methods: `generate_events()`, `publish_signals()`
-- [ ] **RoleService** - Method: `validate_role_constraints()`
-- [ ] **PositionService** - Methods: `update_position()`, `get_portfolio_stats()`
-- [ ] **MarketDataService** - Method: `distribute_market_data()`
+### 2.1 FastAPI Setup
+- [ ] **Main application** - FastAPI app instance
+- [ ] **CORS configuration** - Allow external bot connections
+- [ ] **Exception handlers** - Consistent error responses
+- [ ] **Request models** - Pydantic schemas for validation
+- [ ] **Response models** - Standardized API responses
 
-### 3. Define Data Models
+### 2.2 Authentication
+- [ ] **TeamInfo model** - Bot registration data
+- [ ] **API key generation** - Unique keys per team
+- [ ] **Auth middleware** - Validate API keys
+- [ ] **Team registry** - In-memory team storage
+- [ ] **POST /auth/register** - Team registration endpoint
 
-- [x] Order, Trade (already exist in exchange module)
-- [ ] Position
-- [x] MarketState (implemented as `MarketData`)
-- [x] SignalEvent (implemented as `Signal`)
-- [x] NewsEvent, GameConfig, TickPhase using `@dataclass`
+### 2.3 Basic Endpoints
+- [ ] **POST /orders** - Submit new order
+- [ ] **DELETE /orders/{id}** - Cancel order
+- [ ] **GET /positions/{team_id}** - Query positions
+- [ ] **GET /market/prices** - Current prices
+- [ ] **GET /health** - API health check
 
-### 4. Bootstrap Tick Loop
+## Phase 3: Thread-Safe State
 
-- [x] Create `game_loop.py` with basic `run_tick()` function
-- [x] Add print/log stubs for each tick phase
+### 3.1 In-Memory Stores
+- [ ] **PositionCache** - Dict with RLock for positions
+- [ ] **OrderBookState** - Thread-safe SortedList wrapper
+- [ ] **MarketCache** - Latest prices with read lock
+- [ ] **VolatilityState** - Current regime tracking
+- [ ] **RoleRegistry** - Team role configurations
 
-## Component Build Order
+### 3.2 Queue Infrastructure
+- [ ] **OrderQueue** - API → Validator
+- [ ] **ValidationQueue** - Validator → Matcher
+- [ ] **MatchQueue** - For matching engine
+- [ ] **TradeQueue** - Matcher → Publisher
+- [ ] **PriceQueue** - Price Model → Market Data
+- [ ] **EventQueue** - Events → Processing
+- [ ] **SignalQueue** - Signals → Distribution
 
-### Phase 1: Core Infrastructure
+### 3.3 Database Queues
+- [ ] **TradeDBQueue** - Async trade persistence
+- [ ] **PriceDBQueue** - Market data archival
+- [ ] **EventDBQueue** - Event log storage
 
-- [x] **Tick Controller** - Game timing and orchestration (implemented as GameLoop)
-- [ ] **Price Model** - Underlying price generation (stub only)
-- [x] **Exchange Engine** - Enhanced with batch matching support
-- [ ] **Position Service** - Basic position tracking
+## Phase 4: Threading Implementation
 
-### Phase 2: Market Dynamics
+### 4.1 Thread 2: Order Validator
+- [ ] **Validator thread wrapper** - Queue consumer loop
+- [ ] **Context builder** - Create ValidationContext from state
+- [ ] **Error response handler** - Format rejection messages
+- [ ] **Constraint config loader** - Load from YAML
+- [ ] **Integration with queues** - Connect to pipeline
 
-- [ ] **Order Validator** - Order validation and role constraints
-- [ ] **Volatility State Machine** - Regime management
-- [ ] **Event System** - News and market events
-- [ ] **Market Data Service** - Data distribution
+### 4.2 Thread 3: Matching Engine
+- [ ] **Convert BatchMatchingEngine to continuous** - Immediate execution
+- [ ] **Thread wrapper** - Process match queue
+- [ ] **Per-instrument locks** - Prevent order book races
+- [ ] **Trade generation** - Create Trade objects
+- [ ] **Queue integration** - Send trades to publisher
 
-### Phase 3: Game Features
+### 4.3 Thread 4: Trade Publisher
+- [ ] **Publisher thread** - Consume trade queue
+- [ ] **Position Service** - Update position cache
+- [ ] **P&L calculation** - Real-time profit/loss
+- [ ] **WebSocket broadcast** - Send to connected bots
+- [ ] **Async DB write trigger** - Queue for persistence
 
-- [ ] **Role Service** - Role-specific logic
-- [ ] **Data Persistence** - Save game state
-- [ ] **Bot API** - External interface
+### 4.4 Thread 5: Market Simulator
+- [ ] **Price Model (GBM)** - Geometric Brownian Motion
+- [ ] **SPX price generation** - Primary underlying
+- [ ] **SPY correlation** - SPX/10 with tracking error
+- [ ] **Volatility integration** - Use current regime
+- [ ] **Market Publisher** - Stream via WebSocket
 
-## Detailed Tasks
+### 4.5 Thread 6: Event Generator
+- [ ] **Event types** - Fed, economic, geopolitical
+- [ ] **Poisson process** - Random event timing
+- [ ] **Impact calculator** - Regime shifts, price jumps
+- [ ] **Signal Generator** - Create trading signals
+- [ ] **Signal distribution** - Role-based filtering
 
-### Tick Controller (First Component)
+### 4.6 Thread 7: Database Writer
+- [ ] **Batch accumulator** - Collect 1000 trades
+- [ ] **Bulk insert logic** - Efficient DB writes
+- [ ] **Position snapshots** - Periodic state saves
+- [ ] **Error handling** - Queue overflow management
+- [ ] **Performance monitoring** - Track write latency
 
-- [x] Create basic tick loop with 5-minute intervals
-- [x] Implement trading schedule enforcement (configurable in GameConfig)
-- [x] Add tick event publishing mechanism (phase methods)
-- [x] Implement order window timing (T+0:30 to T+3:00)
-- [x] Add batch matching trigger at T+3:30
+## Phase 5: WebSocket Layer
 
-### Define Phase 1 Interfaces (Next Step)
+### 5.1 WebSocket Server
+- [ ] **WebSocket endpoint setup** - /ws routes
+- [ ] **Connection manager** - Track active connections
+- [ ] **Authentication** - Validate on connect
+- [ ] **Heartbeat/ping** - Keep connections alive
+- [ ] **Reconnection support** - Handle disconnects
 
-- [ ] Define PriceModel interface in core/interfaces.py
-- [ ] Define PositionService interface in core/interfaces.py
-- [ ] Define Position data model in core/models.py
-- [ ] Update GameLoop to use PriceModel interface type hints
-- [ ] Document interface contracts and expected behavior
+### 5.2 Data Streams
+- [ ] **/ws/market-data** - Price updates
+- [ ] **/ws/trades** - Execution notifications
+- [ ] **/ws/events** - News announcements
+- [ ] **/ws/signals** - Trading signals
+- [ ] **Subscription management** - Filter by team
 
-### Price Model (Second Component)
+## Phase 6: Database Layer
 
-- [ ] Implement Geometric Brownian Motion for SPX underlying
-- [ ] Add correlated SPY price generation (SPX/10 with tracking error)
-- [ ] Create volatility parameter interface for regime integration
-- [ ] Implement 3% daily tracking error with mean reversion
-- [ ] Add price snapshots at T+0:00 for each tick
-- [ ] Generate strike prices based on current SPX level
-- [ ] Calculate theoretical option prices using Black-Scholes
-- [ ] Add price validation and bounds checking
+### 6.1 Schema Design
+- [ ] **trades table** - Execution history
+- [ ] **prices table** - Market data archive
+- [ ] **events table** - News event log
+- [ ] **positions table** - Snapshot storage
+- [ ] **teams table** - Registration data
 
-### Position Service (Third Component)
+### 6.2 SQLAlchemy Models
+- [ ] **Trade model** - ORM mapping
+- [ ] **Price model** - Time series data
+- [ ] **Event model** - Event records
+- [ ] **Position model** - State snapshots
+- [ ] **Database session management** - Thread-safe access
 
-- [ ] Create position tracking data structure per participant
-- [ ] Implement trade-to-position update logic
-- [ ] Add real-time P&L calculation with mark-to-market
-- [ ] Calculate portfolio Greeks aggregation
-- [ ] Implement position limit monitoring and alerts
-- [ ] Add trade history and audit trail
-- [ ] Create position snapshot for game state saving
-- [ ] Implement role-based margin calculations
+## Phase 7: Integration & Testing
 
-### Exchange Enhancement (Fourth Component) - COMPLETED
+### 7.1 Integration Points
+- [ ] **OrderValidator ↔ Exchange** - Validation before matching
+- [ ] **PositionService ↔ OrderValidator** - Position limit checks
+- [ ] **All threads connected** - Full pipeline test
+- [ ] **Database persistence** - Verify async writes
+- [ ] **WebSocket stability** - Multi-client test
 
-- [x] Enhanced ExchangeVenue with batch matching support
-- [x] Implemented BatchMatchingEngine with fair randomization
-- [x] Added Strategy Pattern for swappable matching engines
-- [x] Created comprehensive test suite (45 tests)
-- [ ] Add order validation hooks for OrderValidator integration
-- [ ] Implement order amendment functionality
-- [ ] Add trade execution callbacks for position updates
-- [ ] Create order audit trail and history
-- [ ] Implement market data snapshots after matching
-- [ ] Add support for role-specific order handling
+### 7.2 Example Bots
+- [ ] **Python REST bot** - Reference implementation
+- [ ] **WebSocket market data** - Streaming example
+- [ ] **Java bot skeleton** - Multi-language support
+- [ ] **Performance test bot** - Load generation
+- [ ] **Migration guide** - From embedded to API
 
-### Order Validator (Phase 2 Component) - COMPLETED
+### 7.3 Performance Testing
+- [ ] **Single bot baseline** - Latency measurement
+- [ ] **10 bot test** - Concurrency check
+- [ ] **30 bot stress test** - Full load
+- [ ] **Order latency < 10μs** - Matching performance
+- [ ] **1000 orders/second** - Throughput target
 
-- [x] Implement constraint-based validation system (role-agnostic)
-- [x] Add position limit checking (symmetric and absolute)
-- [x] Add order size validation with min/max bounds
-- [x] Validate trading window enforcement (PRE_OPEN phase)
-- [x] Add order rate limiting per tick
-- [x] Add order type validation per role
-- [x] Create validation error response system with error codes
-- [x] Add configuration loading from YAML
-- [ ] Add order amendment and cancellation validation (future)
-- [ ] Integrate with ExchangeVenue and GameLoop (next step)
+## Next Immediate Tasks
+
+1. Create `src/intern_trading_game/api/main.py` with FastAPI app
+2. Implement `POST /orders` endpoint with Pydantic models
+3. Create `PositionCache` class with thread-safe operations
+4. Add `OrderQueue` and basic validator thread
+5. Test order flow with single REST client
