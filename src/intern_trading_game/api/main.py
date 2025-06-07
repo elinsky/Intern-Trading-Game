@@ -54,12 +54,12 @@ app.add_middleware(
 )
 
 # Thread-safe queues
-order_queue: Queue = Queue()  # API → Validator
+order_queue: Queue = Queue()  # API -> Validator
 validation_queue: Queue = Queue()  # Validator → Matcher
 match_queue: Queue = Queue()  # For matching engine
-trade_queue: Queue = Queue()  # Matcher → Publisher
+trade_queue: Queue = Queue()  # Matcher -> Publisher
 response_queue: Queue = Queue()  # For order responses back to API
-websocket_queue: Queue = Queue()  # Threads → WebSocket
+websocket_queue: Queue = Queue()  # Threads -> WebSocket
 
 # Game components
 exchange = ExchangeVenue(ContinuousMatchingEngine())
@@ -258,9 +258,10 @@ def trade_publisher_thread():
             # Calculate fees and send execution reports
             total_fees = 0.0
             liquidity_type = None
+            fill_quantity = sum(trade.quantity for trade in result.fills)
 
             # Update positions if filled
-            if result.filled_quantity > 0:
+            if fill_quantity > 0:
                 # Send execution reports for each fill
                 for trade in result.fills:
                     # Determine liquidity type based on aggressor
@@ -312,19 +313,28 @@ def trade_publisher_thread():
                         positions[team_info.team_id][instrument] = 0
 
                     position_delta = (
-                        result.filled_quantity
+                        fill_quantity
                         if order.side == "buy"
-                        else -result.filled_quantity
+                        else -fill_quantity
                     )
                     positions[team_info.team_id][instrument] += position_delta
+
+            # Calculate average price from fills
+            if fill_quantity > 0:
+                total_value = sum(
+                    trade.price * trade.quantity for trade in result.fills
+                )
+                average_price = total_value / fill_quantity
+            else:
+                average_price = None
 
             # Create response with fees and liquidity_type
             response = OrderResponse(
                 order_id=order.order_id,
                 status=result.status,
                 timestamp=datetime.now(),
-                filled_quantity=result.filled_quantity,
-                average_price=result.average_price,
+                filled_quantity=fill_quantity,
+                average_price=average_price,
                 fees=total_fees,
                 liquidity_type=liquidity_type,
             )
@@ -500,10 +510,10 @@ async def root():
         "status": "ok",
         "service": "Intern Trading Game API",
         "threads": {
-            "validator": validator_t.is_alive(),
-            "matching": matching_t.is_alive(),
-            "publisher": publisher_t.is_alive(),
-            "websocket": websocket_t.is_alive(),
+            "validator": validator_t.is_alive() if validator_t else False,
+            "matching": matching_t.is_alive() if matching_t else False,
+            "publisher": publisher_t.is_alive() if publisher_t else False,
+            "websocket": websocket_t.is_alive() if websocket_t else False,
         },
     }
 
