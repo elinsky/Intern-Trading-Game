@@ -14,7 +14,8 @@
     "theta",
     "delta",
     "Brownian",
-    "Poisson"
+    "Poisson",
+    "incentivized"
   ],
   "ignorePaths": [
     "node_modules",

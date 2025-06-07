@@ -46,6 +46,9 @@ Examples
 from ...exchange.order_result import OrderResult
 from ..models import OrderResponse
 
+# Import supporting services and configs
+from .fee_config import FeeConfig, FeeSchedule
+
 # Import interfaces
 from .interfaces import (
     OrderMatchingServiceInterface,
@@ -56,6 +59,8 @@ from .interfaces import (
 
 # Import concrete implementations
 from .order_validation_service import OrderValidationService
+from .position_management_service import PositionManagementService
+from .trading_fee_service import TradingFeeService
 
 __all__ = [
     # Interfaces
@@ -65,6 +70,12 @@ __all__ = [
     "WebSocketMessagingServiceInterface",
     # Concrete implementations
     "OrderValidationService",
+    # Supporting services
+    "TradingFeeService",
+    "PositionManagementService",
+    # Configuration models
+    "FeeConfig",
+    "FeeSchedule",
     # Re-exported existing types
     "OrderResult",  # From exchange.order_result
     "OrderResponse",  # From api.models
