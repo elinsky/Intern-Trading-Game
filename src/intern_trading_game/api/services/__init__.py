@@ -58,6 +58,7 @@ from .interfaces import (
 )
 
 # Import concrete implementations
+from .order_matching_service import OrderMatchingService
 from .order_validation_service import OrderValidationService
 from .position_management_service import PositionManagementService
 from .trade_processing_service import TradeProcessingService
@@ -71,6 +72,7 @@ __all__ = [
     "WebSocketMessagingServiceInterface",
     # Concrete implementations
     "OrderValidationService",
+    "OrderMatchingService",
     "TradeProcessingService",
     # Supporting services
     "TradingFeeService",
