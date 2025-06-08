@@ -34,7 +34,7 @@ repos:
     rev: 1.8.3
     hooks:
       - id: bandit
-        pass_filenames: false        # ← ignore git-passed filenames
+        pass_filenames: false        # <- ignore git-passed filenames
         # -r src/ means only scan our source code directory
         # --skip B101 tells Bandit to ignore warnings about `assert` usage
         args:

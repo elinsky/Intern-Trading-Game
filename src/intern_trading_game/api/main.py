@@ -322,8 +322,8 @@ def matching_thread():
                                 "instrument_id": order.instrument_id,
                                 "side": order.side,
                                 "quantity": order.quantity,
+                                "order_type": order.order_type,
                                 "price": order.price,
-                                "status": result.status,
                             },
                         )
                     )

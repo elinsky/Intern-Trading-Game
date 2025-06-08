@@ -13,7 +13,7 @@ The trading system uses a hybrid approach:
 ```
 Bot -> REST API -> Order Queue -> Validator -> Matching -> Exchange
          ↓                         ↓           ↓          ↓
-    WebSocket ← ← ← ← ← ← ← ← Reject ← ← ← Accept ← ← Fill
+    WebSocket <- <- <- <- <- <- <- <- Reject <- <- <- Accept <- <- Fill
 ```
 
 ## Order Lifecycle
