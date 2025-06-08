@@ -88,6 +88,7 @@ class TestPackageImports:
             "WebSocketMessagingServiceInterface",
             # Concrete implementations
             "OrderValidationService",
+            "TradeProcessingService",
             # Supporting services
             "TradingFeeService",
             "PositionManagementService",

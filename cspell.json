@@ -15,7 +15,8 @@
     "delta",
     "Brownian",
     "Poisson",
-    "incentivized"
+    "incentivized",
+    "VWAP"
   ],
   "ignorePaths": [
     "node_modules",
