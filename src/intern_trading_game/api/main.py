@@ -36,6 +36,7 @@ from .models import (
 )
 from .services import OrderValidationService
 from .services.fee_config import FeeConfig
+from .services.order_matching_service import OrderMatchingService
 from .services.position_management_service import PositionManagementService
 from .services.trade_processing_service import TradeProcessingService
 from .services.trading_fee_service import TradingFeeService
@@ -293,6 +294,9 @@ def matching_thread():
     """Thread 3: Matching Engine - processes validated orders."""
     print("Matching engine thread started")
 
+    # Initialize service once at thread startup
+    matching_service = OrderMatchingService(exchange)
+
     while True:
         try:
             # Get validated order
@@ -302,9 +306,9 @@ def matching_thread():
 
             order, team_info = order_data
 
-            # Submit to exchange
+            # Submit to exchange using service
             try:
-                result = exchange.submit_order(order)
+                result = matching_service.submit_order_to_exchange(order)
 
                 # Send ACK if order accepted by exchange
                 if result.status in ["new", "partially_filled", "filled"]:
@@ -328,12 +332,16 @@ def matching_thread():
                 trade_queue.put((result, order, team_info))
 
             except Exception as e:
-                # Handle exchange errors
+                # Handle exchange errors using service
+                result = matching_service.handle_exchange_error(e, order)
+
+                # Create response from error result
                 response = OrderResponse(
-                    order_id=order.order_id,
-                    status="error",
+                    order_id=result.order_id,
+                    status=result.status,
                     timestamp=datetime.now(),
-                    error_message=str(e),
+                    error_code=result.error_code,
+                    error_message=result.error_message,
                 )
 
                 # Find the response event
