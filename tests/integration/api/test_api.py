@@ -10,48 +10,14 @@ tests separately.
 """
 
 import pytest
-from fastapi.testclient import TestClient
 
-from intern_trading_game.api.auth import team_registry
-from intern_trading_game.api.main import (
-    app,
-    exchange,
-    orders_this_tick,
-    positions,
-)
-
+# Skip all tests in this module until threading is properly set up
 pytest.skip(
     "API tests require running threads - run as integration tests",
     allow_module_level=True,
 )
 
-
-@pytest.fixture
-def client():
-    """Create a test client for the FastAPI app."""
-    # Reset state before each test
-    exchange.order_books.clear()
-    exchange.instruments.clear()
-    exchange.all_order_ids.clear()
-    positions.clear()
-    orders_this_tick.clear()
-    team_registry.teams.clear()
-    team_registry.api_key_to_team.clear()
-    team_registry._team_counter = 0
-
-    # TestClient will automatically call startup/shutdown events
-    with TestClient(app) as client:
-        yield client
-
-
-@pytest.fixture
-def registered_team(client):
-    """Register a test team and return its info."""
-    response = client.post(
-        "/auth/register", json={"team_name": "TestBot", "role": "market_maker"}
-    )
-    assert response.status_code == 200
-    return response.json()
+# Fixtures are now provided by conftest.py
 
 
 class TestAuthentication:

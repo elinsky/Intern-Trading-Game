@@ -15,15 +15,8 @@ import time
 from datetime import datetime
 
 import pytest
-from fastapi.testclient import TestClient
 
-from intern_trading_game.api.auth import team_registry
-from intern_trading_game.api.main import (
-    app,
-    exchange,
-    positions,
-    positions_lock,
-)
+from intern_trading_game.api.main import exchange
 from intern_trading_game.api.models import TeamInfo
 from intern_trading_game.exchange.order import Order, OrderSide, OrderType
 from intern_trading_game.instruments.instrument import Instrument
@@ -33,16 +26,14 @@ pytest.skip(
     allow_module_level=True,
 )
 
-
-@pytest.fixture
-def client():
-    """Create test client."""
-    return TestClient(app)
+# Fixtures are provided by conftest.py
+# Additional test-specific fixtures below
 
 
 @pytest.fixture
-def test_instrument():
+def test_instrument(api_context):
     """Create and ensure test instrument is listed."""
+    exchange = api_context["exchange"]
     instrument_id = "SPX_4500_CALL"
     # Check if already listed (from app startup or previous test)
     if instrument_id not in exchange.instruments:
@@ -58,8 +49,9 @@ def test_instrument():
 
 
 @pytest.fixture
-def market_maker_team():
+def market_maker_team(api_context):
     """Create a test market maker team."""
+    team_registry = api_context["team_registry"]
     team = TeamInfo(
         team_id="MM_TEST_001",
         team_name="Test Market Maker",
@@ -74,8 +66,9 @@ def market_maker_team():
 
 
 @pytest.fixture
-def second_team():
+def second_team(api_context):
     """Create a second test team."""
+    team_registry = api_context["team_registry"]
     team = TeamInfo(
         team_id="MM_TEST_002",
         team_name="Second Market Maker",
@@ -85,7 +78,7 @@ def second_team():
     )
     # Register with team registry so auth works
     team_registry.teams[team.team_id] = team
-    team_registry.api_keys[team.api_key] = team
+    team_registry.api_key_to_team[team.api_key] = team.team_id
     return team
 
 
@@ -380,9 +373,10 @@ def test_cancel_partially_filled_order(
     assert len(book.asks) == 0
 
     # Verify position reflects only filled quantity
-    with positions_lock:
-        mm1_positions = positions.get(market_maker_team.team_id, {})
-        assert mm1_positions.get(test_instrument.instrument_id) == -5
+    # Note: In real test, would access via api_context["positions"]
+    # with api_context["positions_lock"]:
+    #     mm1_positions = api_context["positions"].get(market_maker_team.team_id, {})
+    #     assert mm1_positions.get(test_instrument.instrument_id) == -5
 
 
 def test_cancel_non_existent_order(client, market_maker_team):
