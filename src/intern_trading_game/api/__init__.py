@@ -1,8 +1,16 @@
 """REST API module for the Intern Trading Game."""
 
-from .auth import team_registry
-from .main import app
-from .models import OrderRequest, OrderResponse, PositionResponse, TeamInfo
+from ..infrastructure.api.app import create_app
+from ..infrastructure.api.auth import team_registry
+from ..infrastructure.api.models import (
+    OrderRequest,
+    OrderResponse,
+    PositionResponse,
+    TeamInfo,
+)
+
+# Create the app instance for backwards compatibility
+app = create_app()
 
 __all__ = [
     "app",

@@ -17,30 +17,30 @@ from fastapi import (
 )
 from fastapi.middleware.cors import CORSMiddleware
 
-from ..core.order_validator import (
+from ..domain.exchange.matching_engine import ContinuousMatchingEngine
+from ..domain.exchange.order import Order, OrderSide, OrderType
+from ..domain.exchange.venue import ExchangeVenue
+from ..domain.models.instrument import Instrument
+from ..domain.validation.order_validator import (
     ConstraintBasedOrderValidator,
     ConstraintConfig,
     ConstraintType,
 )
-from ..exchange.matching_engine import ContinuousMatchingEngine
-from ..exchange.order import Order, OrderSide, OrderType
-from ..exchange.venue import ExchangeVenue
-from ..instruments.instrument import Instrument
-from .auth import get_current_team, team_registry
-from .models import (
+from ..infrastructure.api.auth import get_current_team, team_registry
+from ..infrastructure.api.models import (
     OrderRequest,
     OrderResponse,
     PositionResponse,
     TeamInfo,
     TeamRegistration,
 )
-from .services import OrderValidationService
-from .services.fee_config import FeeConfig
-from .services.order_matching_service import OrderMatchingService
-from .services.position_management_service import PositionManagementService
-from .services.trade_processing_service import TradeProcessingService
-from .services.trading_fee_service import TradingFeeService
-from .websocket import ws_manager
+from ..infrastructure.api.websocket import ws_manager
+from ..infrastructure.config.fee_config import FeeConfig
+from ..services import OrderValidationService
+from ..services.order_matching import OrderMatchingService
+from ..services.position_management import PositionManagementService
+from ..services.trade_processing import TradeProcessingService
+from ..services.trading_fees import TradingFeeService
 
 # Thread-safe queues
 order_queue: Queue = Queue()  # API -> Validator
@@ -480,7 +480,7 @@ async def websocket_async_loop():
                 elif msg_type == "execution_report":
                     await ws_manager.broadcast_trade_execution(**data)
                 elif msg_type == "position_snapshot":
-                    await ws_manager.broadcast_position_snapshot(
+                    await ws_manager.send_position_snapshot(
                         team_id, data["positions"]
                     )
                 elif msg_type == "order_cancel_ack":

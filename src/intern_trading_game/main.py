@@ -5,8 +5,9 @@ This module serves as the entry point for the Intern Trading Game application.
 """
 
 # Order is imported but not used in this file
-from intern_trading_game.exchange.venue import ExchangeVenue
-from intern_trading_game.instruments.instrument import Instrument
+from intern_trading_game.domain.models.instrument import Instrument
+
+from .domain.exchange.venue import ExchangeVenue
 
 
 def main():

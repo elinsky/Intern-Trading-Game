@@ -17,9 +17,13 @@ from datetime import datetime
 import pytest
 
 from intern_trading_game.api.main import exchange
-from intern_trading_game.api.models import TeamInfo
-from intern_trading_game.exchange.order import Order, OrderSide, OrderType
-from intern_trading_game.instruments.instrument import Instrument
+from intern_trading_game.domain.exchange.order import (
+    Order,
+    OrderSide,
+    OrderType,
+)
+from intern_trading_game.domain.models.instrument import Instrument
+from intern_trading_game.infrastructure.api.models import TeamInfo
 
 pytest.skip(
     "Order cancellation API tests require running threads - run as integration tests",
