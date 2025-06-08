@@ -206,6 +206,19 @@ class TestWebSocketManager:
     cleanup of resources.
     """
 
+    @pytest.fixture(autouse=True)
+    async def cleanup_ws_manager(self):
+        """Clean up WebSocket manager state before each test."""
+        # Clear any existing connections before test
+        ws_manager.active_connections.clear()
+        ws_manager.sequence_numbers.clear()
+        ws_manager.team_info.clear()
+        yield
+        # Clean up after test
+        ws_manager.active_connections.clear()
+        ws_manager.sequence_numbers.clear()
+        ws_manager.team_info.clear()
+
     @pytest.fixture
     def mock_websocket(self):
         """Create a mock WebSocket for testing."""

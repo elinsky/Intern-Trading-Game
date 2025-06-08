@@ -72,6 +72,8 @@ plugins:
 
 nav:
   - Home: index-private.md
+  - How-To Guides:
+      - Setup Game Loop: how-to/setup-game-loop.md
   - Game Documentation:
       - Overview: game/overview.md
       - Fundamentals:
@@ -79,32 +81,61 @@ nav:
           - Game Mechanics: game/fundamentals/game-mechanics.md
           - Market Structure: game/fundamentals/market-structure.md
       - Trading:
+          - Order Types: game/trading/order-types.md
           - Constraints: game/trading/constraints.md
           - Execution Rules: game/trading/execution-rules.md
-          - Order Types: game/trading/order-types.md
+          - Signal Access: game/trading/signals-access.md
       - Roles:
           - Overview: game/roles/overview.md
           - Market Maker: game/roles/market-maker.md
           - Hedge Fund: game/roles/hedge-fund.md
           - Arbitrage Desk: game/roles/arbitrage-desk.md
           - Retail: game/roles/retail.md
+      - Simulation:
+          - Price Generation: game/simulation/price-generation.md
+          - Volatility Regimes: game/simulation/volatility-regimes.md
+          - News Events: game/simulation/news-events.md
+          - Correlation Model: game/simulation/correlation-model.md
+      - Scoring:
+          - Overview: game/scoring/overview.md
+      - Configuration:
+          - Game Parameters: game/configuration/game-parameters.md
+          - Example Config: game/configuration/example-config.yaml
+      - Appendix:
+          - Probability Tables: game/appendix/probability-tables.md
+          - Formulas: game/appendix/formulas.md
+          - Glossary: game/appendix/glossary.md
   - Technical Documentation:
       - Architecture: technical/architecture.md
+      - Architecture v2: technical/architecture-v2.md
+      - Architecture v3: technical/architecture-v3.md
       - Build Order: technical/build-order.md
+      - Implementation Guide: technical/implementation-guide.md
       - Tutorials:
           - Market Maker Tutorial: technical/tutorials/market-maker-tutorial.md
       - How-To Guides:
           - How to Submit Orders: technical/how-to/how-to-submit-orders.md
+          - Use REST API: technical/how-to/use-rest-api.md
           - Use WebSockets: technical/how-to/use-websockets.md
+          - WebSocket Integration: technical/how-to/websocket-integration.md
       - Reference:
           - API Overview: technical/reference/api-overview.md
           - Exchange API: technical/reference/exchange-api.md
           - REST API: technical/reference/rest-api.md
           - WebSocket API: technical/reference/websocket-api.md
+          - Validation API: technical/reference/validation-api.md
           - Math Examples: technical/reference/math-examples.md
+      - API Reference (Generated):
+          - Order Book: reference/order_book.md
+          - Order: reference/order.md
+          - Trade: reference/trade.md
+          - Venue: reference/venue.md
+          - Instrument: reference/instrument.md
       - Explanation:
           - Order Matching: technical/explanation/order-matching.md
           - Batch Matching: technical/explanation/batch-matching.md
+          - Order Validator Design: technical/explanation/order-validator-design.md
+          - Trading Phases: technical/explanation/trading-phases.md
       - Contributing:
           - Math in Docstrings: technical/contributing/docstring-math-guide.md
 

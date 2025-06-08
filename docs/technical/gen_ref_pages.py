@@ -6,11 +6,11 @@ import mkdocs_gen_files
 
 # Define the modules to document
 modules = [
-    "intern_trading_game.exchange.order_book",
-    "intern_trading_game.exchange.order",
-    "intern_trading_game.exchange.trade",
-    "intern_trading_game.exchange.venue",
-    "intern_trading_game.instruments.instrument",
+    "intern_trading_game.domain.exchange.order_book",
+    "intern_trading_game.domain.exchange.order",
+    "intern_trading_game.domain.exchange.trade",
+    "intern_trading_game.domain.exchange.venue",
+    "intern_trading_game.domain.models.instrument",
 ]
 
 # Generate the API reference pages

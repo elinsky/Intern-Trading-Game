@@ -33,6 +33,6 @@ This documentation is organized into four main sections:
 
 ## Getting Started
 
-To get started with the Intern Trading Game, check out the [Market Maker Tutorial](tutorials/market-maker-tutorial.md).
+To get started with the Intern Trading Game, check out the [Market Maker Tutorial](technical/tutorials/market-maker-tutorial.md).
 
-For more information on how to submit orders, see the [How to Submit Orders](how-to/how-to-submit-orders.md) guide.
+For more information on how to submit orders, see the [How to Submit Orders](technical/how-to/how-to-submit-orders.md) guide.

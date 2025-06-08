@@ -43,16 +43,11 @@ Welcome to the Intern Trading Game documentation. This guide contains all busine
 ### Scoring
 
 - [Overview](scoring/overview.md) - Scoring philosophy
-- [Market Maker Metrics](scoring/metrics/market-maker.md)
-- [Hedge Fund Metrics](scoring/metrics/hedge-fund.md)
-- [Arbitrage Desk Metrics](scoring/metrics/arbitrage-desk.md)
-- [Evaluation Periods](scoring/evaluation-periods.md)
 
 ### Configuration
 
 - [Game Parameters](configuration/game-parameters.md) - Configurable settings
 - [Example Config](configuration/example-config.yaml) - Sample configuration
-- [Schedule](configuration/schedule.md) - Game timeline and phases
 
 ### Appendix
 
