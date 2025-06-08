@@ -35,6 +35,10 @@ from .models import (
     TeamRegistration,
 )
 from .services import OrderValidationService
+from .services.fee_config import FeeConfig
+from .services.position_management_service import PositionManagementService
+from .services.trade_processing_service import TradeProcessingService
+from .services.trading_fee_service import TradingFeeService
 from .websocket import ws_manager
 
 # Thread-safe queues
@@ -51,6 +55,35 @@ validator = ConstraintBasedOrderValidator()
 
 # Service instances
 validation_service: Optional[OrderValidationService] = None
+
+# Hardcoded fee configuration matching current behavior
+# TODO: Load from YAML config file
+HARDCODED_FEE_CONFIG = {
+    "market_maker": {
+        "fees": {
+            "maker_rebate": 0.02,  # Positive = rebate (receive money)
+            "taker_fee": -0.05,  # Negative = fee (pay money)
+        }
+    },
+    "hedge_fund": {
+        "fees": {
+            "maker_rebate": 0.0,  # No rebate
+            "taker_fee": -0.05,  # Standard taker fee
+        }
+    },
+    "arbitrage": {
+        "fees": {
+            "maker_rebate": 0.0,  # No rebate
+            "taker_fee": -0.05,  # Standard taker fee
+        }
+    },
+    "retail": {
+        "fees": {
+            "maker_rebate": 0.0,  # No rebate
+            "taker_fee": -0.05,  # Standard taker fee
+        }
+    },
+}
 
 # Position tracking (thread-safe)
 positions: Dict[str, Dict[str, int]] = {}
@@ -316,6 +349,14 @@ def trade_publisher_thread():
     """Thread 4: Trade Publisher - updates positions and sends responses."""
     print("Trade publisher thread started")
 
+    # Initialize services once at thread startup
+    fee_config = FeeConfig.from_config_dict(HARDCODED_FEE_CONFIG)
+    fee_service = TradingFeeService(fee_config)
+    position_service = PositionManagementService(positions, positions_lock)
+    trade_service = TradeProcessingService(
+        fee_service, position_service, websocket_queue
+    )
+
     while True:
         try:
             # Get trade result
@@ -325,91 +366,12 @@ def trade_publisher_thread():
 
             result, order, team_info = trade_data
 
-            # Calculate fees and send execution reports
-            total_fees = 0.0
-            liquidity_type = None
-            fill_quantity = sum(trade.quantity for trade in result.fills)
-
-            # Update positions if filled
-            if fill_quantity > 0:
-                # Send execution reports for each fill
-                for trade in result.fills:
-                    # Determine liquidity type based on aggressor
-                    if trade.aggressor_side == order.side:
-                        liquidity_type = "taker"
-                    else:
-                        liquidity_type = "maker"
-
-                    # Calculate fees
-                    if (
-                        team_info.role == "market_maker"
-                        and liquidity_type == "maker"
-                    ):
-                        fees = -0.02 * trade.quantity  # Rebate
-                    else:
-                        fees = 0.05 * trade.quantity  # Taker fee
-
-                    total_fees += fees
-
-                    # Send execution report via WebSocket
-                    websocket_queue.put(
-                        (
-                            "execution_report",
-                            team_info.team_id,
-                            {
-                                "trade": trade,
-                                "buyer_order_id": trade.buyer_order_id,
-                                "seller_order_id": trade.seller_order_id,
-                                "client_order_id": order.client_order_id
-                                if order.order_id
-                                in [
-                                    trade.buyer_order_id,
-                                    trade.seller_order_id,
-                                ]
-                                else None,
-                                "liquidity_type": liquidity_type,
-                                "fees": fees,
-                            },
-                        )
-                    )
-
-                # Update positions
-                with positions_lock:
-                    if team_info.team_id not in positions:
-                        positions[team_info.team_id] = {}
-
-                    instrument = order.instrument_id
-                    if instrument not in positions[team_info.team_id]:
-                        positions[team_info.team_id][instrument] = 0
-
-                    position_delta = (
-                        fill_quantity
-                        if order.side == "buy"
-                        else -fill_quantity
-                    )
-                    positions[team_info.team_id][instrument] += position_delta
-
-            # Calculate average price from fills
-            if fill_quantity > 0:
-                total_value = sum(
-                    trade.price * trade.quantity for trade in result.fills
-                )
-                average_price = total_value / fill_quantity
-            else:
-                average_price = None
-
-            # Create response with fees and liquidity_type
-            response = OrderResponse(
-                order_id=order.order_id,
-                status=result.status,
-                timestamp=datetime.now(),
-                filled_quantity=fill_quantity,
-                average_price=average_price,
-                fees=total_fees,
-                liquidity_type=liquidity_type,
+            # Use service for all business logic
+            response = trade_service.process_trade_result(
+                result, order, team_info
             )
 
-            # Send response back
+            # Send response back (infrastructure concern)
             if order.order_id in pending_orders:
                 order_responses[order.order_id] = response
                 pending_orders[order.order_id].set()
