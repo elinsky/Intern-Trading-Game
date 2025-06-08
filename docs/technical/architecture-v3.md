@@ -61,12 +61,12 @@ graph TB
         ORDERS[(orders_this_tick<br/>Dict with RLock)]
         BOOKS[(Order Books<br/>In ExchangeVenue)]
         RESP[(pending_orders<br/>Response Events)]
-        Q1[order_queue<br/>API → Validator]
-        Q2[validation_queue<br/>Validator → Matcher]
+        Q1[order_queue<br/>API -> Validator]
+        Q2[validation_queue<br/>Validator -> Matcher]
         Q3[match_queue<br/>For matching engine]
-        Q4[trade_queue<br/>Matcher → Publisher]
+        Q4[trade_queue<br/>Matcher -> Publisher]
         Q5[response_queue<br/>For order responses]
-        Q6[websocket_queue<br/>→ WebSocket]
+        Q6[websocket_queue<br/>-> WebSocket]
     end
 
     %% External connections
@@ -283,12 +283,12 @@ graph TB
 
 **Message Queues** (all using Python's thread-safe `Queue`):
 
-- **order_queue**: REST API → Validator Thread
-- **validation_queue**: Validator → Matcher (currently unused)
+- **order_queue**: REST API -> Validator Thread
+- **validation_queue**: Validator -> Matcher (currently unused)
 - **match_queue**: For matching engine operations
-- **trade_queue**: Matcher → Publisher Thread
+- **trade_queue**: Matcher -> Publisher Thread
 - **response_queue**: For order response coordination
-- **websocket_queue**: All threads → WebSocket Thread
+- **websocket_queue**: All threads -> WebSocket Thread
 
 **Key Design Decisions**:
 
@@ -310,17 +310,17 @@ The architecture enforces strict dependency rules:
 
 ### Complete Order Flow (Current Implementation)
 ```
-1. Bot → REST API (POST /orders)
-2. REST API → order_queue
-3. Validator Thread → OrderValidationService → ConstraintBasedOrderValidator
-4. If valid: → match_queue
-5. Matching Thread → OrderMatchingService → ExchangeVenue → ContinuousMatchingEngine
-6. If matched: → trade_queue
-7. Publisher Thread → TradeProcessingService:
-   - → TradingFeeService (calculate fees)
-   - → PositionManagementService (update positions)
-   - → websocket_queue (execution report)
-8. WebSocket Thread → WebSocketManager → Bot
+1. Bot -> REST API (POST /orders)
+2. REST API -> order_queue
+3. Validator Thread -> OrderValidationService -> ConstraintBasedOrderValidator
+4. If valid: -> match_queue
+5. Matching Thread -> OrderMatchingService -> ExchangeVenue -> ContinuousMatchingEngine
+6. If matched: -> trade_queue
+7. Publisher Thread -> TradeProcessingService:
+   - -> TradingFeeService (calculate fees)
+   - -> PositionManagementService (update positions)
+   - -> websocket_queue (execution report)
+8. WebSocket Thread -> WebSocketManager -> Bot
 ```
 
 ## Key Architectural Benefits

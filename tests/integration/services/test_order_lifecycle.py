@@ -1,7 +1,7 @@
 """Service-level integration tests for complete order lifecycle.
 
 Tests the integration between services without threading complexity.
-Focuses on the core business flow: validation → matching → position updates.
+Focuses on the core business flow: validation -> matching -> position updates.
 """
 
 from datetime import datetime
@@ -150,8 +150,8 @@ class TestOrderLifecycleIntegration:
         Position updated correctly for the trader.
         Fees calculated per role (market taker fee).
         """
-        # Given - Market maker team
-        mm = TeamInfo(
+        # Given - Market maker team (buyer) and counterparty (seller)
+        mm_buyer = TeamInfo(
             team_id="MM_BUYER",
             team_name="Buyer MM",
             role="market_maker",
@@ -159,13 +159,14 @@ class TestOrderLifecycleIntegration:
             created_at=datetime.now(),
         )
 
-        # Initialize positions
+        # Initialize positions for both counterparties
         positions = service_context["positions"]
-        positions[mm.team_id] = {}
+        positions[mm_buyer.team_id] = {}
+        positions["MM_SELLER"] = {}  # Initialize seller position
 
         # Create order for testing
         buy_order = Order(
-            trader_id=mm.team_id,
+            trader_id=mm_buyer.team_id,
             instrument_id="SPX_4500_CALL",
             order_type=OrderType.MARKET,
             side=OrderSide.BUY,
@@ -181,8 +182,8 @@ class TestOrderLifecycleIntegration:
 
         trade = Trade(
             instrument_id="SPX_4500_CALL",
-            buyer_id=mm.team_id,
-            seller_id="OTHER_TRADER",
+            buyer_id=mm_buyer.team_id,
+            seller_id="MM_SELLER",  # Use actual seller ID for counterparty testing
             buyer_order_id=buy_order.order_id,
             seller_order_id="OTHER_ORDER_ID",
             quantity=5,
@@ -199,7 +200,7 @@ class TestOrderLifecycleIntegration:
 
         # Process the trade through TradeProcessingService
         response = service_context["trade_service"].process_trade_result(
-            filled_result, buy_order, mm
+            filled_result, buy_order, mm_buyer
         )
 
         # Then - Verify trade processing results
@@ -207,8 +208,16 @@ class TestOrderLifecycleIntegration:
         assert response.filled_quantity == 5
         assert response.average_price == 128.50
 
-        # Verify position updated correctly (only for the processed team)
-        assert positions[mm.team_id]["SPX_4500_CALL"] == 5  # Bought 5
+        # Verify positions updated correctly for both counterparties
+        assert positions[mm_buyer.team_id]["SPX_4500_CALL"] == 5  # Buyer: +5
+        assert positions["MM_SELLER"]["SPX_4500_CALL"] == -5  # Seller: -5
+
+        # Verify position conservation (no contracts created/destroyed)
+        total_position = (
+            positions[mm_buyer.team_id]["SPX_4500_CALL"]
+            + positions["MM_SELLER"]["SPX_4500_CALL"]
+        )
+        assert total_position == 0
 
         # Verify fees were calculated
         assert response.fees is not None

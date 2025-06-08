@@ -2,7 +2,7 @@
 
 from datetime import datetime
 from queue import Queue
-from unittest.mock import create_autospec
+from unittest.mock import call, create_autospec
 
 import pytest
 
@@ -414,11 +414,18 @@ class TestTradeProcessingService:
         # When - Process the result
         service.process_trade_result(result, sell_order, sample_team)
 
-        # Then - Position decreases
-        mock_position_service.update_position.assert_called_once_with(
-            "TEAM001",
-            "SPX-20240315-4500C",
-            -50,  # Negative for sell
+        # Then - Positions updated for both counterparties
+        # Now expect two calls: one for aggressor, one for counterparty
+        expected_calls = [
+            call(
+                "TEAM001", "SPX-20240315-4500C", -50
+            ),  # Seller (aggressor): -50
+            call(
+                "TEAM002", "SPX-20240315-4500C", 50
+            ),  # Buyer (counterparty): +50
+        ]
+        mock_position_service.update_position.assert_has_calls(
+            expected_calls, any_order=False
         )
 
     def test_websocket_messages_for_multiple_fills(

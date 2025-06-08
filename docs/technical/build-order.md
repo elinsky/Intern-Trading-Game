@@ -81,12 +81,12 @@
 ### 3.2 Queue Infrastructure
 
 - [ ] **OrderQueue** - API -> Validator
-- [ ] **ValidationQueue** - Validator → Matcher
+- [ ] **ValidationQueue** - Validator -> Matcher
 - [ ] **MatchQueue** - For matching engine
-- [ ] **TradeQueue** - Matcher → Publisher
-- [ ] **PriceQueue** - Price Model → Market Data
-- [ ] **EventQueue** - Events → Processing
-- [ ] **SignalQueue** - Signals → Distribution
+- [ ] **TradeQueue** - Matcher -> Publisher
+- [ ] **PriceQueue** - Price Model -> Market Data
+- [ ] **EventQueue** - Events -> Processing
+- [ ] **SignalQueue** - Signals -> Distribution
 
 ### 3.3 Database Queues
 

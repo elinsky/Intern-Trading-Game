@@ -179,14 +179,14 @@ SG -->|Technical Indicators| SQ
 
 ### Critical Path
 ```
-Order Submission → Validation → Matching → Position Update → Trade Notification
+Order Submission -> Validation -> Matching -> Position Update -> Trade Notification
      ~100ns         ~500ns      ~2μs        ~100ns           ~1μs
                           Total: < 5 microseconds
 ```
 
 ### Async Path (Non-Blocking)
 ```
-Trade → DB Queue → Batch Accumulation → Database Write
+Trade -> DB Queue -> Batch Accumulation -> Database Write
          ~100ns      (up to 100ms)        ~10-50ms
                     Never blocks trading
 ```

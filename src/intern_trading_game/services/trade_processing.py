@@ -212,6 +212,11 @@ class TradeProcessingService(TradeProcessingServiceInterface):
                 team.team_id, order.instrument_id, position_delta
             )
 
+            # Update counterparty positions for all fills
+            self._update_counterparty_positions(
+                result.fills, order, team.team_id
+            )
+
         # Calculate average price if there were fills
         average_price = None
         if fill_quantity > 0:
@@ -408,3 +413,104 @@ class TradeProcessingService(TradeProcessingServiceInterface):
             "liquidity_type": liquidity_type,
             "fees": fees,
         }
+
+    def _update_counterparty_positions(
+        self, trades: List[Trade], order: Order, aggressor_team_id: str
+    ) -> None:
+        """Update positions for counterparties in all trades.
+
+        For each trade, updates the position of the counterparty (the side
+        that didn't initiate the order). This ensures both sides of every
+        trade have their positions properly updated.
+
+        Parameters
+        ----------
+        trades : List[Trade]
+            List of trades to process counterparty updates for
+        order : Order
+            The aggressor order that initiated the trades
+        aggressor_team_id : str
+            Team ID of the order initiator (already updated)
+
+        Notes
+        -----
+        This method implements proper trade settlement by ensuring both
+        counterparties have their positions updated:
+        - Aggressor: Already updated in main flow
+        - Counterparty: Updated here
+
+        The position delta for the counterparty is always opposite to
+        the aggressor's delta to maintain position conservation.
+
+        Examples
+        --------
+        For a buy order that trades against sell orders:
+        - Aggressor (buyer): +quantity position
+        - Counterparty (seller): -quantity position
+
+        For a sell order that trades against buy orders:
+        - Aggressor (seller): -quantity position
+        - Counterparty (buyer): +quantity position
+        """
+        for trade in trades:
+            # Get counterparty team ID and position delta
+            counterparty_team_id, counterparty_delta = (
+                self._get_counterparty_info(trade, order, aggressor_team_id)
+            )
+
+            # Skip if counterparty is the same as aggressor (self-trading)
+            if counterparty_team_id == aggressor_team_id:
+                continue
+
+            # Update counterparty position
+            # TODO: Remove int() cast when Trade.quantity is changed to int
+            self.position_service.update_position(
+                counterparty_team_id,
+                order.instrument_id,
+                counterparty_delta * int(trade.quantity),
+            )
+
+    def _get_counterparty_info(
+        self, trade: Trade, order: Order, aggressor_team_id: str
+    ) -> Tuple[str, int]:
+        """Get counterparty team ID and position delta for a trade.
+
+        Determines which side of the trade is the counterparty and
+        calculates the appropriate position delta.
+
+        Parameters
+        ----------
+        trade : Trade
+            The trade to analyze
+        order : Order
+            The aggressor order
+        aggressor_team_id : str
+            Team ID of the order initiator
+
+        Returns
+        -------
+        Tuple[str, int]
+            A tuple of (counterparty_team_id, position_delta_sign) where:
+            - counterparty_team_id: Team ID of the counterparty
+            - position_delta_sign: +1 for buys, -1 for sells
+
+        Notes
+        -----
+        The counterparty is determined by comparing the aggressor's order ID
+        with the buyer_order_id and seller_order_id in the trade.
+
+        Position deltas are:
+        - +1 for buyers (position increases)
+        - -1 for sellers (position decreases)
+        """
+        # Determine if aggressor is buyer or seller in this trade
+        if order.order_id == trade.buyer_order_id:
+            # Aggressor is buyer, counterparty is seller
+            counterparty_team_id = trade.seller_id
+            counterparty_delta = -1  # Seller decreases position
+        else:
+            # Aggressor is seller, counterparty is buyer
+            counterparty_team_id = trade.buyer_id
+            counterparty_delta = +1  # Buyer increases position
+
+        return counterparty_team_id, counterparty_delta

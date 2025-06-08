@@ -206,10 +206,10 @@ class OrderMatchingService(OrderMatchingServiceInterface):
         exception type.
 
         Common error mappings:
-        - ValueError → "INVALID_ORDER"
-        - KeyError → "UNKNOWN_INSTRUMENT"
-        - RuntimeError → "EXCHANGE_ERROR"
-        - Others → "INTERNAL_ERROR"
+        - ValueError -> "INVALID_ORDER"
+        - KeyError -> "UNKNOWN_INSTRUMENT"
+        - RuntimeError -> "EXCHANGE_ERROR"
+        - Others -> "INTERNAL_ERROR"
 
         TradingContext
         --------------

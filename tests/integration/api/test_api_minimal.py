@@ -1,6 +1,6 @@
 """Minimal API integration tests with threading support.
 
-Focus on essential order submission → trade execution → position update flow
+Focus on essential order submission -> trade execution -> position update flow
 with proper thread lifecycle management.
 """
 
@@ -18,7 +18,7 @@ class TestMinimalAPIIntegration:
         Exchange has listed instruments available.
 
         When - Team submits order via REST API
-        Order flows through: API → Validator → Matcher → Publisher threads.
+        Order flows through: API -> Validator -> Matcher -> Publisher threads.
         All services process the order through the complete pipeline.
 
         Then - Order processed successfully with proper response

@@ -135,7 +135,7 @@ Simultaneous two-sided markets providing both bid and ask.
 ### 1. Submission
 
 ```
-Bot → API → Validation → Order Book
+Bot -> API -> Validation -> Order Book
 ```
 
 ### 2. Validation Checks
@@ -174,7 +174,7 @@ Bot → API → Validation → Order Book
    - Higher bids ranked first
    - Lower asks ranked first
 
-2. **Time Priority**: Same price → earlier first
+2. **Time Priority**: Same price -> earlier first
 
    - Microsecond timestamp precision
    - No queue jumping

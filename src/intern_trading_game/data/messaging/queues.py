@@ -13,7 +13,7 @@ def create_queues():
     """
     return {
         "order_queue": Queue(),  # API -> Validator
-        "validation_queue": Queue(),  # Validator → Matcher (future)
+        "validation_queue": Queue(),  # Validator -> Matcher (future)
         "match_queue": Queue(),  # For matching engine
         "trade_queue": Queue(),  # Matcher -> Publisher
         "response_queue": Queue(),  # For order responses back to API

@@ -52,7 +52,7 @@ Spot pricing mismatches between SPX and SPY, capturing small, consistent profits
 
 2. **Identify Option Mispricings**
 
-   - Higher realized vol in SPY → SPY options should be priced higher
+   - Higher realized vol in SPY -> SPY options should be priced higher
    - If options don't reflect this difference, arbitrage opportunity exists
    - Compare same-strike options between SPX and SPY
 

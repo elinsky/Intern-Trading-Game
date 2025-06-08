@@ -315,10 +315,10 @@ Get current positions for a team.
 
 The API uses a multi-threaded queue architecture:
 
-1. **Order Queue**: API → Validator thread (handles both new orders and cancellations)
-2. **Validation Queue**: Validator → Matching thread
+1. **Order Queue**: API -> Validator thread (handles both new orders and cancellations)
+2. **Validation Queue**: Validator -> Matching thread
 3. **Match Queue**: For matching engine
-4. **Trade Queue**: Matching → Publisher thread
+4. **Trade Queue**: Matching -> Publisher thread
 
 This ensures:
 

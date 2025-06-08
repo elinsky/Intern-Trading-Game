@@ -248,15 +248,34 @@ class TradingWindowConstraint(Constraint):
 
 
 class InstrumentAllowedConstraint(Constraint):
-    """Validates instrument is tradeable (placeholder for future use)."""
+    """Validates instrument is allowed for trading by this role."""
 
     def check(
         self, context: ValidationContext, config: ConstraintConfig
     ) -> ValidationResult:
-        """Check instrument allowed constraint."""
-        # For now, all instruments are allowed
-        # Future: could restrict certain instruments by role
-        return ValidationResult(True)
+        """Check instrument allowed constraint.
+
+        Parameters
+        ----------
+        context : ValidationContext
+            Contains the order with instrument_id to validate
+        config : ConstraintConfig
+            Must contain 'allowed_instruments' parameter with list of valid instruments
+
+        Returns
+        -------
+        ValidationResult
+            Valid if instrument is in allowed list, invalid otherwise
+        """
+        allowed_instruments = config.parameters.get("allowed_instruments", [])
+
+        if context.order.instrument_id in allowed_instruments:
+            return ValidationResult(True)
+        else:
+            return ValidationResult(
+                False,
+                f"Instrument {context.order.instrument_id} not in allowed list: {allowed_instruments}",
+            )
 
 
 class PriceRangeConstraint(Constraint):

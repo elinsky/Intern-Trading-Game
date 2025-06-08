@@ -11,7 +11,7 @@ The trading system uses a hybrid approach:
 ## Architecture
 
 ```
-Bot → REST API → Order Queue → Validator → Matching → Exchange
+Bot -> REST API -> Order Queue -> Validator -> Matching -> Exchange
          ↓                         ↓           ↓          ↓
     WebSocket ← ← ← ← ← ← ← ← Reject ← ← ← Accept ← ← Fill
 ```
@@ -92,16 +92,16 @@ response = requests.post(
 
 ### Successful Order Flow
 
-1. **REST Submit** → Synchronous response with order_id
-2. **Validator** → If accepted, continues to matching
-3. **Matching Engine** → Sends `new_order_ack` via WebSocket
-4. **Exchange** → If filled, sends `execution_report` via WebSocket
+1. **REST Submit** -> Synchronous response with order_id
+2. **Validator** -> If accepted, continues to matching
+3. **Matching Engine** -> Sends `new_order_ack` via WebSocket
+4. **Exchange** -> If filled, sends `execution_report` via WebSocket
 
 ### Rejected Order Flow
 
-1. **REST Submit** → Synchronous response with order_id
-2. **Validator** → If rejected, sends `new_order_reject` via WebSocket
-3. **REST Response** → Returns rejected status
+1. **REST Submit** -> Synchronous response with order_id
+2. **Validator** -> If rejected, sends `new_order_reject` via WebSocket
+3. **REST Response** -> Returns rejected status
 
 ## Example Integration
 

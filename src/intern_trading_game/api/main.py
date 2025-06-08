@@ -358,7 +358,8 @@ def trade_publisher_thread():
     print("Trade publisher thread started")
 
     # Initialize services once at thread startup
-    fee_config = FeeConfig.from_config_dict(HARDCODED_FEE_CONFIG)
+    # Wrap HARDCODED_FEE_CONFIG in "roles" key for from_config_dict
+    fee_config = FeeConfig.from_config_dict({"roles": HARDCODED_FEE_CONFIG})
     fee_service = TradingFeeService(fee_config)
     position_service = PositionManagementService(positions, positions_lock)
     trade_service = TradeProcessingService(
@@ -527,13 +528,23 @@ async def startup():
     websocket_t.start()
 
     # Setup market maker constraints
-    mm_constraint = ConstraintConfig(
+    mm_position_constraint = ConstraintConfig(
         constraint_type=ConstraintType.POSITION_LIMIT,
         parameters={"max_position": 50, "symmetric": True},
         error_code="MM_POS_LIMIT",
         error_message="Position exceeds ±50",
     )
-    validator.load_constraints("market_maker", [mm_constraint])
+
+    mm_instrument_constraint = ConstraintConfig(
+        constraint_type=ConstraintType.INSTRUMENT_ALLOWED,
+        parameters={"allowed_instruments": ["SPX_4500_CALL", "SPX_4500_PUT"]},
+        error_code="INVALID_INSTRUMENT",
+        error_message="Instrument not found",
+    )
+
+    validator.load_constraints(
+        "market_maker", [mm_position_constraint, mm_instrument_constraint]
+    )
 
     # List instruments
     instruments = [
