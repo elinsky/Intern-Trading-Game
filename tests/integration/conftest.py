@@ -24,7 +24,6 @@ from intern_trading_game.domain.validation.order_validator import (
     ConstraintType,
 )
 from intern_trading_game.infrastructure.api.auth import TeamInfo, team_registry
-from intern_trading_game.infrastructure.config.fee_config import FeeConfig
 from intern_trading_game.services import (
     OrderMatchingService,
     OrderValidationService,
@@ -39,20 +38,27 @@ from intern_trading_game.services import (
 @pytest.fixture
 def fee_config():
     """Provide test fee configuration."""
-    return {
-        "market_maker": FeeConfig(
-            fees={
-                "maker_rebate": 0.02,
-                "taker_fee": -0.05,
-            }
-        ),
-        "hedge_fund": FeeConfig(
-            fees={
-                "maker_rebate": 0.0,
-                "taker_fee": -0.05,
-            }
-        ),
-    }
+    from intern_trading_game.infrastructure.config.fee_config import (
+        FeeConfig,
+        FeeSchedule,
+    )
+
+    return FeeConfig(
+        role_fees={
+            "market_maker": FeeSchedule(
+                maker_rebate=0.02,
+                taker_fee=-0.05,
+            ),
+            "hedge_fund": FeeSchedule(
+                maker_rebate=0.0,
+                taker_fee=-0.05,
+            ),
+            "retail": FeeSchedule(
+                maker_rebate=0.0,
+                taker_fee=-0.05,
+            ),
+        }
+    )
 
 
 @pytest.fixture
@@ -139,9 +145,13 @@ def service_context(
 
     fee_service = TradingFeeService(fee_config)
 
+    # For single-threaded tests, we can use a regular Lock or None
+    import threading
+
+    lock = threading.RLock()
     position_service = PositionManagementService(
-        positions=test_positions,
-        positions_lock=None,  # No lock needed for single-threaded tests
+        positions_dict=test_positions,
+        positions_lock=lock,
     )
 
     matching_service = OrderMatchingService(exchange)

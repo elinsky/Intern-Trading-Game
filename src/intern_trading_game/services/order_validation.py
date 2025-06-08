@@ -250,11 +250,14 @@ class OrderValidationService(OrderValidationServiceInterface):
         to avoid confusion about order states.
         """
         # Attempt cancellation at exchange with ownership check
-        success = self.exchange.cancel_order(order_id, team_id)
-
-        if success:
-            return (True, None)
-        else:
-            # Generic failure reason - future enhancement could
-            # provide more detailed failure codes from exchange
-            return (False, "Order not found or unauthorized")
+        try:
+            success = self.exchange.cancel_order(order_id, team_id)
+            if success:
+                return (True, None)
+            else:
+                # Generic failure reason - future enhancement could
+                # provide more detailed failure codes from exchange
+                return (False, "Order not found or unauthorized")
+        except ValueError as e:
+            # Exchange throws ValueError for ownership violations
+            return (False, str(e))
