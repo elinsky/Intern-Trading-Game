@@ -1,0 +1,3666 @@
+
+<!doctype html>
+<html lang="en" class="no-js">
+  <head>
+    
+      <meta charset="utf-8">
+      <meta name="viewport" content="width=device-width,initial-scale=1">
+      
+        <meta name="description" content="Core simulation engine, matching logic, and reference tools for a role-based, options market-making game">
+      
+      
+      
+      
+        <link rel="prev" href="../../scoring/overview/">
+      
+      
+        <link rel="next" href="../example-config.yaml">
+      
+      
+      <link rel="icon" href="../../../assets/images/favicon.png">
+      <meta name="generator" content="mkdocs-1.6.1, mkdocs-material-9.6.14">
+    
+    
+      
+        <title>Game Parameters - Intern Trading Game</title>
+      
+    
+    
+      <link rel="stylesheet" href="../../../assets/stylesheets/main.342714a4.min.css">
+      
+        
+        <link rel="stylesheet" href="../../../assets/stylesheets/palette.06af60db.min.css">
+      
+      
+
+
+    
+    
+      
+    
+    
+      
+        
+        
+        <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+        <link rel="stylesheet" href="https://fonts.googleapis.com/css?family=Roboto:300,300i,400,400i,700,700i%7CRoboto+Mono:400,400i,700,700i&display=fallback">
+        <style>:root{--md-text-font:"Roboto";--md-code-font:"Roboto Mono"}</style>
+      
+    
+    
+      <link rel="stylesheet" href="../../../assets/_mkdocstrings.css">
+    
+      <link rel="stylesheet" href="../../../stylesheets/extra.css">
+    
+    <script>__md_scope=new URL("../../..",location),__md_hash=e=>[...e].reduce(((e,_)=>(e<<5)-e+_.charCodeAt(0)),0),__md_get=(e,_=localStorage,t=__md_scope)=>JSON.parse(_.getItem(t.pathname+"."+e)),__md_set=(e,_,t=localStorage,a=__md_scope)=>{try{t.setItem(a.pathname+"."+e,JSON.stringify(_))}catch(e){}}</script>
+    
+      
+
+    
+    
+    
+  </head>
+  
+  
+    
+    
+      
+    
+    
+    
+    
+    <body dir="ltr" data-md-color-scheme="default" data-md-color-primary="white" data-md-color-accent="orange">
+  
+    
+    <input class="md-toggle" data-md-toggle="drawer" type="checkbox" id="__drawer" autocomplete="off">
+    <input class="md-toggle" data-md-toggle="search" type="checkbox" id="__search" autocomplete="off">
+    <label class="md-overlay" for="__drawer"></label>
+    <div data-md-component="skip">
+      
+        
+        <a href="#game-parameters" class="md-skip">
+          Skip to content
+        </a>
+      
+    </div>
+    <div data-md-component="announce">
+      
+    </div>
+    
+    
+      
+
+  
+
+<header class="md-header md-header--shadow" data-md-component="header">
+  <nav class="md-header__inner md-grid" aria-label="Header">
+    <a href="../../.." title="Intern Trading Game" class="md-header__button md-logo" aria-label="Intern Trading Game" data-md-component="logo">
+      
+  
+  <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path d="M12 8a3 3 0 0 0 3-3 3 3 0 0 0-3-3 3 3 0 0 0-3 3 3 3 0 0 0 3 3m0 3.54C9.64 9.35 6.5 8 3 8v11c3.5 0 6.64 1.35 9 3.54 2.36-2.19 5.5-3.54 9-3.54V8c-3.5 0-6.64 1.35-9 3.54"/></svg>
+
+    </a>
+    <label class="md-header__button md-icon" for="__drawer">
+      
+      <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path d="M3 6h18v2H3zm0 5h18v2H3zm0 5h18v2H3z"/></svg>
+    </label>
+    <div class="md-header__title" data-md-component="header-title">
+      <div class="md-header__ellipsis">
+        <div class="md-header__topic">
+          <span class="md-ellipsis">
+            Intern Trading Game
+          </span>
+        </div>
+        <div class="md-header__topic" data-md-component="header-topic">
+          <span class="md-ellipsis">
+            
+              Game Parameters
+            
+          </span>
+        </div>
+      </div>
+    </div>
+    
+      
+        <form class="md-header__option" data-md-component="palette">
+  
+    
+    
+    
+    <input class="md-option" data-md-color-media="" data-md-color-scheme="default" data-md-color-primary="white" data-md-color-accent="orange"  aria-label="Switch to dark mode"  type="radio" name="__palette" id="__palette_0">
+    
+      <label class="md-header__button md-icon" title="Switch to dark mode" for="__palette_1" hidden>
+        <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path d="M12 8a4 4 0 0 0-4 4 4 4 0 0 0 4 4 4 4 0 0 0 4-4 4 4 0 0 0-4-4m0 10a6 6 0 0 1-6-6 6 6 0 0 1 6-6 6 6 0 0 1 6 6 6 6 0 0 1-6 6m8-9.31V4h-4.69L12 .69 8.69 4H4v4.69L.69 12 4 15.31V20h4.69L12 23.31 15.31 20H20v-4.69L23.31 12z"/></svg>
+      </label>
+    
+  
+    
+    
+    
+    <input class="md-option" data-md-color-media="" data-md-color-scheme="slate" data-md-color-primary="grey" data-md-color-accent="orange"  aria-label="Switch to light mode"  type="radio" name="__palette" id="__palette_1">
+    
+      <label class="md-header__button md-icon" title="Switch to light mode" for="__palette_0" hidden>
+        <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path d="M12 18c-.89 0-1.74-.2-2.5-.55C11.56 16.5 13 14.42 13 12s-1.44-4.5-3.5-5.45C10.26 6.2 11.11 6 12 6a6 6 0 0 1 6 6 6 6 0 0 1-6 6m8-9.31V4h-4.69L12 .69 8.69 4H4v4.69L.69 12 4 15.31V20h4.69L12 23.31 15.31 20H20v-4.69L23.31 12z"/></svg>
+      </label>
+    
+  
+</form>
+      
+    
+    
+      <script>var palette=__md_get("__palette");if(palette&&palette.color){if("(prefers-color-scheme)"===palette.color.media){var media=matchMedia("(prefers-color-scheme: light)"),input=document.querySelector(media.matches?"[data-md-color-media='(prefers-color-scheme: light)']":"[data-md-color-media='(prefers-color-scheme: dark)']");palette.color.media=input.getAttribute("data-md-color-media"),palette.color.scheme=input.getAttribute("data-md-color-scheme"),palette.color.primary=input.getAttribute("data-md-color-primary"),palette.color.accent=input.getAttribute("data-md-color-accent")}for(var[key,value]of Object.entries(palette.color))document.body.setAttribute("data-md-color-"+key,value)}</script>
+    
+    
+    
+      
+      
+        <label class="md-header__button md-icon" for="__search">
+          
+          <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path d="M9.5 3A6.5 6.5 0 0 1 16 9.5c0 1.61-.59 3.09-1.56 4.23l.27.27h.79l5 5-1.5 1.5-5-5v-.79l-.27-.27A6.52 6.52 0 0 1 9.5 16 6.5 6.5 0 0 1 3 9.5 6.5 6.5 0 0 1 9.5 3m0 2C7 5 5 7 5 9.5S7 14 9.5 14 14 12 14 9.5 12 5 9.5 5"/></svg>
+        </label>
+        <div class="md-search" data-md-component="search" role="dialog">
+  <label class="md-search__overlay" for="__search"></label>
+  <div class="md-search__inner" role="search">
+    <form class="md-search__form" name="search">
+      <input type="text" class="md-search__input" name="query" aria-label="Search" placeholder="Search" autocapitalize="off" autocorrect="off" autocomplete="off" spellcheck="false" data-md-component="search-query" required>
+      <label class="md-search__icon md-icon" for="__search">
+        
+        <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path d="M9.5 3A6.5 6.5 0 0 1 16 9.5c0 1.61-.59 3.09-1.56 4.23l.27.27h.79l5 5-1.5 1.5-5-5v-.79l-.27-.27A6.52 6.52 0 0 1 9.5 16 6.5 6.5 0 0 1 3 9.5 6.5 6.5 0 0 1 9.5 3m0 2C7 5 5 7 5 9.5S7 14 9.5 14 14 12 14 9.5 12 5 9.5 5"/></svg>
+        
+        <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path d="M20 11v2H8l5.5 5.5-1.42 1.42L4.16 12l7.92-7.92L13.5 5.5 8 11z"/></svg>
+      </label>
+      <nav class="md-search__options" aria-label="Search">
+        
+          <a href="javascript:void(0)" class="md-search__icon md-icon" title="Share" aria-label="Share" data-clipboard data-clipboard-text="" data-md-component="search-share" tabindex="-1">
+            
+            <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path d="M18 16.08c-.76 0-1.44.3-1.96.77L8.91 12.7c.05-.23.09-.46.09-.7s-.04-.47-.09-.7l7.05-4.11c.54.5 1.25.81 2.04.81a3 3 0 0 0 3-3 3 3 0 0 0-3-3 3 3 0 0 0-3 3c0 .24.04.47.09.7L8.04 9.81C7.5 9.31 6.79 9 6 9a3 3 0 0 0-3 3 3 3 0 0 0 3 3c.79 0 1.5-.31 2.04-.81l7.12 4.15c-.05.21-.08.43-.08.66 0 1.61 1.31 2.91 2.92 2.91s2.92-1.3 2.92-2.91A2.92 2.92 0 0 0 18 16.08"/></svg>
+          </a>
+        
+        <button type="reset" class="md-search__icon md-icon" title="Clear" aria-label="Clear" tabindex="-1">
+          
+          <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path d="M19 6.41 17.59 5 12 10.59 6.41 5 5 6.41 10.59 12 5 17.59 6.41 19 12 13.41 17.59 19 19 17.59 13.41 12z"/></svg>
+        </button>
+      </nav>
+      
+    </form>
+    <div class="md-search__output">
+      <div class="md-search__scrollwrap" tabindex="0" data-md-scrollfix>
+        <div class="md-search-result" data-md-component="search-result">
+          <div class="md-search-result__meta">
+            Initializing search
+          </div>
+          <ol class="md-search-result__list" role="presentation"></ol>
+        </div>
+      </div>
+    </div>
+  </div>
+</div>
+      
+    
+    
+      <div class="md-header__source">
+        <a href="https://github.com/yourusername/Intern-Trading-Game" title="Go to repository" class="md-source" data-md-component="source">
+  <div class="md-source__icon md-icon">
+    
+    <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 448 512"><!--! Font Awesome Free 6.7.2 by @fontawesome - https://fontawesome.com License - https://fontawesome.com/license/free (Icons: CC BY 4.0, Fonts: SIL OFL 1.1, Code: MIT License) Copyright 2024 Fonticons, Inc.--><path d="M439.55 236.05 244 40.45a28.87 28.87 0 0 0-40.81 0l-40.66 40.63 51.52 51.52c27.06-9.14 52.68 16.77 43.39 43.68l49.66 49.66c34.23-11.8 61.18 31 35.47 56.69-26.49 26.49-70.21-2.87-56-37.34L240.22 199v121.85c25.3 12.54 22.26 41.85 9.08 55a34.34 34.34 0 0 1-48.55 0c-17.57-17.6-11.07-46.91 11.25-56v-123c-20.8-8.51-24.6-30.74-18.64-45L142.57 101 8.45 235.14a28.86 28.86 0 0 0 0 40.81l195.61 195.6a28.86 28.86 0 0 0 40.8 0l194.69-194.69a28.86 28.86 0 0 0 0-40.81"/></svg>
+  </div>
+  <div class="md-source__repository">
+    Intern-Trading-Game
+  </div>
+</a>
+      </div>
+    
+  </nav>
+  
+</header>
+    
+    <div class="md-container" data-md-component="container">
+      
+      
+        
+          
+        
+      
+      <main class="md-main" data-md-component="main">
+        <div class="md-main__inner md-grid">
+          
+            
+              
+              <div class="md-sidebar md-sidebar--primary" data-md-component="sidebar" data-md-type="navigation" >
+                <div class="md-sidebar__scrollwrap">
+                  <div class="md-sidebar__inner">
+                    
+
+
+
+<nav class="md-nav md-nav--primary" aria-label="Navigation" data-md-level="0">
+  <label class="md-nav__title" for="__drawer">
+    <a href="../../.." title="Intern Trading Game" class="md-nav__button md-logo" aria-label="Intern Trading Game" data-md-component="logo">
+      
+  
+  <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path d="M12 8a3 3 0 0 0 3-3 3 3 0 0 0-3-3 3 3 0 0 0-3 3 3 3 0 0 0 3 3m0 3.54C9.64 9.35 6.5 8 3 8v11c3.5 0 6.64 1.35 9 3.54 2.36-2.19 5.5-3.54 9-3.54V8c-3.5 0-6.64 1.35-9 3.54"/></svg>
+
+    </a>
+    Intern Trading Game
+  </label>
+  
+    <div class="md-nav__source">
+      <a href="https://github.com/yourusername/Intern-Trading-Game" title="Go to repository" class="md-source" data-md-component="source">
+  <div class="md-source__icon md-icon">
+    
+    <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 448 512"><!--! Font Awesome Free 6.7.2 by @fontawesome - https://fontawesome.com License - https://fontawesome.com/license/free (Icons: CC BY 4.0, Fonts: SIL OFL 1.1, Code: MIT License) Copyright 2024 Fonticons, Inc.--><path d="M439.55 236.05 244 40.45a28.87 28.87 0 0 0-40.81 0l-40.66 40.63 51.52 51.52c27.06-9.14 52.68 16.77 43.39 43.68l49.66 49.66c34.23-11.8 61.18 31 35.47 56.69-26.49 26.49-70.21-2.87-56-37.34L240.22 199v121.85c25.3 12.54 22.26 41.85 9.08 55a34.34 34.34 0 0 1-48.55 0c-17.57-17.6-11.07-46.91 11.25-56v-123c-20.8-8.51-24.6-30.74-18.64-45L142.57 101 8.45 235.14a28.86 28.86 0 0 0 0 40.81l195.61 195.6a28.86 28.86 0 0 0 40.8 0l194.69-194.69a28.86 28.86 0 0 0 0-40.81"/></svg>
+  </div>
+  <div class="md-source__repository">
+    Intern-Trading-Game
+  </div>
+</a>
+    </div>
+  
+  <ul class="md-nav__list" data-md-scrollfix>
+    
+      
+      
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../.." class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    Home
+    
+  </span>
+  
+
+      </a>
+    </li>
+  
+
+    
+      
+      
+  
+  
+    
+  
+  
+  
+    
+    
+      
+        
+      
+        
+      
+        
+      
+        
+      
+        
+      
+        
+      
+        
+      
+        
+      
+    
+    
+    
+    
+    <li class="md-nav__item md-nav__item--active md-nav__item--nested">
+      
+        
+        
+        <input class="md-nav__toggle md-toggle " type="checkbox" id="__nav_2" checked>
+        
+          
+          <label class="md-nav__link" for="__nav_2" id="__nav_2_label" tabindex="0">
+            
+  
+  
+  <span class="md-ellipsis">
+    Game Documentation
+    
+  </span>
+  
+
+            <span class="md-nav__icon md-icon"></span>
+          </label>
+        
+        <nav class="md-nav" data-md-level="1" aria-labelledby="__nav_2_label" aria-expanded="true">
+          <label class="md-nav__title" for="__nav_2">
+            <span class="md-nav__icon md-icon"></span>
+            Game Documentation
+          </label>
+          <ul class="md-nav__list" data-md-scrollfix>
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../overview/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    Overview
+    
+  </span>
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    
+    
+      
+        
+      
+        
+      
+        
+      
+    
+    
+    
+    
+    <li class="md-nav__item md-nav__item--nested">
+      
+        
+        
+          
+        
+        <input class="md-nav__toggle md-toggle md-toggle--indeterminate" type="checkbox" id="__nav_2_2" >
+        
+          
+          <label class="md-nav__link" for="__nav_2_2" id="__nav_2_2_label" tabindex="0">
+            
+  
+  
+  <span class="md-ellipsis">
+    Fundamentals
+    
+  </span>
+  
+
+            <span class="md-nav__icon md-icon"></span>
+          </label>
+        
+        <nav class="md-nav" data-md-level="2" aria-labelledby="__nav_2_2_label" aria-expanded="false">
+          <label class="md-nav__title" for="__nav_2_2">
+            <span class="md-nav__icon md-icon"></span>
+            Fundamentals
+          </label>
+          <ul class="md-nav__list" data-md-scrollfix>
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../fundamentals/core-concepts/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    Core Concepts
+    
+  </span>
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../fundamentals/game-mechanics/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    Game Mechanics
+    
+  </span>
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../fundamentals/market-structure/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    Market Structure
+    
+  </span>
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+          </ul>
+        </nav>
+      
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    
+    
+      
+        
+      
+        
+      
+        
+      
+        
+      
+    
+    
+    
+    
+    <li class="md-nav__item md-nav__item--nested">
+      
+        
+        
+          
+        
+        <input class="md-nav__toggle md-toggle md-toggle--indeterminate" type="checkbox" id="__nav_2_3" >
+        
+          
+          <label class="md-nav__link" for="__nav_2_3" id="__nav_2_3_label" tabindex="0">
+            
+  
+  
+  <span class="md-ellipsis">
+    Trading
+    
+  </span>
+  
+
+            <span class="md-nav__icon md-icon"></span>
+          </label>
+        
+        <nav class="md-nav" data-md-level="2" aria-labelledby="__nav_2_3_label" aria-expanded="false">
+          <label class="md-nav__title" for="__nav_2_3">
+            <span class="md-nav__icon md-icon"></span>
+            Trading
+          </label>
+          <ul class="md-nav__list" data-md-scrollfix>
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../trading/order-types/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    Order Types
+    
+  </span>
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../trading/constraints/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    Constraints
+    
+  </span>
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../trading/execution-rules/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    Execution Rules
+    
+  </span>
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../trading/signals-access/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    Signal Access
+    
+  </span>
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+          </ul>
+        </nav>
+      
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    
+    
+      
+        
+      
+        
+      
+        
+      
+        
+      
+        
+      
+    
+    
+    
+    
+    <li class="md-nav__item md-nav__item--nested">
+      
+        
+        
+          
+        
+        <input class="md-nav__toggle md-toggle md-toggle--indeterminate" type="checkbox" id="__nav_2_4" >
+        
+          
+          <label class="md-nav__link" for="__nav_2_4" id="__nav_2_4_label" tabindex="0">
+            
+  
+  
+  <span class="md-ellipsis">
+    Roles
+    
+  </span>
+  
+
+            <span class="md-nav__icon md-icon"></span>
+          </label>
+        
+        <nav class="md-nav" data-md-level="2" aria-labelledby="__nav_2_4_label" aria-expanded="false">
+          <label class="md-nav__title" for="__nav_2_4">
+            <span class="md-nav__icon md-icon"></span>
+            Roles
+          </label>
+          <ul class="md-nav__list" data-md-scrollfix>
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../roles/overview/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    Overview
+    
+  </span>
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../roles/market-maker/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    Market Maker
+    
+  </span>
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../roles/hedge-fund/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    Hedge Fund
+    
+  </span>
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../roles/arbitrage-desk/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    Arbitrage Desk
+    
+  </span>
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../roles/retail/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    Retail
+    
+  </span>
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+          </ul>
+        </nav>
+      
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    
+    
+      
+        
+      
+        
+      
+        
+      
+        
+      
+    
+    
+    
+    
+    <li class="md-nav__item md-nav__item--nested">
+      
+        
+        
+          
+        
+        <input class="md-nav__toggle md-toggle md-toggle--indeterminate" type="checkbox" id="__nav_2_5" >
+        
+          
+          <label class="md-nav__link" for="__nav_2_5" id="__nav_2_5_label" tabindex="0">
+            
+  
+  
+  <span class="md-ellipsis">
+    Simulation
+    
+  </span>
+  
+
+            <span class="md-nav__icon md-icon"></span>
+          </label>
+        
+        <nav class="md-nav" data-md-level="2" aria-labelledby="__nav_2_5_label" aria-expanded="false">
+          <label class="md-nav__title" for="__nav_2_5">
+            <span class="md-nav__icon md-icon"></span>
+            Simulation
+          </label>
+          <ul class="md-nav__list" data-md-scrollfix>
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../simulation/price-generation/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    Price Generation
+    
+  </span>
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../simulation/volatility-regimes/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    Volatility Regimes
+    
+  </span>
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../simulation/news-events/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    News Events
+    
+  </span>
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../simulation/correlation-model/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    Correlation Model
+    
+  </span>
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+          </ul>
+        </nav>
+      
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    
+    
+      
+        
+      
+    
+    
+    
+    
+    <li class="md-nav__item md-nav__item--nested">
+      
+        
+        
+          
+        
+        <input class="md-nav__toggle md-toggle md-toggle--indeterminate" type="checkbox" id="__nav_2_6" >
+        
+          
+          <label class="md-nav__link" for="__nav_2_6" id="__nav_2_6_label" tabindex="0">
+            
+  
+  
+  <span class="md-ellipsis">
+    Scoring
+    
+  </span>
+  
+
+            <span class="md-nav__icon md-icon"></span>
+          </label>
+        
+        <nav class="md-nav" data-md-level="2" aria-labelledby="__nav_2_6_label" aria-expanded="false">
+          <label class="md-nav__title" for="__nav_2_6">
+            <span class="md-nav__icon md-icon"></span>
+            Scoring
+          </label>
+          <ul class="md-nav__list" data-md-scrollfix>
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../scoring/overview/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    Overview
+    
+  </span>
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+          </ul>
+        </nav>
+      
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+    
+  
+  
+  
+    
+    
+      
+        
+      
+        
+      
+    
+    
+    
+    
+    <li class="md-nav__item md-nav__item--active md-nav__item--nested">
+      
+        
+        
+        <input class="md-nav__toggle md-toggle " type="checkbox" id="__nav_2_7" checked>
+        
+          
+          <label class="md-nav__link" for="__nav_2_7" id="__nav_2_7_label" tabindex="0">
+            
+  
+  
+  <span class="md-ellipsis">
+    Configuration
+    
+  </span>
+  
+
+            <span class="md-nav__icon md-icon"></span>
+          </label>
+        
+        <nav class="md-nav" data-md-level="2" aria-labelledby="__nav_2_7_label" aria-expanded="true">
+          <label class="md-nav__title" for="__nav_2_7">
+            <span class="md-nav__icon md-icon"></span>
+            Configuration
+          </label>
+          <ul class="md-nav__list" data-md-scrollfix>
+            
+              
+                
+  
+  
+    
+  
+  
+  
+    <li class="md-nav__item md-nav__item--active">
+      
+      <input class="md-nav__toggle md-toggle" type="checkbox" id="__toc">
+      
+      
+        
+      
+      
+        <label class="md-nav__link md-nav__link--active" for="__toc">
+          
+  
+  
+  <span class="md-ellipsis">
+    Game Parameters
+    
+  </span>
+  
+
+          <span class="md-nav__icon md-icon"></span>
+        </label>
+      
+      <a href="./" class="md-nav__link md-nav__link--active">
+        
+  
+  
+  <span class="md-ellipsis">
+    Game Parameters
+    
+  </span>
+  
+
+      </a>
+      
+        
+
+<nav class="md-nav md-nav--secondary" aria-label="Table of contents">
+  
+  
+  
+    
+  
+  
+    <label class="md-nav__title" for="__toc">
+      <span class="md-nav__icon md-icon"></span>
+      Table of contents
+    </label>
+    <ul class="md-nav__list" data-md-component="toc" data-md-scrollfix>
+      
+        <li class="md-nav__item">
+  <a href="#overview" class="md-nav__link">
+    <span class="md-ellipsis">
+      Overview
+    </span>
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#market-structure-parameters" class="md-nav__link">
+    <span class="md-ellipsis">
+      Market Structure Parameters
+    </span>
+  </a>
+  
+    <nav class="md-nav" aria-label="Market Structure Parameters">
+      <ul class="md-nav__list">
+        
+          <li class="md-nav__item">
+  <a href="#tick-configuration" class="md-nav__link">
+    <span class="md-ellipsis">
+      Tick Configuration
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#instrument-configuration" class="md-nav__link">
+    <span class="md-ellipsis">
+      Instrument Configuration
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#price-parameters" class="md-nav__link">
+    <span class="md-ellipsis">
+      Price Parameters
+    </span>
+  </a>
+  
+</li>
+        
+      </ul>
+    </nav>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#volatility-regime-parameters" class="md-nav__link">
+    <span class="md-ellipsis">
+      Volatility Regime Parameters
+    </span>
+  </a>
+  
+    <nav class="md-nav" aria-label="Volatility Regime Parameters">
+      <ul class="md-nav__list">
+        
+          <li class="md-nav__item">
+  <a href="#regime-definitions" class="md-nav__link">
+    <span class="md-ellipsis">
+      Regime Definitions
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#transition-matrix" class="md-nav__link">
+    <span class="md-ellipsis">
+      Transition Matrix
+    </span>
+  </a>
+  
+</li>
+        
+      </ul>
+    </nav>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#role-specific-parameters" class="md-nav__link">
+    <span class="md-ellipsis">
+      Role-Specific Parameters
+    </span>
+  </a>
+  
+    <nav class="md-nav" aria-label="Role-Specific Parameters">
+      <ul class="md-nav__list">
+        
+          <li class="md-nav__item">
+  <a href="#market-maker" class="md-nav__link">
+    <span class="md-ellipsis">
+      Market Maker
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#hedge-fund" class="md-nav__link">
+    <span class="md-ellipsis">
+      Hedge Fund
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#arbitrage-desk" class="md-nav__link">
+    <span class="md-ellipsis">
+      Arbitrage Desk
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#retail-flow-simulation" class="md-nav__link">
+    <span class="md-ellipsis">
+      Retail Flow Simulation
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#retail-behavioral-patterns" class="md-nav__link">
+    <span class="md-ellipsis">
+      Retail Behavioral Patterns
+    </span>
+  </a>
+  
+</li>
+        
+      </ul>
+    </nav>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#signal-parameters" class="md-nav__link">
+    <span class="md-ellipsis">
+      Signal Parameters
+    </span>
+  </a>
+  
+    <nav class="md-nav" aria-label="Signal Parameters">
+      <ul class="md-nav__list">
+        
+          <li class="md-nav__item">
+  <a href="#news-event-configuration" class="md-nav__link">
+    <span class="md-ellipsis">
+      News Event Configuration
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#tracking-error-parameters" class="md-nav__link">
+    <span class="md-ellipsis">
+      Tracking Error Parameters
+    </span>
+  </a>
+  
+</li>
+        
+      </ul>
+    </nav>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#order-management-parameters" class="md-nav__link">
+    <span class="md-ellipsis">
+      Order Management Parameters
+    </span>
+  </a>
+  
+    <nav class="md-nav" aria-label="Order Management Parameters">
+      <ul class="md-nav__list">
+        
+          <li class="md-nav__item">
+  <a href="#order-limits" class="md-nav__link">
+    <span class="md-ellipsis">
+      Order Limits
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#execution-parameters" class="md-nav__link">
+    <span class="md-ellipsis">
+      Execution Parameters
+    </span>
+  </a>
+  
+</li>
+        
+      </ul>
+    </nav>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#scoring-parameters" class="md-nav__link">
+    <span class="md-ellipsis">
+      Scoring Parameters
+    </span>
+  </a>
+  
+    <nav class="md-nav" aria-label="Scoring Parameters">
+      <ul class="md-nav__list">
+        
+          <li class="md-nav__item">
+  <a href="#weight-distribution" class="md-nav__link">
+    <span class="md-ellipsis">
+      Weight Distribution
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#penalty-thresholds" class="md-nav__link">
+    <span class="md-ellipsis">
+      Penalty Thresholds
+    </span>
+  </a>
+  
+</li>
+        
+      </ul>
+    </nav>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#adjustable-parameters" class="md-nav__link">
+    <span class="md-ellipsis">
+      Adjustable Parameters
+    </span>
+  </a>
+  
+    <nav class="md-nav" aria-label="Adjustable Parameters">
+      <ul class="md-nav__list">
+        
+          <li class="md-nav__item">
+  <a href="#dynamic-adjustments" class="md-nav__link">
+    <span class="md-ellipsis">
+      Dynamic Adjustments
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#fixed-parameters" class="md-nav__link">
+    <span class="md-ellipsis">
+      Fixed Parameters
+    </span>
+  </a>
+  
+</li>
+        
+      </ul>
+    </nav>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#configuration-file-format" class="md-nav__link">
+    <span class="md-ellipsis">
+      Configuration File Format
+    </span>
+  </a>
+  
+</li>
+      
+    </ul>
+  
+</nav>
+      
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../example-config.yaml" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    Example Config
+    
+  </span>
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+          </ul>
+        </nav>
+      
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    
+    
+      
+        
+      
+        
+      
+        
+      
+    
+    
+    
+    
+    <li class="md-nav__item md-nav__item--nested">
+      
+        
+        
+          
+        
+        <input class="md-nav__toggle md-toggle md-toggle--indeterminate" type="checkbox" id="__nav_2_8" >
+        
+          
+          <label class="md-nav__link" for="__nav_2_8" id="__nav_2_8_label" tabindex="0">
+            
+  
+  
+  <span class="md-ellipsis">
+    Appendix
+    
+  </span>
+  
+
+            <span class="md-nav__icon md-icon"></span>
+          </label>
+        
+        <nav class="md-nav" data-md-level="2" aria-labelledby="__nav_2_8_label" aria-expanded="false">
+          <label class="md-nav__title" for="__nav_2_8">
+            <span class="md-nav__icon md-icon"></span>
+            Appendix
+          </label>
+          <ul class="md-nav__list" data-md-scrollfix>
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../appendix/probability-tables/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    Probability Tables
+    
+  </span>
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../appendix/formulas/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    Formulas
+    
+  </span>
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../appendix/glossary/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    Glossary
+    
+  </span>
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+          </ul>
+        </nav>
+      
+    </li>
+  
+
+              
+            
+          </ul>
+        </nav>
+      
+    </li>
+  
+
+    
+      
+      
+  
+  
+  
+  
+    
+    
+      
+        
+          
+        
+      
+        
+      
+        
+      
+        
+      
+        
+      
+        
+      
+        
+      
+        
+      
+        
+      
+        
+      
+    
+    
+    
+    
+    <li class="md-nav__item md-nav__item--nested">
+      
+        
+        
+          
+        
+        <input class="md-nav__toggle md-toggle md-toggle--indeterminate" type="checkbox" id="__nav_3" >
+        
+          
+          <div class="md-nav__link md-nav__container">
+            <a href="../../../technical/" class="md-nav__link ">
+              
+  
+  
+  <span class="md-ellipsis">
+    Technical Documentation
+    
+  </span>
+  
+
+            </a>
+            
+              
+              <label class="md-nav__link " for="__nav_3" id="__nav_3_label" tabindex="0">
+                <span class="md-nav__icon md-icon"></span>
+              </label>
+            
+          </div>
+        
+        <nav class="md-nav" data-md-level="1" aria-labelledby="__nav_3_label" aria-expanded="false">
+          <label class="md-nav__title" for="__nav_3">
+            <span class="md-nav__icon md-icon"></span>
+            Technical Documentation
+          </label>
+          <ul class="md-nav__list" data-md-scrollfix>
+            
+              
+            
+              
+                
+  
+  
+  
+  
+    
+    
+      
+        
+      
+        
+      
+        
+      
+    
+    
+    
+    
+    <li class="md-nav__item md-nav__item--nested">
+      
+        
+        
+          
+        
+        <input class="md-nav__toggle md-toggle md-toggle--indeterminate" type="checkbox" id="__nav_3_2" >
+        
+          
+          <label class="md-nav__link" for="__nav_3_2" id="__nav_3_2_label" tabindex="0">
+            
+  
+  
+  <span class="md-ellipsis">
+    Architecture
+    
+  </span>
+  
+
+            <span class="md-nav__icon md-icon"></span>
+          </label>
+        
+        <nav class="md-nav" data-md-level="2" aria-labelledby="__nav_3_2_label" aria-expanded="false">
+          <label class="md-nav__title" for="__nav_3_2">
+            <span class="md-nav__icon md-icon"></span>
+            Architecture
+          </label>
+          <ul class="md-nav__list" data-md-scrollfix>
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../../technical/architecture-v3/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    Current Version (v3)
+    
+  </span>
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../../technical/architecture-v2/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    Previous Version (v2)
+    
+  </span>
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../../technical/architecture/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    Original Version (v1)
+    
+  </span>
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+          </ul>
+        </nav>
+      
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../../technical/build-order/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    Build Order
+    
+  </span>
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../../technical/implementation-guide/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    Implementation Guide
+    
+  </span>
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    
+    
+      
+        
+      
+    
+    
+    
+    
+    <li class="md-nav__item md-nav__item--nested">
+      
+        
+        
+          
+        
+        <input class="md-nav__toggle md-toggle md-toggle--indeterminate" type="checkbox" id="__nav_3_5" >
+        
+          
+          <label class="md-nav__link" for="__nav_3_5" id="__nav_3_5_label" tabindex="0">
+            
+  
+  
+  <span class="md-ellipsis">
+    Tutorials
+    
+  </span>
+  
+
+            <span class="md-nav__icon md-icon"></span>
+          </label>
+        
+        <nav class="md-nav" data-md-level="2" aria-labelledby="__nav_3_5_label" aria-expanded="false">
+          <label class="md-nav__title" for="__nav_3_5">
+            <span class="md-nav__icon md-icon"></span>
+            Tutorials
+          </label>
+          <ul class="md-nav__list" data-md-scrollfix>
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../../technical/tutorials/market-maker-tutorial/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    Market Maker Tutorial
+    
+  </span>
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+          </ul>
+        </nav>
+      
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    
+    
+      
+        
+          
+        
+      
+        
+      
+        
+      
+        
+      
+        
+      
+    
+    
+    
+    
+    <li class="md-nav__item md-nav__item--nested">
+      
+        
+        
+          
+        
+        <input class="md-nav__toggle md-toggle md-toggle--indeterminate" type="checkbox" id="__nav_3_6" >
+        
+          
+          <div class="md-nav__link md-nav__container">
+            <a href="../../../technical/how-to/" class="md-nav__link ">
+              
+  
+  
+  <span class="md-ellipsis">
+    How-To Guides
+    
+  </span>
+  
+
+            </a>
+            
+              
+              <label class="md-nav__link " for="__nav_3_6" id="__nav_3_6_label" tabindex="0">
+                <span class="md-nav__icon md-icon"></span>
+              </label>
+            
+          </div>
+        
+        <nav class="md-nav" data-md-level="2" aria-labelledby="__nav_3_6_label" aria-expanded="false">
+          <label class="md-nav__title" for="__nav_3_6">
+            <span class="md-nav__icon md-icon"></span>
+            How-To Guides
+          </label>
+          <ul class="md-nav__list" data-md-scrollfix>
+            
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../../technical/how-to/how-to-submit-orders/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    How to Submit Orders
+    
+  </span>
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../../technical/how-to/use-rest-api/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    Use REST API
+    
+  </span>
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../../technical/how-to/use-websockets/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    Use WebSockets
+    
+  </span>
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../../technical/how-to/websocket-integration/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    WebSocket Integration
+    
+  </span>
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+          </ul>
+        </nav>
+      
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    
+    
+      
+        
+          
+        
+      
+        
+      
+        
+      
+        
+      
+        
+      
+        
+      
+        
+      
+    
+    
+    
+    
+    <li class="md-nav__item md-nav__item--nested">
+      
+        
+        
+          
+        
+        <input class="md-nav__toggle md-toggle md-toggle--indeterminate" type="checkbox" id="__nav_3_7" >
+        
+          
+          <div class="md-nav__link md-nav__container">
+            <a href="../../../technical/reference/" class="md-nav__link ">
+              
+  
+  
+  <span class="md-ellipsis">
+    Reference
+    
+  </span>
+  
+
+            </a>
+            
+              
+              <label class="md-nav__link " for="__nav_3_7" id="__nav_3_7_label" tabindex="0">
+                <span class="md-nav__icon md-icon"></span>
+              </label>
+            
+          </div>
+        
+        <nav class="md-nav" data-md-level="2" aria-labelledby="__nav_3_7_label" aria-expanded="false">
+          <label class="md-nav__title" for="__nav_3_7">
+            <span class="md-nav__icon md-icon"></span>
+            Reference
+          </label>
+          <ul class="md-nav__list" data-md-scrollfix>
+            
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../../technical/reference/api-overview/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    API Overview
+    
+  </span>
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../../technical/reference/exchange-api/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    Exchange API
+    
+  </span>
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../../technical/reference/rest-api/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    REST API
+    
+  </span>
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../../technical/reference/websocket-api/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    WebSocket API
+    
+  </span>
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../../technical/reference/validation-api/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    Validation API
+    
+  </span>
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../../technical/reference/math-examples/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    Math Examples
+    
+  </span>
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+          </ul>
+        </nav>
+      
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    
+    
+      
+        
+      
+        
+      
+        
+      
+        
+      
+        
+      
+    
+    
+    
+    
+    <li class="md-nav__item md-nav__item--nested">
+      
+        
+        
+          
+        
+        <input class="md-nav__toggle md-toggle md-toggle--indeterminate" type="checkbox" id="__nav_3_8" >
+        
+          
+          <label class="md-nav__link" for="__nav_3_8" id="__nav_3_8_label" tabindex="0">
+            
+  
+  
+  <span class="md-ellipsis">
+    API Reference (Generated)
+    
+  </span>
+  
+
+            <span class="md-nav__icon md-icon"></span>
+          </label>
+        
+        <nav class="md-nav" data-md-level="2" aria-labelledby="__nav_3_8_label" aria-expanded="false">
+          <label class="md-nav__title" for="__nav_3_8">
+            <span class="md-nav__icon md-icon"></span>
+            API Reference (Generated)
+          </label>
+          <ul class="md-nav__list" data-md-scrollfix>
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../../reference/order_book/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    Order Book
+    
+  </span>
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../../reference/order/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    Order
+    
+  </span>
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../../reference/trade/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    Trade
+    
+  </span>
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../../reference/venue/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    Venue
+    
+  </span>
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../../reference/instrument/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    Instrument
+    
+  </span>
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+          </ul>
+        </nav>
+      
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    
+    
+      
+        
+          
+        
+      
+        
+      
+        
+      
+        
+      
+        
+      
+    
+    
+    
+    
+    <li class="md-nav__item md-nav__item--nested">
+      
+        
+        
+          
+        
+        <input class="md-nav__toggle md-toggle md-toggle--indeterminate" type="checkbox" id="__nav_3_9" >
+        
+          
+          <div class="md-nav__link md-nav__container">
+            <a href="../../../technical/explanation/" class="md-nav__link ">
+              
+  
+  
+  <span class="md-ellipsis">
+    Explanation
+    
+  </span>
+  
+
+            </a>
+            
+              
+              <label class="md-nav__link " for="__nav_3_9" id="__nav_3_9_label" tabindex="0">
+                <span class="md-nav__icon md-icon"></span>
+              </label>
+            
+          </div>
+        
+        <nav class="md-nav" data-md-level="2" aria-labelledby="__nav_3_9_label" aria-expanded="false">
+          <label class="md-nav__title" for="__nav_3_9">
+            <span class="md-nav__icon md-icon"></span>
+            Explanation
+          </label>
+          <ul class="md-nav__list" data-md-scrollfix>
+            
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../../technical/explanation/order-matching/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    Order Matching
+    
+  </span>
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../../technical/explanation/batch-matching/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    Batch Matching
+    
+  </span>
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../../technical/explanation/order-validator-design/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    Order Validator Design
+    
+  </span>
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../../technical/explanation/trading-phases/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    Trading Phases
+    
+  </span>
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+          </ul>
+        </nav>
+      
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    
+    
+      
+        
+      
+    
+    
+    
+    
+    <li class="md-nav__item md-nav__item--nested">
+      
+        
+        
+          
+        
+        <input class="md-nav__toggle md-toggle md-toggle--indeterminate" type="checkbox" id="__nav_3_10" >
+        
+          
+          <label class="md-nav__link" for="__nav_3_10" id="__nav_3_10_label" tabindex="0">
+            
+  
+  
+  <span class="md-ellipsis">
+    Contributing
+    
+  </span>
+  
+
+            <span class="md-nav__icon md-icon"></span>
+          </label>
+        
+        <nav class="md-nav" data-md-level="2" aria-labelledby="__nav_3_10_label" aria-expanded="false">
+          <label class="md-nav__title" for="__nav_3_10">
+            <span class="md-nav__icon md-icon"></span>
+            Contributing
+          </label>
+          <ul class="md-nav__list" data-md-scrollfix>
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../../technical/contributing/docstring-math-guide/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    Math in Docstrings
+    
+  </span>
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+          </ul>
+        </nav>
+      
+    </li>
+  
+
+              
+            
+          </ul>
+        </nav>
+      
+    </li>
+  
+
+    
+  </ul>
+</nav>
+                  </div>
+                </div>
+              </div>
+            
+            
+              
+              <div class="md-sidebar md-sidebar--secondary" data-md-component="sidebar" data-md-type="toc" >
+                <div class="md-sidebar__scrollwrap">
+                  <div class="md-sidebar__inner">
+                    
+
+<nav class="md-nav md-nav--secondary" aria-label="Table of contents">
+  
+  
+  
+    
+  
+  
+    <label class="md-nav__title" for="__toc">
+      <span class="md-nav__icon md-icon"></span>
+      Table of contents
+    </label>
+    <ul class="md-nav__list" data-md-component="toc" data-md-scrollfix>
+      
+        <li class="md-nav__item">
+  <a href="#overview" class="md-nav__link">
+    <span class="md-ellipsis">
+      Overview
+    </span>
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#market-structure-parameters" class="md-nav__link">
+    <span class="md-ellipsis">
+      Market Structure Parameters
+    </span>
+  </a>
+  
+    <nav class="md-nav" aria-label="Market Structure Parameters">
+      <ul class="md-nav__list">
+        
+          <li class="md-nav__item">
+  <a href="#tick-configuration" class="md-nav__link">
+    <span class="md-ellipsis">
+      Tick Configuration
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#instrument-configuration" class="md-nav__link">
+    <span class="md-ellipsis">
+      Instrument Configuration
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#price-parameters" class="md-nav__link">
+    <span class="md-ellipsis">
+      Price Parameters
+    </span>
+  </a>
+  
+</li>
+        
+      </ul>
+    </nav>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#volatility-regime-parameters" class="md-nav__link">
+    <span class="md-ellipsis">
+      Volatility Regime Parameters
+    </span>
+  </a>
+  
+    <nav class="md-nav" aria-label="Volatility Regime Parameters">
+      <ul class="md-nav__list">
+        
+          <li class="md-nav__item">
+  <a href="#regime-definitions" class="md-nav__link">
+    <span class="md-ellipsis">
+      Regime Definitions
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#transition-matrix" class="md-nav__link">
+    <span class="md-ellipsis">
+      Transition Matrix
+    </span>
+  </a>
+  
+</li>
+        
+      </ul>
+    </nav>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#role-specific-parameters" class="md-nav__link">
+    <span class="md-ellipsis">
+      Role-Specific Parameters
+    </span>
+  </a>
+  
+    <nav class="md-nav" aria-label="Role-Specific Parameters">
+      <ul class="md-nav__list">
+        
+          <li class="md-nav__item">
+  <a href="#market-maker" class="md-nav__link">
+    <span class="md-ellipsis">
+      Market Maker
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#hedge-fund" class="md-nav__link">
+    <span class="md-ellipsis">
+      Hedge Fund
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#arbitrage-desk" class="md-nav__link">
+    <span class="md-ellipsis">
+      Arbitrage Desk
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#retail-flow-simulation" class="md-nav__link">
+    <span class="md-ellipsis">
+      Retail Flow Simulation
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#retail-behavioral-patterns" class="md-nav__link">
+    <span class="md-ellipsis">
+      Retail Behavioral Patterns
+    </span>
+  </a>
+  
+</li>
+        
+      </ul>
+    </nav>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#signal-parameters" class="md-nav__link">
+    <span class="md-ellipsis">
+      Signal Parameters
+    </span>
+  </a>
+  
+    <nav class="md-nav" aria-label="Signal Parameters">
+      <ul class="md-nav__list">
+        
+          <li class="md-nav__item">
+  <a href="#news-event-configuration" class="md-nav__link">
+    <span class="md-ellipsis">
+      News Event Configuration
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#tracking-error-parameters" class="md-nav__link">
+    <span class="md-ellipsis">
+      Tracking Error Parameters
+    </span>
+  </a>
+  
+</li>
+        
+      </ul>
+    </nav>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#order-management-parameters" class="md-nav__link">
+    <span class="md-ellipsis">
+      Order Management Parameters
+    </span>
+  </a>
+  
+    <nav class="md-nav" aria-label="Order Management Parameters">
+      <ul class="md-nav__list">
+        
+          <li class="md-nav__item">
+  <a href="#order-limits" class="md-nav__link">
+    <span class="md-ellipsis">
+      Order Limits
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#execution-parameters" class="md-nav__link">
+    <span class="md-ellipsis">
+      Execution Parameters
+    </span>
+  </a>
+  
+</li>
+        
+      </ul>
+    </nav>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#scoring-parameters" class="md-nav__link">
+    <span class="md-ellipsis">
+      Scoring Parameters
+    </span>
+  </a>
+  
+    <nav class="md-nav" aria-label="Scoring Parameters">
+      <ul class="md-nav__list">
+        
+          <li class="md-nav__item">
+  <a href="#weight-distribution" class="md-nav__link">
+    <span class="md-ellipsis">
+      Weight Distribution
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#penalty-thresholds" class="md-nav__link">
+    <span class="md-ellipsis">
+      Penalty Thresholds
+    </span>
+  </a>
+  
+</li>
+        
+      </ul>
+    </nav>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#adjustable-parameters" class="md-nav__link">
+    <span class="md-ellipsis">
+      Adjustable Parameters
+    </span>
+  </a>
+  
+    <nav class="md-nav" aria-label="Adjustable Parameters">
+      <ul class="md-nav__list">
+        
+          <li class="md-nav__item">
+  <a href="#dynamic-adjustments" class="md-nav__link">
+    <span class="md-ellipsis">
+      Dynamic Adjustments
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#fixed-parameters" class="md-nav__link">
+    <span class="md-ellipsis">
+      Fixed Parameters
+    </span>
+  </a>
+  
+</li>
+        
+      </ul>
+    </nav>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#configuration-file-format" class="md-nav__link">
+    <span class="md-ellipsis">
+      Configuration File Format
+    </span>
+  </a>
+  
+</li>
+      
+    </ul>
+  
+</nav>
+                  </div>
+                </div>
+              </div>
+            
+          
+          
+            <div class="md-content" data-md-component="content">
+              <article class="md-content__inner md-typeset">
+                
+                  
+
+
+  
+  
+
+
+<h1 id="game-parameters">Game Parameters</h1>
+<h2 id="overview">Overview</h2>
+<p>The Intern Trading Game simulation has numerous configurable parameters that control market behavior, constraints, and scoring. This document outlines the key parameters and their typical values.</p>
+<h2 id="market-structure-parameters">Market Structure Parameters</h2>
+<h3 id="tick-configuration">Tick Configuration</h3>
+<table>
+<thead>
+<tr>
+<th>Parameter</th>
+<th>Default Value</th>
+<th>Range</th>
+<th>Description</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>tick_duration</td>
+<td>5 minutes</td>
+<td>1-60 min</td>
+<td>Time between market updates</td>
+</tr>
+<tr>
+<td>order_window</td>
+<td>3 minutes</td>
+<td>1-4 min</td>
+<td>Time to submit orders each tick</td>
+</tr>
+<tr>
+<td>batch_processing</td>
+<td>true</td>
+<td>-</td>
+<td>Orders processed simultaneously</td>
+</tr>
+</tbody>
+</table>
+<h3 id="instrument-configuration">Instrument Configuration</h3>
+<table>
+<thead>
+<tr>
+<th>Parameter</th>
+<th>Default Value</th>
+<th>Description</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>underlyings</td>
+<td>["SPX", "SPY"]</td>
+<td>Available spot instruments</td>
+</tr>
+<tr>
+<td>strikes_per_underlying</td>
+<td>5</td>
+<td>Number of option strikes</td>
+</tr>
+<tr>
+<td>expiration_count</td>
+<td>3</td>
+<td>Number of expiration dates</td>
+</tr>
+<tr>
+<td>expiration_range</td>
+<td>1-8 weeks</td>
+<td>Time to expiration range</td>
+</tr>
+</tbody>
+</table>
+<h3 id="price-parameters">Price Parameters</h3>
+<table>
+<thead>
+<tr>
+<th>Parameter</th>
+<th>Default Value</th>
+<th>Description</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>spx_initial_price</td>
+<td>4400</td>
+<td>Starting SPX price</td>
+</tr>
+<tr>
+<td>spy_ratio</td>
+<td>10</td>
+<td>SPX/SPY price ratio</td>
+</tr>
+<tr>
+<td>min_tick_size</td>
+<td>0.01</td>
+<td>Minimum price increment</td>
+</tr>
+<tr>
+<td>max_tick_move</td>
+<td>5%</td>
+<td>Circuit breaker limit</td>
+</tr>
+</tbody>
+</table>
+<h2 id="volatility-regime-parameters">Volatility Regime Parameters</h2>
+<h3 id="regime-definitions">Regime Definitions</h3>
+<table>
+<thead>
+<tr>
+<th>Regime</th>
+<th>Annual Vol</th>
+<th>5-min Std Dev</th>
+<th>Persistence</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>Low</td>
+<td>10%</td>
+<td>0.04%</td>
+<td>50-200 ticks</td>
+</tr>
+<tr>
+<td>Medium</td>
+<td>20%</td>
+<td>0.09%</td>
+<td>30-100 ticks</td>
+</tr>
+<tr>
+<td>High</td>
+<td>50%</td>
+<td>0.22%</td>
+<td>10-50 ticks</td>
+</tr>
+</tbody>
+</table>
+<h3 id="transition-matrix">Transition Matrix</h3>
+<div class="highlight"><pre><span></span><code><a id="__codelineno-0-1" name="__codelineno-0-1" href="#__codelineno-0-1"></a>         To Low  To Med  To High
+<a id="__codelineno-0-2" name="__codelineno-0-2" href="#__codelineno-0-2"></a>From Low   0.95    0.04    0.01
+<a id="__codelineno-0-3" name="__codelineno-0-3" href="#__codelineno-0-3"></a>From Med   0.02    0.94    0.04
+<a id="__codelineno-0-4" name="__codelineno-0-4" href="#__codelineno-0-4"></a>From High  0.01    0.09    0.90
+</code></pre></div>
+<h2 id="role-specific-parameters">Role-Specific Parameters</h2>
+<h3 id="market-maker">Market Maker</h3>
+<table>
+<thead>
+<tr>
+<th>Parameter</th>
+<th>Value</th>
+<th>Description</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>quote_uptime_requirement</td>
+<td>80%</td>
+<td>Minimum quote presence</td>
+</tr>
+<tr>
+<td>maker_rebate</td>
+<td>+$0.02</td>
+<td>Per contract rebate</td>
+</tr>
+<tr>
+<td>taker_fee</td>
+<td>-$0.01</td>
+<td>Per contract fee</td>
+</tr>
+<tr>
+<td>position_limit</td>
+<td>±50</td>
+<td>Per option limit</td>
+</tr>
+<tr>
+<td>total_position_limit</td>
+<td>±200</td>
+<td>Portfolio limit</td>
+</tr>
+<tr>
+<td>max_spread_width</td>
+<td>10%</td>
+<td>Maximum quote spread</td>
+</tr>
+</tbody>
+</table>
+<h3 id="hedge-fund">Hedge Fund</h3>
+<table>
+<thead>
+<tr>
+<th>Parameter</th>
+<th>Value</th>
+<th>Description</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>maker_rebate</td>
+<td>+$0.01</td>
+<td>Per contract rebate</td>
+</tr>
+<tr>
+<td>taker_fee</td>
+<td>-$0.02</td>
+<td>Per contract fee</td>
+</tr>
+<tr>
+<td>position_limit</td>
+<td>150</td>
+<td>Per option limit</td>
+</tr>
+<tr>
+<td>total_position_limit</td>
+<td>500</td>
+<td>Portfolio limit</td>
+</tr>
+<tr>
+<td>signal_accuracy</td>
+<td>66%</td>
+<td>Volatility signal accuracy</td>
+</tr>
+<tr>
+<td>signal_lead_time</td>
+<td>1-5 ticks</td>
+<td>Advance warning</td>
+</tr>
+</tbody>
+</table>
+<h3 id="arbitrage-desk">Arbitrage Desk</h3>
+<table>
+<thead>
+<tr>
+<th>Parameter</th>
+<th>Value</th>
+<th>Description</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>maker_rebate</td>
+<td>+$0.01</td>
+<td>Per contract rebate</td>
+</tr>
+<tr>
+<td>taker_fee</td>
+<td>-$0.02</td>
+<td>Per contract fee</td>
+</tr>
+<tr>
+<td>position_limit</td>
+<td>100</td>
+<td>Per option limit</td>
+</tr>
+<tr>
+<td>total_position_limit</td>
+<td>300</td>
+<td>Portfolio limit</td>
+</tr>
+<tr>
+<td>signal_accuracy</td>
+<td>80%</td>
+<td>Tracking error accuracy</td>
+</tr>
+<tr>
+<td>target_ratio</td>
+<td>10:1</td>
+<td>SPX:SPY value ratio</td>
+</tr>
+</tbody>
+</table>
+<h3 id="retail-flow-simulation">Retail Flow Simulation</h3>
+<table>
+<thead>
+<tr>
+<th>Parameter</th>
+<th>Value</th>
+<th>Description</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>orders_per_tick</td>
+<td>Poisson(λ=3)</td>
+<td>Random order generation</td>
+</tr>
+<tr>
+<td>order_size</td>
+<td>Exponential(μ=5)</td>
+<td>Size distribution</td>
+</tr>
+<tr>
+<td>max_position</td>
+<td>50</td>
+<td>Total position limit</td>
+</tr>
+<tr>
+<td>call_probability</td>
+<td>60%</td>
+<td>Bullish bias</td>
+</tr>
+<tr>
+<td>otm_preference</td>
+<td>70%</td>
+<td>Prefer cheap options</td>
+</tr>
+<tr>
+<td>market_order_rate</td>
+<td>40%</td>
+<td>Takes liquidity</td>
+</tr>
+</tbody>
+</table>
+<h3 id="retail-behavioral-patterns">Retail Behavioral Patterns</h3>
+<table>
+<thead>
+<tr>
+<th>Pattern</th>
+<th>Probability</th>
+<th>Trigger</th>
+<th>Effect</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>Momentum Chasing</td>
+<td>30%</td>
+<td>3-tick trend</td>
+<td>2x size</td>
+</tr>
+<tr>
+<td>Panic Selling</td>
+<td>20%</td>
+<td>5% drawdown</td>
+<td>3x size sells</td>
+</tr>
+<tr>
+<td>FOMO Buying</td>
+<td>25%</td>
+<td>Vol spike</td>
+<td>Buy OTM calls</td>
+</tr>
+<tr>
+<td>Profit Taking</td>
+<td>15%</td>
+<td>20% gain</td>
+<td>Sell 50%</td>
+</tr>
+</tbody>
+</table>
+<h2 id="signal-parameters">Signal Parameters</h2>
+<h3 id="news-event-configuration">News Event Configuration</h3>
+<table>
+<thead>
+<tr>
+<th>Parameter</th>
+<th>Default</th>
+<th>Description</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>event_frequency</td>
+<td>1-4 hours</td>
+<td>Poisson distribution</td>
+</tr>
+<tr>
+<td>regime_shift_events</td>
+<td>40%</td>
+<td>Percentage causing shifts</td>
+</tr>
+<tr>
+<td>price_jump_events</td>
+<td>30%</td>
+<td>Percentage causing jumps</td>
+</tr>
+<tr>
+<td>false_positive_events</td>
+<td>30%</td>
+<td>No effect events</td>
+</tr>
+</tbody>
+</table>
+<h3 id="tracking-error-parameters">Tracking Error Parameters</h3>
+<table>
+<thead>
+<tr>
+<th>Parameter</th>
+<th>Default</th>
+<th>Description</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>base_correlation</td>
+<td>0.98</td>
+<td>SPX-SPY correlation</td>
+</tr>
+<tr>
+<td>tracking_error_std</td>
+<td>0.15%</td>
+<td>Daily tracking error</td>
+</tr>
+<tr>
+<td>mean_reversion_speed</td>
+<td>5-10 ticks</td>
+<td>Convergence half-life</td>
+</tr>
+<tr>
+<td>signal_threshold</td>
+<td>0.15%</td>
+<td>Minimum to signal</td>
+</tr>
+</tbody>
+</table>
+<h2 id="order-management-parameters">Order Management Parameters</h2>
+<h3 id="order-limits">Order Limits</h3>
+<table>
+<thead>
+<tr>
+<th>Role</th>
+<th>Orders/Tick</th>
+<th>Min Size</th>
+<th>Max Size</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>Market Maker</td>
+<td>100</td>
+<td>1</td>
+<td>1000</td>
+</tr>
+<tr>
+<td>Hedge Fund</td>
+<td>50</td>
+<td>1</td>
+<td>500</td>
+</tr>
+<tr>
+<td>Arbitrage</td>
+<td>75</td>
+<td>1</td>
+<td>500</td>
+</tr>
+<tr>
+<td>Retail Flow</td>
+<td>Poisson(3)</td>
+<td>1</td>
+<td>50</td>
+</tr>
+</tbody>
+</table>
+<h3 id="execution-parameters">Execution Parameters</h3>
+<table>
+<thead>
+<tr>
+<th>Parameter</th>
+<th>Value</th>
+<th>Description</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>matching_algorithm</td>
+<td>Price-Time</td>
+<td>Order priority</td>
+</tr>
+<tr>
+<td>partial_fills</td>
+<td>Enabled</td>
+<td>Allow partial execution</td>
+</tr>
+<tr>
+<td>order_expiration</td>
+<td>End of tick</td>
+<td>All orders expire</td>
+</tr>
+<tr>
+<td>self_trade</td>
+<td>Allowed</td>
+<td>Can trade with yourself</td>
+</tr>
+</tbody>
+</table>
+<h2 id="scoring-parameters">Scoring Parameters</h2>
+<h3 id="weight-distribution">Weight Distribution</h3>
+<table>
+<thead>
+<tr>
+<th>Component</th>
+<th>Weight</th>
+<th>Description</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>Quantitative Performance</td>
+<td>70%</td>
+<td>P&amp;L, risk metrics</td>
+</tr>
+<tr>
+<td>Qualitative Factors</td>
+<td>30%</td>
+<td>Code, research, teamwork</td>
+</tr>
+</tbody>
+</table>
+<h3 id="penalty-thresholds">Penalty Thresholds</h3>
+<table>
+<thead>
+<tr>
+<th>Violation</th>
+<th>Threshold</th>
+<th>Penalty</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>Minor Position Breach</td>
+<td>&lt;10% over</td>
+<td>-5% score</td>
+</tr>
+<tr>
+<td>Major Position Breach</td>
+<td>10-25% over</td>
+<td>-15% score</td>
+</tr>
+<tr>
+<td>Severe Position Breach</td>
+<td>&gt;25% over</td>
+<td>-30% score</td>
+</tr>
+<tr>
+<td>Quote Uptime Failure</td>
+<td>&lt;80%</td>
+<td>Graduated penalties</td>
+</tr>
+</tbody>
+</table>
+<h2 id="adjustable-parameters">Adjustable Parameters</h2>
+<h3 id="dynamic-adjustments">Dynamic Adjustments</h3>
+<p>Some parameters may be adjusted during the game:</p>
+<ul>
+<li>Volatility regime probabilities</li>
+<li>Event frequencies</li>
+<li>Signal accuracies</li>
+<li>Fee structures</li>
+</ul>
+<h3 id="fixed-parameters">Fixed Parameters</h3>
+<p>These remain constant throughout:</p>
+<ul>
+<li>Position limits</li>
+<li>Role constraints</li>
+<li>Tick duration</li>
+<li>Scoring weights</li>
+</ul>
+<h2 id="configuration-file-format">Configuration File Format</h2>
+<p>See <a href="../example-config.yaml">Example Configuration</a> for a complete configuration file showing all parameters and their relationships.</p>
+
+
+
+
+
+
+
+
+
+
+
+
+                
+              </article>
+            </div>
+          
+          
+<script>var target=document.getElementById(location.hash.slice(1));target&&target.name&&(target.checked=target.name.startsWith("__tabbed_"))</script>
+        </div>
+        
+          <button type="button" class="md-top md-icon" data-md-component="top" hidden>
+  
+  <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path d="M13 20h-2V8l-5.5 5.5-1.42-1.42L12 4.16l7.92 7.92-1.42 1.42L13 8z"/></svg>
+  Back to top
+</button>
+        
+      </main>
+      
+        <footer class="md-footer">
+  
+  <div class="md-footer-meta md-typeset">
+    <div class="md-footer-meta__inner md-grid">
+      <div class="md-copyright">
+  
+  
+    Made with
+    <a href="https://squidfunk.github.io/mkdocs-material/" target="_blank" rel="noopener">
+      Material for MkDocs
+    </a>
+  
+</div>
+      
+    </div>
+  </div>
+</footer>
+      
+    </div>
+    <div class="md-dialog" data-md-component="dialog">
+      <div class="md-dialog__inner md-typeset"></div>
+    </div>
+    
+    
+    
+      
+      <script id="__config" type="application/json">{"base": "../../..", "features": ["navigation.instant", "navigation.tracking", "navigation.expand", "navigation.indexes", "navigation.top", "content.code.copy", "content.code.annotate", "search.highlight", "search.share"], "search": "../../../assets/javascripts/workers/search.d50fe291.min.js", "tags": null, "translations": {"clipboard.copied": "Copied to clipboard", "clipboard.copy": "Copy to clipboard", "search.result.more.one": "1 more on this page", "search.result.more.other": "# more on this page", "search.result.none": "No matching documents", "search.result.one": "1 matching document", "search.result.other": "# matching documents", "search.result.placeholder": "Type to start searching", "search.result.term.missing": "Missing", "select.version": "Select version"}, "version": null}</script>
+    
+    
+      <script src="../../../assets/javascripts/bundle.13a4f30d.min.js"></script>
+      
+        <script src="../../../technical/javascripts/mathjax.js"></script>
+      
+        <script src="https://polyfill.io/v3/polyfill.min.js?features=es6"></script>
+      
+        <script src="https://cdn.jsdelivr.net/npm/mathjax@3/es5/tex-mml-chtml.js"></script>
+      
+        <script src="https://unpkg.com/mermaid@10.6.1/dist/mermaid.min.js"></script>
+      
+        <script src="../../../technical/javascripts/mermaid-init.js"></script>
+      
+    
+  </body>
+</html>

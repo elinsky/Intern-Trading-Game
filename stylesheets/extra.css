@@ -1,0 +1,323 @@
+/* Custom theme for Intern Trading Game documentation */
+
+/* Color Variables */
+:root {
+    --doc-orange: #FF6600;
+    --doc-orange-light: #FFA500;
+    --doc-blue: #0066CC;
+    --doc-blue-dark: #003d7a;
+    --doc-gray-dark: #333333;
+    --doc-gray-medium: #666666;
+    --doc-gray-light: #F8F8F8;
+    --doc-border: #E0E0E0;
+}
+
+/* Override Material theme colors */
+[data-md-color-scheme="default"] {
+    --md-primary-fg-color: #FFFFFF;
+    --md-primary-bg-color: var(--doc-gray-dark);
+    --md-accent-fg-color: var(--doc-orange);
+    --md-accent-fg-color--transparent: rgba(255, 102, 0, 0.1);
+}
+
+/* Typography */
+body {
+    font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", "Helvetica Neue", Arial, sans-serif;
+}
+
+.md-typeset {
+    font-size: 0.9rem;  /* Slightly smaller to fit more content */
+    line-height: 1.6;
+}
+
+/* Headers with doc styling */
+.md-typeset h1 {
+    font-weight: 300;
+    font-size: 2.5rem;
+    margin: 1rem 0 1.5rem;
+    border-bottom: 1px solid var(--doc-border);
+    padding-bottom: 0.5rem;
+}
+
+.md-typeset h2 {
+    font-weight: 400;
+    font-size: 1.8rem;
+    margin: 1.5rem 0 1rem;
+}
+
+.md-typeset h3 {
+    font-weight: 500;
+    font-size: 1.3rem;
+    margin: 1.5rem 0 0.8rem;
+}
+
+/* Content area - use available width */
+.md-content {
+    max-width: calc(100% - 2rem);  /* Use nearly full width */
+}
+
+/* Ensure consistent width across all components */
+.md-header__inner,
+.md-tabs__list,
+.md-footer-meta__inner,
+.md-footer-nav__inner,
+.md-grid {
+    max-width: calc(100% - 2rem);
+}
+
+/* Sidebar configuration */
+@media screen and (min-width: 76.25em) {
+    .md-sidebar--primary {
+        width: 15rem;  /* Wider navigation */
+    }
+
+    .md-sidebar--secondary {
+        width: 15rem;  /* Match TOC width */
+    }
+
+    /* Adjust content margins for wider sidebars */
+    .md-content__inner {
+        margin-left: 1rem;
+        margin-right: 1rem;
+    }
+}
+
+/* 13" laptops (typically 1440x900 or 1280x800) */
+@media screen and (min-width: 1200px) and (max-width: 1366px) {
+    .md-content {
+        max-width: 1100px;
+    }
+}
+
+/* 14" laptops and small monitors (typically 1366x768 or 1920x1080) */
+@media screen and (min-width: 1366px) and (max-width: 1440px) {
+    .md-content {
+        max-width: 1280px;
+    }
+}
+
+/* 15" laptops (typically 1440x900 or 1920x1080) */
+@media screen and (min-width: 1440px) and (max-width: 1680px) {
+    .md-content {
+        max-width: 1400px;
+    }
+}
+
+/* 16" MacBook Pro and similar (1728px effective width) */
+@media screen and (min-width: 1680px) and (max-width: 1920px) {
+    .md-content {
+        max-width: 1600px;
+    }
+}
+
+/* Standard desktop monitors (1920x1080) */
+@media screen and (min-width: 1920px) and (max-width: 2560px) {
+    .md-content {
+        max-width: 1800px;
+    }
+}
+
+/* Large desktop monitors (2560x1440) */
+@media screen and (min-width: 2560px) and (max-width: 3440px) {
+    .md-content {
+        max-width: 2200px;
+    }
+}
+
+/* Ultra-wide and 4K monitors */
+@media screen and (min-width: 3440px) {
+    .md-content {
+        max-width: 2800px;
+    }
+}
+
+/* Make code blocks and tables use full content width */
+.md-typeset .highlight,
+.md-typeset table:not([class]) {
+    max-width: 100%;
+}
+
+/* Optimize tables for data display */
+.md-typeset table {
+    font-size: 0.85rem;  /* Smaller tables to fit more data */
+}
+
+/* Make admonitions more compact */
+.md-typeset .admonition,
+.md-typeset details {
+    font-size: 0.875rem;
+}
+
+/* Navigation styling - doc orange accents */
+.md-nav__link--active,
+.md-nav__link:active,
+.md-nav__link:hover {
+    color: var(--doc-orange);
+}
+
+.md-nav__item .md-nav__link--active {
+    font-weight: 600;
+    color: var(--doc-orange);
+}
+
+/* Code blocks - doc style */
+.md-typeset pre {
+    border: 1px solid var(--doc-border);
+    border-radius: 4px;
+}
+
+.md-typeset code {
+    padding: 0.1rem 0.3rem;
+    border-radius: 3px;
+    font-size: 0.875rem;
+}
+
+/* Light mode code styling */
+[data-md-color-scheme="default"] .md-typeset pre {
+    background-color: var(--doc-gray-light);
+}
+
+[data-md-color-scheme="default"] .md-typeset code {
+    background-color: var(--doc-gray-light);
+    color: var(--doc-gray-dark);
+}
+
+/* Tables - doc style with alternating rows */
+.md-typeset table:not([class]) {
+    border: 1px solid var(--doc-border);
+    border-radius: 4px;
+    overflow: hidden;
+}
+
+.md-typeset table:not([class]) th {
+    font-weight: 600;
+    border-bottom: 2px solid var(--doc-border);
+}
+
+/* Light mode table styling */
+[data-md-color-scheme="default"] .md-typeset table:not([class]) th {
+    background-color: var(--doc-gray-light);
+    color: var(--doc-gray-dark);
+}
+
+[data-md-color-scheme="default"] .md-typeset table:not([class]) tbody tr:nth-child(odd) {
+    background-color: rgba(248, 248, 248, 0.5);
+}
+
+/* Dark mode table styling */
+[data-md-color-scheme="slate"] .md-typeset table:not([class]) tbody tr:nth-child(odd) {
+    background-color: rgba(255, 255, 255, 0.03);
+}
+
+/* API Reference boxes - doc style */
+.md-typeset .admonition {
+    border: 1px solid var(--doc-border);
+    border-radius: 4px;
+    box-shadow: none;
+    margin: 1.5rem 0;
+}
+
+.md-typeset .admonition-title {
+    border-bottom: 1px solid var(--doc-border);
+    font-weight: 600;
+}
+
+/* Light mode admonition styling */
+[data-md-color-scheme="default"] .md-typeset .admonition-title {
+    background-color: var(--doc-gray-light);
+    color: var(--doc-gray-dark);
+}
+
+/* Links - doc blue with orange hover */
+[data-md-color-scheme="default"] .md-typeset a {
+    color: var(--doc-blue);
+}
+
+[data-md-color-scheme="slate"] .md-typeset a {
+    color: #4db8ff;  /* Lighter blue for dark mode */
+}
+
+.md-typeset a {
+    text-decoration: none;
+}
+
+.md-typeset a:hover {
+    color: var(--doc-orange);
+    text-decoration: underline;
+}
+
+/* Header/nav bar */
+[data-md-color-scheme="default"] .md-header {
+    background-color: #FFFFFF;
+    color: var(--doc-gray-dark);
+    box-shadow: 0 1px 3px rgba(0,0,0,0.1);
+}
+
+[data-md-color-scheme="default"] .md-header__title {
+    color: var(--doc-gray-dark);
+}
+
+/* Search - let Material handle dark mode */
+[data-md-color-scheme="default"] .md-search__input {
+    background-color: var(--doc-gray-light);
+    color: var(--doc-gray-dark);
+}
+
+/* Parameter/attribute lists - doc style */
+.md-typeset dl dt {
+    font-weight: 600;
+    font-family: monospace;
+    padding: 0.3rem 0.5rem;
+    border-radius: 3px;
+    margin-bottom: 0.5rem;
+}
+
+[data-md-color-scheme="default"] .md-typeset dl dt {
+    color: var(--doc-gray-dark);
+    background-color: var(--doc-gray-light);
+}
+
+/* Custom class for API reference cards */
+.doc-api-card {
+    border: 1px solid var(--doc-border);
+    border-radius: 4px;
+    padding: 1.5rem;
+    margin: 1.5rem 0;
+    background-color: var(--md-default-bg-color);
+}
+
+.doc-api-card h3 {
+    margin-top: 0;
+    color: var(--doc-orange);
+}
+
+/* Dark mode overrides */
+[data-md-color-scheme="slate"] {
+    --doc-gray-light: #2d2d2d;
+    --doc-border: #494949;
+}
+
+[data-md-color-scheme="slate"] .doc-api-card {
+    background-color: var(--md-code-bg-color);
+    border-color: var(--doc-border);
+}
+
+/* Remove Material shadows for cleaner look */
+.md-sidebar__scrollwrap,
+.md-content__inner,
+.md-search__output {
+    box-shadow: none;
+}
+
+/* Buttons - doc style */
+.md-button {
+    background-color: var(--doc-orange);
+    color: white;
+    border: none;
+    border-radius: 4px;
+    font-weight: 500;
+}
+
+.md-button:hover {
+    background-color: var(--doc-orange-light);
+}

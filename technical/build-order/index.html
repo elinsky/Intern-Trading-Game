@@ -1,0 +1,3424 @@
+
+<!doctype html>
+<html lang="en" class="no-js">
+  <head>
+    
+      <meta charset="utf-8">
+      <meta name="viewport" content="width=device-width,initial-scale=1">
+      
+        <meta name="description" content="Core simulation engine, matching logic, and reference tools for a role-based, options market-making game">
+      
+      
+      
+      
+        <link rel="prev" href="../architecture/">
+      
+      
+        <link rel="next" href="../implementation-guide/">
+      
+      
+      <link rel="icon" href="../../assets/images/favicon.png">
+      <meta name="generator" content="mkdocs-1.6.1, mkdocs-material-9.6.14">
+    
+    
+      
+        <title>Build Order - Intern Trading Game</title>
+      
+    
+    
+      <link rel="stylesheet" href="../../assets/stylesheets/main.342714a4.min.css">
+      
+        
+        <link rel="stylesheet" href="../../assets/stylesheets/palette.06af60db.min.css">
+      
+      
+
+
+    
+    
+      
+    
+    
+      
+        
+        
+        <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+        <link rel="stylesheet" href="https://fonts.googleapis.com/css?family=Roboto:300,300i,400,400i,700,700i%7CRoboto+Mono:400,400i,700,700i&display=fallback">
+        <style>:root{--md-text-font:"Roboto";--md-code-font:"Roboto Mono"}</style>
+      
+    
+    
+      <link rel="stylesheet" href="../../assets/_mkdocstrings.css">
+    
+      <link rel="stylesheet" href="../../stylesheets/extra.css">
+    
+    <script>__md_scope=new URL("../..",location),__md_hash=e=>[...e].reduce(((e,_)=>(e<<5)-e+_.charCodeAt(0)),0),__md_get=(e,_=localStorage,t=__md_scope)=>JSON.parse(_.getItem(t.pathname+"."+e)),__md_set=(e,_,t=localStorage,a=__md_scope)=>{try{t.setItem(a.pathname+"."+e,JSON.stringify(_))}catch(e){}}</script>
+    
+      
+
+    
+    
+    
+  </head>
+  
+  
+    
+    
+      
+    
+    
+    
+    
+    <body dir="ltr" data-md-color-scheme="default" data-md-color-primary="white" data-md-color-accent="orange">
+  
+    
+    <input class="md-toggle" data-md-toggle="drawer" type="checkbox" id="__drawer" autocomplete="off">
+    <input class="md-toggle" data-md-toggle="search" type="checkbox" id="__search" autocomplete="off">
+    <label class="md-overlay" for="__drawer"></label>
+    <div data-md-component="skip">
+      
+        
+        <a href="#build-order-checklist-v2-api-architecture" class="md-skip">
+          Skip to content
+        </a>
+      
+    </div>
+    <div data-md-component="announce">
+      
+    </div>
+    
+    
+      
+
+  
+
+<header class="md-header md-header--shadow" data-md-component="header">
+  <nav class="md-header__inner md-grid" aria-label="Header">
+    <a href="../.." title="Intern Trading Game" class="md-header__button md-logo" aria-label="Intern Trading Game" data-md-component="logo">
+      
+  
+  <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path d="M12 8a3 3 0 0 0 3-3 3 3 0 0 0-3-3 3 3 0 0 0-3 3 3 3 0 0 0 3 3m0 3.54C9.64 9.35 6.5 8 3 8v11c3.5 0 6.64 1.35 9 3.54 2.36-2.19 5.5-3.54 9-3.54V8c-3.5 0-6.64 1.35-9 3.54"/></svg>
+
+    </a>
+    <label class="md-header__button md-icon" for="__drawer">
+      
+      <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path d="M3 6h18v2H3zm0 5h18v2H3zm0 5h18v2H3z"/></svg>
+    </label>
+    <div class="md-header__title" data-md-component="header-title">
+      <div class="md-header__ellipsis">
+        <div class="md-header__topic">
+          <span class="md-ellipsis">
+            Intern Trading Game
+          </span>
+        </div>
+        <div class="md-header__topic" data-md-component="header-topic">
+          <span class="md-ellipsis">
+            
+              Build Order
+            
+          </span>
+        </div>
+      </div>
+    </div>
+    
+      
+        <form class="md-header__option" data-md-component="palette">
+  
+    
+    
+    
+    <input class="md-option" data-md-color-media="" data-md-color-scheme="default" data-md-color-primary="white" data-md-color-accent="orange"  aria-label="Switch to dark mode"  type="radio" name="__palette" id="__palette_0">
+    
+      <label class="md-header__button md-icon" title="Switch to dark mode" for="__palette_1" hidden>
+        <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path d="M12 8a4 4 0 0 0-4 4 4 4 0 0 0 4 4 4 4 0 0 0 4-4 4 4 0 0 0-4-4m0 10a6 6 0 0 1-6-6 6 6 0 0 1 6-6 6 6 0 0 1 6 6 6 6 0 0 1-6 6m8-9.31V4h-4.69L12 .69 8.69 4H4v4.69L.69 12 4 15.31V20h4.69L12 23.31 15.31 20H20v-4.69L23.31 12z"/></svg>
+      </label>
+    
+  
+    
+    
+    
+    <input class="md-option" data-md-color-media="" data-md-color-scheme="slate" data-md-color-primary="grey" data-md-color-accent="orange"  aria-label="Switch to light mode"  type="radio" name="__palette" id="__palette_1">
+    
+      <label class="md-header__button md-icon" title="Switch to light mode" for="__palette_0" hidden>
+        <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path d="M12 18c-.89 0-1.74-.2-2.5-.55C11.56 16.5 13 14.42 13 12s-1.44-4.5-3.5-5.45C10.26 6.2 11.11 6 12 6a6 6 0 0 1 6 6 6 6 0 0 1-6 6m8-9.31V4h-4.69L12 .69 8.69 4H4v4.69L.69 12 4 15.31V20h4.69L12 23.31 15.31 20H20v-4.69L23.31 12z"/></svg>
+      </label>
+    
+  
+</form>
+      
+    
+    
+      <script>var palette=__md_get("__palette");if(palette&&palette.color){if("(prefers-color-scheme)"===palette.color.media){var media=matchMedia("(prefers-color-scheme: light)"),input=document.querySelector(media.matches?"[data-md-color-media='(prefers-color-scheme: light)']":"[data-md-color-media='(prefers-color-scheme: dark)']");palette.color.media=input.getAttribute("data-md-color-media"),palette.color.scheme=input.getAttribute("data-md-color-scheme"),palette.color.primary=input.getAttribute("data-md-color-primary"),palette.color.accent=input.getAttribute("data-md-color-accent")}for(var[key,value]of Object.entries(palette.color))document.body.setAttribute("data-md-color-"+key,value)}</script>
+    
+    
+    
+      
+      
+        <label class="md-header__button md-icon" for="__search">
+          
+          <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path d="M9.5 3A6.5 6.5 0 0 1 16 9.5c0 1.61-.59 3.09-1.56 4.23l.27.27h.79l5 5-1.5 1.5-5-5v-.79l-.27-.27A6.52 6.52 0 0 1 9.5 16 6.5 6.5 0 0 1 3 9.5 6.5 6.5 0 0 1 9.5 3m0 2C7 5 5 7 5 9.5S7 14 9.5 14 14 12 14 9.5 12 5 9.5 5"/></svg>
+        </label>
+        <div class="md-search" data-md-component="search" role="dialog">
+  <label class="md-search__overlay" for="__search"></label>
+  <div class="md-search__inner" role="search">
+    <form class="md-search__form" name="search">
+      <input type="text" class="md-search__input" name="query" aria-label="Search" placeholder="Search" autocapitalize="off" autocorrect="off" autocomplete="off" spellcheck="false" data-md-component="search-query" required>
+      <label class="md-search__icon md-icon" for="__search">
+        
+        <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path d="M9.5 3A6.5 6.5 0 0 1 16 9.5c0 1.61-.59 3.09-1.56 4.23l.27.27h.79l5 5-1.5 1.5-5-5v-.79l-.27-.27A6.52 6.52 0 0 1 9.5 16 6.5 6.5 0 0 1 3 9.5 6.5 6.5 0 0 1 9.5 3m0 2C7 5 5 7 5 9.5S7 14 9.5 14 14 12 14 9.5 12 5 9.5 5"/></svg>
+        
+        <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path d="M20 11v2H8l5.5 5.5-1.42 1.42L4.16 12l7.92-7.92L13.5 5.5 8 11z"/></svg>
+      </label>
+      <nav class="md-search__options" aria-label="Search">
+        
+          <a href="javascript:void(0)" class="md-search__icon md-icon" title="Share" aria-label="Share" data-clipboard data-clipboard-text="" data-md-component="search-share" tabindex="-1">
+            
+            <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path d="M18 16.08c-.76 0-1.44.3-1.96.77L8.91 12.7c.05-.23.09-.46.09-.7s-.04-.47-.09-.7l7.05-4.11c.54.5 1.25.81 2.04.81a3 3 0 0 0 3-3 3 3 0 0 0-3-3 3 3 0 0 0-3 3c0 .24.04.47.09.7L8.04 9.81C7.5 9.31 6.79 9 6 9a3 3 0 0 0-3 3 3 3 0 0 0 3 3c.79 0 1.5-.31 2.04-.81l7.12 4.15c-.05.21-.08.43-.08.66 0 1.61 1.31 2.91 2.92 2.91s2.92-1.3 2.92-2.91A2.92 2.92 0 0 0 18 16.08"/></svg>
+          </a>
+        
+        <button type="reset" class="md-search__icon md-icon" title="Clear" aria-label="Clear" tabindex="-1">
+          
+          <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path d="M19 6.41 17.59 5 12 10.59 6.41 5 5 6.41 10.59 12 5 17.59 6.41 19 12 13.41 17.59 19 19 17.59 13.41 12z"/></svg>
+        </button>
+      </nav>
+      
+    </form>
+    <div class="md-search__output">
+      <div class="md-search__scrollwrap" tabindex="0" data-md-scrollfix>
+        <div class="md-search-result" data-md-component="search-result">
+          <div class="md-search-result__meta">
+            Initializing search
+          </div>
+          <ol class="md-search-result__list" role="presentation"></ol>
+        </div>
+      </div>
+    </div>
+  </div>
+</div>
+      
+    
+    
+      <div class="md-header__source">
+        <a href="https://github.com/yourusername/Intern-Trading-Game" title="Go to repository" class="md-source" data-md-component="source">
+  <div class="md-source__icon md-icon">
+    
+    <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 448 512"><!--! Font Awesome Free 6.7.2 by @fontawesome - https://fontawesome.com License - https://fontawesome.com/license/free (Icons: CC BY 4.0, Fonts: SIL OFL 1.1, Code: MIT License) Copyright 2024 Fonticons, Inc.--><path d="M439.55 236.05 244 40.45a28.87 28.87 0 0 0-40.81 0l-40.66 40.63 51.52 51.52c27.06-9.14 52.68 16.77 43.39 43.68l49.66 49.66c34.23-11.8 61.18 31 35.47 56.69-26.49 26.49-70.21-2.87-56-37.34L240.22 199v121.85c25.3 12.54 22.26 41.85 9.08 55a34.34 34.34 0 0 1-48.55 0c-17.57-17.6-11.07-46.91 11.25-56v-123c-20.8-8.51-24.6-30.74-18.64-45L142.57 101 8.45 235.14a28.86 28.86 0 0 0 0 40.81l195.61 195.6a28.86 28.86 0 0 0 40.8 0l194.69-194.69a28.86 28.86 0 0 0 0-40.81"/></svg>
+  </div>
+  <div class="md-source__repository">
+    Intern-Trading-Game
+  </div>
+</a>
+      </div>
+    
+  </nav>
+  
+</header>
+    
+    <div class="md-container" data-md-component="container">
+      
+      
+        
+          
+        
+      
+      <main class="md-main" data-md-component="main">
+        <div class="md-main__inner md-grid">
+          
+            
+              
+              <div class="md-sidebar md-sidebar--primary" data-md-component="sidebar" data-md-type="navigation" >
+                <div class="md-sidebar__scrollwrap">
+                  <div class="md-sidebar__inner">
+                    
+
+
+
+<nav class="md-nav md-nav--primary" aria-label="Navigation" data-md-level="0">
+  <label class="md-nav__title" for="__drawer">
+    <a href="../.." title="Intern Trading Game" class="md-nav__button md-logo" aria-label="Intern Trading Game" data-md-component="logo">
+      
+  
+  <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path d="M12 8a3 3 0 0 0 3-3 3 3 0 0 0-3-3 3 3 0 0 0-3 3 3 3 0 0 0 3 3m0 3.54C9.64 9.35 6.5 8 3 8v11c3.5 0 6.64 1.35 9 3.54 2.36-2.19 5.5-3.54 9-3.54V8c-3.5 0-6.64 1.35-9 3.54"/></svg>
+
+    </a>
+    Intern Trading Game
+  </label>
+  
+    <div class="md-nav__source">
+      <a href="https://github.com/yourusername/Intern-Trading-Game" title="Go to repository" class="md-source" data-md-component="source">
+  <div class="md-source__icon md-icon">
+    
+    <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 448 512"><!--! Font Awesome Free 6.7.2 by @fontawesome - https://fontawesome.com License - https://fontawesome.com/license/free (Icons: CC BY 4.0, Fonts: SIL OFL 1.1, Code: MIT License) Copyright 2024 Fonticons, Inc.--><path d="M439.55 236.05 244 40.45a28.87 28.87 0 0 0-40.81 0l-40.66 40.63 51.52 51.52c27.06-9.14 52.68 16.77 43.39 43.68l49.66 49.66c34.23-11.8 61.18 31 35.47 56.69-26.49 26.49-70.21-2.87-56-37.34L240.22 199v121.85c25.3 12.54 22.26 41.85 9.08 55a34.34 34.34 0 0 1-48.55 0c-17.57-17.6-11.07-46.91 11.25-56v-123c-20.8-8.51-24.6-30.74-18.64-45L142.57 101 8.45 235.14a28.86 28.86 0 0 0 0 40.81l195.61 195.6a28.86 28.86 0 0 0 40.8 0l194.69-194.69a28.86 28.86 0 0 0 0-40.81"/></svg>
+  </div>
+  <div class="md-source__repository">
+    Intern-Trading-Game
+  </div>
+</a>
+    </div>
+  
+  <ul class="md-nav__list" data-md-scrollfix>
+    
+      
+      
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../.." class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    Home
+    
+  </span>
+  
+
+      </a>
+    </li>
+  
+
+    
+      
+      
+  
+  
+  
+  
+    
+    
+      
+        
+      
+        
+      
+        
+      
+        
+      
+        
+      
+        
+      
+        
+      
+        
+      
+    
+    
+    
+    
+    <li class="md-nav__item md-nav__item--nested">
+      
+        
+        
+          
+        
+        <input class="md-nav__toggle md-toggle md-toggle--indeterminate" type="checkbox" id="__nav_2" >
+        
+          
+          <label class="md-nav__link" for="__nav_2" id="__nav_2_label" tabindex="0">
+            
+  
+  
+  <span class="md-ellipsis">
+    Game Documentation
+    
+  </span>
+  
+
+            <span class="md-nav__icon md-icon"></span>
+          </label>
+        
+        <nav class="md-nav" data-md-level="1" aria-labelledby="__nav_2_label" aria-expanded="false">
+          <label class="md-nav__title" for="__nav_2">
+            <span class="md-nav__icon md-icon"></span>
+            Game Documentation
+          </label>
+          <ul class="md-nav__list" data-md-scrollfix>
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../game/overview/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    Overview
+    
+  </span>
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    
+    
+      
+        
+      
+        
+      
+        
+      
+    
+    
+    
+    
+    <li class="md-nav__item md-nav__item--nested">
+      
+        
+        
+          
+        
+        <input class="md-nav__toggle md-toggle md-toggle--indeterminate" type="checkbox" id="__nav_2_2" >
+        
+          
+          <label class="md-nav__link" for="__nav_2_2" id="__nav_2_2_label" tabindex="0">
+            
+  
+  
+  <span class="md-ellipsis">
+    Fundamentals
+    
+  </span>
+  
+
+            <span class="md-nav__icon md-icon"></span>
+          </label>
+        
+        <nav class="md-nav" data-md-level="2" aria-labelledby="__nav_2_2_label" aria-expanded="false">
+          <label class="md-nav__title" for="__nav_2_2">
+            <span class="md-nav__icon md-icon"></span>
+            Fundamentals
+          </label>
+          <ul class="md-nav__list" data-md-scrollfix>
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../game/fundamentals/core-concepts/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    Core Concepts
+    
+  </span>
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../game/fundamentals/game-mechanics/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    Game Mechanics
+    
+  </span>
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../game/fundamentals/market-structure/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    Market Structure
+    
+  </span>
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+          </ul>
+        </nav>
+      
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    
+    
+      
+        
+      
+        
+      
+        
+      
+        
+      
+    
+    
+    
+    
+    <li class="md-nav__item md-nav__item--nested">
+      
+        
+        
+          
+        
+        <input class="md-nav__toggle md-toggle md-toggle--indeterminate" type="checkbox" id="__nav_2_3" >
+        
+          
+          <label class="md-nav__link" for="__nav_2_3" id="__nav_2_3_label" tabindex="0">
+            
+  
+  
+  <span class="md-ellipsis">
+    Trading
+    
+  </span>
+  
+
+            <span class="md-nav__icon md-icon"></span>
+          </label>
+        
+        <nav class="md-nav" data-md-level="2" aria-labelledby="__nav_2_3_label" aria-expanded="false">
+          <label class="md-nav__title" for="__nav_2_3">
+            <span class="md-nav__icon md-icon"></span>
+            Trading
+          </label>
+          <ul class="md-nav__list" data-md-scrollfix>
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../game/trading/order-types/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    Order Types
+    
+  </span>
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../game/trading/constraints/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    Constraints
+    
+  </span>
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../game/trading/execution-rules/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    Execution Rules
+    
+  </span>
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../game/trading/signals-access/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    Signal Access
+    
+  </span>
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+          </ul>
+        </nav>
+      
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    
+    
+      
+        
+      
+        
+      
+        
+      
+        
+      
+        
+      
+    
+    
+    
+    
+    <li class="md-nav__item md-nav__item--nested">
+      
+        
+        
+          
+        
+        <input class="md-nav__toggle md-toggle md-toggle--indeterminate" type="checkbox" id="__nav_2_4" >
+        
+          
+          <label class="md-nav__link" for="__nav_2_4" id="__nav_2_4_label" tabindex="0">
+            
+  
+  
+  <span class="md-ellipsis">
+    Roles
+    
+  </span>
+  
+
+            <span class="md-nav__icon md-icon"></span>
+          </label>
+        
+        <nav class="md-nav" data-md-level="2" aria-labelledby="__nav_2_4_label" aria-expanded="false">
+          <label class="md-nav__title" for="__nav_2_4">
+            <span class="md-nav__icon md-icon"></span>
+            Roles
+          </label>
+          <ul class="md-nav__list" data-md-scrollfix>
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../game/roles/overview/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    Overview
+    
+  </span>
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../game/roles/market-maker/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    Market Maker
+    
+  </span>
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../game/roles/hedge-fund/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    Hedge Fund
+    
+  </span>
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../game/roles/arbitrage-desk/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    Arbitrage Desk
+    
+  </span>
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../game/roles/retail/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    Retail
+    
+  </span>
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+          </ul>
+        </nav>
+      
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    
+    
+      
+        
+      
+        
+      
+        
+      
+        
+      
+    
+    
+    
+    
+    <li class="md-nav__item md-nav__item--nested">
+      
+        
+        
+          
+        
+        <input class="md-nav__toggle md-toggle md-toggle--indeterminate" type="checkbox" id="__nav_2_5" >
+        
+          
+          <label class="md-nav__link" for="__nav_2_5" id="__nav_2_5_label" tabindex="0">
+            
+  
+  
+  <span class="md-ellipsis">
+    Simulation
+    
+  </span>
+  
+
+            <span class="md-nav__icon md-icon"></span>
+          </label>
+        
+        <nav class="md-nav" data-md-level="2" aria-labelledby="__nav_2_5_label" aria-expanded="false">
+          <label class="md-nav__title" for="__nav_2_5">
+            <span class="md-nav__icon md-icon"></span>
+            Simulation
+          </label>
+          <ul class="md-nav__list" data-md-scrollfix>
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../game/simulation/price-generation/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    Price Generation
+    
+  </span>
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../game/simulation/volatility-regimes/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    Volatility Regimes
+    
+  </span>
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../game/simulation/news-events/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    News Events
+    
+  </span>
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../game/simulation/correlation-model/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    Correlation Model
+    
+  </span>
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+          </ul>
+        </nav>
+      
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    
+    
+      
+        
+      
+    
+    
+    
+    
+    <li class="md-nav__item md-nav__item--nested">
+      
+        
+        
+          
+        
+        <input class="md-nav__toggle md-toggle md-toggle--indeterminate" type="checkbox" id="__nav_2_6" >
+        
+          
+          <label class="md-nav__link" for="__nav_2_6" id="__nav_2_6_label" tabindex="0">
+            
+  
+  
+  <span class="md-ellipsis">
+    Scoring
+    
+  </span>
+  
+
+            <span class="md-nav__icon md-icon"></span>
+          </label>
+        
+        <nav class="md-nav" data-md-level="2" aria-labelledby="__nav_2_6_label" aria-expanded="false">
+          <label class="md-nav__title" for="__nav_2_6">
+            <span class="md-nav__icon md-icon"></span>
+            Scoring
+          </label>
+          <ul class="md-nav__list" data-md-scrollfix>
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../game/scoring/overview/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    Overview
+    
+  </span>
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+          </ul>
+        </nav>
+      
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    
+    
+      
+        
+      
+        
+      
+    
+    
+    
+    
+    <li class="md-nav__item md-nav__item--nested">
+      
+        
+        
+          
+        
+        <input class="md-nav__toggle md-toggle md-toggle--indeterminate" type="checkbox" id="__nav_2_7" >
+        
+          
+          <label class="md-nav__link" for="__nav_2_7" id="__nav_2_7_label" tabindex="0">
+            
+  
+  
+  <span class="md-ellipsis">
+    Configuration
+    
+  </span>
+  
+
+            <span class="md-nav__icon md-icon"></span>
+          </label>
+        
+        <nav class="md-nav" data-md-level="2" aria-labelledby="__nav_2_7_label" aria-expanded="false">
+          <label class="md-nav__title" for="__nav_2_7">
+            <span class="md-nav__icon md-icon"></span>
+            Configuration
+          </label>
+          <ul class="md-nav__list" data-md-scrollfix>
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../game/configuration/game-parameters/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    Game Parameters
+    
+  </span>
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../game/configuration/example-config.yaml" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    Example Config
+    
+  </span>
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+          </ul>
+        </nav>
+      
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    
+    
+      
+        
+      
+        
+      
+        
+      
+    
+    
+    
+    
+    <li class="md-nav__item md-nav__item--nested">
+      
+        
+        
+          
+        
+        <input class="md-nav__toggle md-toggle md-toggle--indeterminate" type="checkbox" id="__nav_2_8" >
+        
+          
+          <label class="md-nav__link" for="__nav_2_8" id="__nav_2_8_label" tabindex="0">
+            
+  
+  
+  <span class="md-ellipsis">
+    Appendix
+    
+  </span>
+  
+
+            <span class="md-nav__icon md-icon"></span>
+          </label>
+        
+        <nav class="md-nav" data-md-level="2" aria-labelledby="__nav_2_8_label" aria-expanded="false">
+          <label class="md-nav__title" for="__nav_2_8">
+            <span class="md-nav__icon md-icon"></span>
+            Appendix
+          </label>
+          <ul class="md-nav__list" data-md-scrollfix>
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../game/appendix/probability-tables/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    Probability Tables
+    
+  </span>
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../game/appendix/formulas/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    Formulas
+    
+  </span>
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../game/appendix/glossary/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    Glossary
+    
+  </span>
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+          </ul>
+        </nav>
+      
+    </li>
+  
+
+              
+            
+          </ul>
+        </nav>
+      
+    </li>
+  
+
+    
+      
+      
+  
+  
+    
+  
+  
+  
+    
+    
+      
+        
+          
+        
+      
+        
+      
+        
+      
+        
+      
+        
+      
+        
+      
+        
+      
+        
+      
+        
+      
+        
+      
+    
+    
+    
+    
+    <li class="md-nav__item md-nav__item--active md-nav__item--nested">
+      
+        
+        
+        <input class="md-nav__toggle md-toggle " type="checkbox" id="__nav_3" checked>
+        
+          
+          <div class="md-nav__link md-nav__container">
+            <a href="../" class="md-nav__link ">
+              
+  
+  
+  <span class="md-ellipsis">
+    Technical Documentation
+    
+  </span>
+  
+
+            </a>
+            
+              
+              <label class="md-nav__link " for="__nav_3" id="__nav_3_label" tabindex="0">
+                <span class="md-nav__icon md-icon"></span>
+              </label>
+            
+          </div>
+        
+        <nav class="md-nav" data-md-level="1" aria-labelledby="__nav_3_label" aria-expanded="true">
+          <label class="md-nav__title" for="__nav_3">
+            <span class="md-nav__icon md-icon"></span>
+            Technical Documentation
+          </label>
+          <ul class="md-nav__list" data-md-scrollfix>
+            
+              
+            
+              
+                
+  
+  
+  
+  
+    
+    
+      
+        
+      
+        
+      
+        
+      
+    
+    
+    
+    
+    <li class="md-nav__item md-nav__item--nested">
+      
+        
+        
+          
+        
+        <input class="md-nav__toggle md-toggle md-toggle--indeterminate" type="checkbox" id="__nav_3_2" >
+        
+          
+          <label class="md-nav__link" for="__nav_3_2" id="__nav_3_2_label" tabindex="0">
+            
+  
+  
+  <span class="md-ellipsis">
+    Architecture
+    
+  </span>
+  
+
+            <span class="md-nav__icon md-icon"></span>
+          </label>
+        
+        <nav class="md-nav" data-md-level="2" aria-labelledby="__nav_3_2_label" aria-expanded="false">
+          <label class="md-nav__title" for="__nav_3_2">
+            <span class="md-nav__icon md-icon"></span>
+            Architecture
+          </label>
+          <ul class="md-nav__list" data-md-scrollfix>
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../architecture-v3/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    Current Version (v3)
+    
+  </span>
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../architecture-v2/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    Previous Version (v2)
+    
+  </span>
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../architecture/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    Original Version (v1)
+    
+  </span>
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+          </ul>
+        </nav>
+      
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+    
+  
+  
+  
+    <li class="md-nav__item md-nav__item--active">
+      
+      <input class="md-nav__toggle md-toggle" type="checkbox" id="__toc">
+      
+      
+        
+      
+      
+        <label class="md-nav__link md-nav__link--active" for="__toc">
+          
+  
+  
+  <span class="md-ellipsis">
+    Build Order
+    
+  </span>
+  
+
+          <span class="md-nav__icon md-icon"></span>
+        </label>
+      
+      <a href="./" class="md-nav__link md-nav__link--active">
+        
+  
+  
+  <span class="md-ellipsis">
+    Build Order
+    
+  </span>
+  
+
+      </a>
+      
+        
+
+<nav class="md-nav md-nav--secondary" aria-label="Table of contents">
+  
+  
+  
+    
+  
+  
+    <label class="md-nav__title" for="__toc">
+      <span class="md-nav__icon md-icon"></span>
+      Table of contents
+    </label>
+    <ul class="md-nav__list" data-md-component="toc" data-md-scrollfix>
+      
+        <li class="md-nav__item">
+  <a href="#phase-1-core-foundation-complete" class="md-nav__link">
+    <span class="md-ellipsis">
+      Phase 1: Core Foundation COMPLETE
+    </span>
+  </a>
+  
+    <nav class="md-nav" aria-label="Phase 1: Core Foundation COMPLETE">
+      <ul class="md-nav__list">
+        
+          <li class="md-nav__item">
+  <a href="#exchange-infrastructure" class="md-nav__link">
+    <span class="md-ellipsis">
+      Exchange Infrastructure
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#validation-system" class="md-nav__link">
+    <span class="md-ellipsis">
+      Validation System
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#game-loop-legacy" class="md-nav__link">
+    <span class="md-ellipsis">
+      Game Loop (Legacy)
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#documentation" class="md-nav__link">
+    <span class="md-ellipsis">
+      Documentation
+    </span>
+  </a>
+  
+</li>
+        
+      </ul>
+    </nav>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#phase-2-rest-api-foundation-complete" class="md-nav__link">
+    <span class="md-ellipsis">
+      Phase 2: REST API Foundation COMPLETE
+    </span>
+  </a>
+  
+    <nav class="md-nav" aria-label="Phase 2: REST API Foundation COMPLETE">
+      <ul class="md-nav__list">
+        
+          <li class="md-nav__item">
+  <a href="#21-fastapi-setup" class="md-nav__link">
+    <span class="md-ellipsis">
+      2.1 FastAPI Setup
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#22-authentication" class="md-nav__link">
+    <span class="md-ellipsis">
+      2.2 Authentication
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#23-basic-endpoints" class="md-nav__link">
+    <span class="md-ellipsis">
+      2.3 Basic Endpoints
+    </span>
+  </a>
+  
+</li>
+        
+      </ul>
+    </nav>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#phase-3-thread-safe-state" class="md-nav__link">
+    <span class="md-ellipsis">
+      Phase 3: Thread-Safe State
+    </span>
+  </a>
+  
+    <nav class="md-nav" aria-label="Phase 3: Thread-Safe State">
+      <ul class="md-nav__list">
+        
+          <li class="md-nav__item">
+  <a href="#31-in-memory-stores" class="md-nav__link">
+    <span class="md-ellipsis">
+      3.1 In-Memory Stores
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#32-queue-infrastructure" class="md-nav__link">
+    <span class="md-ellipsis">
+      3.2 Queue Infrastructure
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#33-database-queues" class="md-nav__link">
+    <span class="md-ellipsis">
+      3.3 Database Queues
+    </span>
+  </a>
+  
+</li>
+        
+      </ul>
+    </nav>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#phase-4-threading-implementation-partial" class="md-nav__link">
+    <span class="md-ellipsis">
+      Phase 4: Threading Implementation (Partial)
+    </span>
+  </a>
+  
+    <nav class="md-nav" aria-label="Phase 4: Threading Implementation (Partial)">
+      <ul class="md-nav__list">
+        
+          <li class="md-nav__item">
+  <a href="#41-thread-2-order-validator-complete" class="md-nav__link">
+    <span class="md-ellipsis">
+      4.1 Thread 2: Order Validator COMPLETE
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#42-thread-3-matching-engine-complete" class="md-nav__link">
+    <span class="md-ellipsis">
+      4.2 Thread 3: Matching Engine COMPLETE
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#43-thread-4-trade-publisher" class="md-nav__link">
+    <span class="md-ellipsis">
+      4.3 Thread 4: Trade Publisher
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#44-thread-5-market-simulator" class="md-nav__link">
+    <span class="md-ellipsis">
+      4.4 Thread 5: Market Simulator
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#45-thread-6-event-generator" class="md-nav__link">
+    <span class="md-ellipsis">
+      4.5 Thread 6: Event Generator
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#46-thread-7-database-writer" class="md-nav__link">
+    <span class="md-ellipsis">
+      4.6 Thread 7: Database Writer
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#47-thread-8-websocket-publisher-complete" class="md-nav__link">
+    <span class="md-ellipsis">
+      4.7 Thread 8: WebSocket Publisher COMPLETE
+    </span>
+  </a>
+  
+</li>
+        
+      </ul>
+    </nav>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#phase-5-websocket-layer" class="md-nav__link">
+    <span class="md-ellipsis">
+      Phase 5: WebSocket Layer
+    </span>
+  </a>
+  
+    <nav class="md-nav" aria-label="Phase 5: WebSocket Layer">
+      <ul class="md-nav__list">
+        
+          <li class="md-nav__item">
+  <a href="#51-websocket-server" class="md-nav__link">
+    <span class="md-ellipsis">
+      5.1 WebSocket Server
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#52-data-streams" class="md-nav__link">
+    <span class="md-ellipsis">
+      5.2 Data Streams
+    </span>
+  </a>
+  
+</li>
+        
+      </ul>
+    </nav>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#phase-6-database-layer" class="md-nav__link">
+    <span class="md-ellipsis">
+      Phase 6: Database Layer
+    </span>
+  </a>
+  
+    <nav class="md-nav" aria-label="Phase 6: Database Layer">
+      <ul class="md-nav__list">
+        
+          <li class="md-nav__item">
+  <a href="#61-schema-design" class="md-nav__link">
+    <span class="md-ellipsis">
+      6.1 Schema Design
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#62-sqlalchemy-models" class="md-nav__link">
+    <span class="md-ellipsis">
+      6.2 SQLAlchemy Models
+    </span>
+  </a>
+  
+</li>
+        
+      </ul>
+    </nav>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#phase-7-integration-testing" class="md-nav__link">
+    <span class="md-ellipsis">
+      Phase 7: Integration &amp; Testing
+    </span>
+  </a>
+  
+    <nav class="md-nav" aria-label="Phase 7: Integration &amp; Testing">
+      <ul class="md-nav__list">
+        
+          <li class="md-nav__item">
+  <a href="#71-integration-points" class="md-nav__link">
+    <span class="md-ellipsis">
+      7.1 Integration Points
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#72-example-bots" class="md-nav__link">
+    <span class="md-ellipsis">
+      7.2 Example Bots
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#73-performance-testing" class="md-nav__link">
+    <span class="md-ellipsis">
+      7.3 Performance Testing
+    </span>
+  </a>
+  
+</li>
+        
+      </ul>
+    </nav>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#next-immediate-tasks" class="md-nav__link">
+    <span class="md-ellipsis">
+      Next Immediate Tasks
+    </span>
+  </a>
+  
+</li>
+      
+    </ul>
+  
+</nav>
+      
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../implementation-guide/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    Implementation Guide
+    
+  </span>
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    
+    
+      
+        
+      
+    
+    
+    
+    
+    <li class="md-nav__item md-nav__item--nested">
+      
+        
+        
+          
+        
+        <input class="md-nav__toggle md-toggle md-toggle--indeterminate" type="checkbox" id="__nav_3_5" >
+        
+          
+          <label class="md-nav__link" for="__nav_3_5" id="__nav_3_5_label" tabindex="0">
+            
+  
+  
+  <span class="md-ellipsis">
+    Tutorials
+    
+  </span>
+  
+
+            <span class="md-nav__icon md-icon"></span>
+          </label>
+        
+        <nav class="md-nav" data-md-level="2" aria-labelledby="__nav_3_5_label" aria-expanded="false">
+          <label class="md-nav__title" for="__nav_3_5">
+            <span class="md-nav__icon md-icon"></span>
+            Tutorials
+          </label>
+          <ul class="md-nav__list" data-md-scrollfix>
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../tutorials/market-maker-tutorial/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    Market Maker Tutorial
+    
+  </span>
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+          </ul>
+        </nav>
+      
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    
+    
+      
+        
+          
+        
+      
+        
+      
+        
+      
+        
+      
+        
+      
+    
+    
+    
+    
+    <li class="md-nav__item md-nav__item--nested">
+      
+        
+        
+          
+        
+        <input class="md-nav__toggle md-toggle md-toggle--indeterminate" type="checkbox" id="__nav_3_6" >
+        
+          
+          <div class="md-nav__link md-nav__container">
+            <a href="../how-to/" class="md-nav__link ">
+              
+  
+  
+  <span class="md-ellipsis">
+    How-To Guides
+    
+  </span>
+  
+
+            </a>
+            
+              
+              <label class="md-nav__link " for="__nav_3_6" id="__nav_3_6_label" tabindex="0">
+                <span class="md-nav__icon md-icon"></span>
+              </label>
+            
+          </div>
+        
+        <nav class="md-nav" data-md-level="2" aria-labelledby="__nav_3_6_label" aria-expanded="false">
+          <label class="md-nav__title" for="__nav_3_6">
+            <span class="md-nav__icon md-icon"></span>
+            How-To Guides
+          </label>
+          <ul class="md-nav__list" data-md-scrollfix>
+            
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../how-to/how-to-submit-orders/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    How to Submit Orders
+    
+  </span>
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../how-to/use-rest-api/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    Use REST API
+    
+  </span>
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../how-to/use-websockets/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    Use WebSockets
+    
+  </span>
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../how-to/websocket-integration/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    WebSocket Integration
+    
+  </span>
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+          </ul>
+        </nav>
+      
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    
+    
+      
+        
+          
+        
+      
+        
+      
+        
+      
+        
+      
+        
+      
+        
+      
+        
+      
+    
+    
+    
+    
+    <li class="md-nav__item md-nav__item--nested">
+      
+        
+        
+          
+        
+        <input class="md-nav__toggle md-toggle md-toggle--indeterminate" type="checkbox" id="__nav_3_7" >
+        
+          
+          <div class="md-nav__link md-nav__container">
+            <a href="../reference/" class="md-nav__link ">
+              
+  
+  
+  <span class="md-ellipsis">
+    Reference
+    
+  </span>
+  
+
+            </a>
+            
+              
+              <label class="md-nav__link " for="__nav_3_7" id="__nav_3_7_label" tabindex="0">
+                <span class="md-nav__icon md-icon"></span>
+              </label>
+            
+          </div>
+        
+        <nav class="md-nav" data-md-level="2" aria-labelledby="__nav_3_7_label" aria-expanded="false">
+          <label class="md-nav__title" for="__nav_3_7">
+            <span class="md-nav__icon md-icon"></span>
+            Reference
+          </label>
+          <ul class="md-nav__list" data-md-scrollfix>
+            
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../reference/api-overview/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    API Overview
+    
+  </span>
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../reference/exchange-api/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    Exchange API
+    
+  </span>
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../reference/rest-api/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    REST API
+    
+  </span>
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../reference/websocket-api/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    WebSocket API
+    
+  </span>
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../reference/validation-api/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    Validation API
+    
+  </span>
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../reference/math-examples/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    Math Examples
+    
+  </span>
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+          </ul>
+        </nav>
+      
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    
+    
+      
+        
+      
+        
+      
+        
+      
+        
+      
+        
+      
+    
+    
+    
+    
+    <li class="md-nav__item md-nav__item--nested">
+      
+        
+        
+          
+        
+        <input class="md-nav__toggle md-toggle md-toggle--indeterminate" type="checkbox" id="__nav_3_8" >
+        
+          
+          <label class="md-nav__link" for="__nav_3_8" id="__nav_3_8_label" tabindex="0">
+            
+  
+  
+  <span class="md-ellipsis">
+    API Reference (Generated)
+    
+  </span>
+  
+
+            <span class="md-nav__icon md-icon"></span>
+          </label>
+        
+        <nav class="md-nav" data-md-level="2" aria-labelledby="__nav_3_8_label" aria-expanded="false">
+          <label class="md-nav__title" for="__nav_3_8">
+            <span class="md-nav__icon md-icon"></span>
+            API Reference (Generated)
+          </label>
+          <ul class="md-nav__list" data-md-scrollfix>
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../reference/order_book/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    Order Book
+    
+  </span>
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../reference/order/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    Order
+    
+  </span>
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../reference/trade/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    Trade
+    
+  </span>
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../reference/venue/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    Venue
+    
+  </span>
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../reference/instrument/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    Instrument
+    
+  </span>
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+          </ul>
+        </nav>
+      
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    
+    
+      
+        
+          
+        
+      
+        
+      
+        
+      
+        
+      
+        
+      
+    
+    
+    
+    
+    <li class="md-nav__item md-nav__item--nested">
+      
+        
+        
+          
+        
+        <input class="md-nav__toggle md-toggle md-toggle--indeterminate" type="checkbox" id="__nav_3_9" >
+        
+          
+          <div class="md-nav__link md-nav__container">
+            <a href="../explanation/" class="md-nav__link ">
+              
+  
+  
+  <span class="md-ellipsis">
+    Explanation
+    
+  </span>
+  
+
+            </a>
+            
+              
+              <label class="md-nav__link " for="__nav_3_9" id="__nav_3_9_label" tabindex="0">
+                <span class="md-nav__icon md-icon"></span>
+              </label>
+            
+          </div>
+        
+        <nav class="md-nav" data-md-level="2" aria-labelledby="__nav_3_9_label" aria-expanded="false">
+          <label class="md-nav__title" for="__nav_3_9">
+            <span class="md-nav__icon md-icon"></span>
+            Explanation
+          </label>
+          <ul class="md-nav__list" data-md-scrollfix>
+            
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../explanation/order-matching/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    Order Matching
+    
+  </span>
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../explanation/batch-matching/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    Batch Matching
+    
+  </span>
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../explanation/order-validator-design/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    Order Validator Design
+    
+  </span>
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../explanation/trading-phases/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    Trading Phases
+    
+  </span>
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+          </ul>
+        </nav>
+      
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    
+    
+      
+        
+      
+    
+    
+    
+    
+    <li class="md-nav__item md-nav__item--nested">
+      
+        
+        
+          
+        
+        <input class="md-nav__toggle md-toggle md-toggle--indeterminate" type="checkbox" id="__nav_3_10" >
+        
+          
+          <label class="md-nav__link" for="__nav_3_10" id="__nav_3_10_label" tabindex="0">
+            
+  
+  
+  <span class="md-ellipsis">
+    Contributing
+    
+  </span>
+  
+
+            <span class="md-nav__icon md-icon"></span>
+          </label>
+        
+        <nav class="md-nav" data-md-level="2" aria-labelledby="__nav_3_10_label" aria-expanded="false">
+          <label class="md-nav__title" for="__nav_3_10">
+            <span class="md-nav__icon md-icon"></span>
+            Contributing
+          </label>
+          <ul class="md-nav__list" data-md-scrollfix>
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../contributing/docstring-math-guide/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    Math in Docstrings
+    
+  </span>
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+          </ul>
+        </nav>
+      
+    </li>
+  
+
+              
+            
+          </ul>
+        </nav>
+      
+    </li>
+  
+
+    
+  </ul>
+</nav>
+                  </div>
+                </div>
+              </div>
+            
+            
+              
+              <div class="md-sidebar md-sidebar--secondary" data-md-component="sidebar" data-md-type="toc" >
+                <div class="md-sidebar__scrollwrap">
+                  <div class="md-sidebar__inner">
+                    
+
+<nav class="md-nav md-nav--secondary" aria-label="Table of contents">
+  
+  
+  
+    
+  
+  
+    <label class="md-nav__title" for="__toc">
+      <span class="md-nav__icon md-icon"></span>
+      Table of contents
+    </label>
+    <ul class="md-nav__list" data-md-component="toc" data-md-scrollfix>
+      
+        <li class="md-nav__item">
+  <a href="#phase-1-core-foundation-complete" class="md-nav__link">
+    <span class="md-ellipsis">
+      Phase 1: Core Foundation COMPLETE
+    </span>
+  </a>
+  
+    <nav class="md-nav" aria-label="Phase 1: Core Foundation COMPLETE">
+      <ul class="md-nav__list">
+        
+          <li class="md-nav__item">
+  <a href="#exchange-infrastructure" class="md-nav__link">
+    <span class="md-ellipsis">
+      Exchange Infrastructure
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#validation-system" class="md-nav__link">
+    <span class="md-ellipsis">
+      Validation System
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#game-loop-legacy" class="md-nav__link">
+    <span class="md-ellipsis">
+      Game Loop (Legacy)
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#documentation" class="md-nav__link">
+    <span class="md-ellipsis">
+      Documentation
+    </span>
+  </a>
+  
+</li>
+        
+      </ul>
+    </nav>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#phase-2-rest-api-foundation-complete" class="md-nav__link">
+    <span class="md-ellipsis">
+      Phase 2: REST API Foundation COMPLETE
+    </span>
+  </a>
+  
+    <nav class="md-nav" aria-label="Phase 2: REST API Foundation COMPLETE">
+      <ul class="md-nav__list">
+        
+          <li class="md-nav__item">
+  <a href="#21-fastapi-setup" class="md-nav__link">
+    <span class="md-ellipsis">
+      2.1 FastAPI Setup
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#22-authentication" class="md-nav__link">
+    <span class="md-ellipsis">
+      2.2 Authentication
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#23-basic-endpoints" class="md-nav__link">
+    <span class="md-ellipsis">
+      2.3 Basic Endpoints
+    </span>
+  </a>
+  
+</li>
+        
+      </ul>
+    </nav>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#phase-3-thread-safe-state" class="md-nav__link">
+    <span class="md-ellipsis">
+      Phase 3: Thread-Safe State
+    </span>
+  </a>
+  
+    <nav class="md-nav" aria-label="Phase 3: Thread-Safe State">
+      <ul class="md-nav__list">
+        
+          <li class="md-nav__item">
+  <a href="#31-in-memory-stores" class="md-nav__link">
+    <span class="md-ellipsis">
+      3.1 In-Memory Stores
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#32-queue-infrastructure" class="md-nav__link">
+    <span class="md-ellipsis">
+      3.2 Queue Infrastructure
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#33-database-queues" class="md-nav__link">
+    <span class="md-ellipsis">
+      3.3 Database Queues
+    </span>
+  </a>
+  
+</li>
+        
+      </ul>
+    </nav>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#phase-4-threading-implementation-partial" class="md-nav__link">
+    <span class="md-ellipsis">
+      Phase 4: Threading Implementation (Partial)
+    </span>
+  </a>
+  
+    <nav class="md-nav" aria-label="Phase 4: Threading Implementation (Partial)">
+      <ul class="md-nav__list">
+        
+          <li class="md-nav__item">
+  <a href="#41-thread-2-order-validator-complete" class="md-nav__link">
+    <span class="md-ellipsis">
+      4.1 Thread 2: Order Validator COMPLETE
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#42-thread-3-matching-engine-complete" class="md-nav__link">
+    <span class="md-ellipsis">
+      4.2 Thread 3: Matching Engine COMPLETE
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#43-thread-4-trade-publisher" class="md-nav__link">
+    <span class="md-ellipsis">
+      4.3 Thread 4: Trade Publisher
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#44-thread-5-market-simulator" class="md-nav__link">
+    <span class="md-ellipsis">
+      4.4 Thread 5: Market Simulator
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#45-thread-6-event-generator" class="md-nav__link">
+    <span class="md-ellipsis">
+      4.5 Thread 6: Event Generator
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#46-thread-7-database-writer" class="md-nav__link">
+    <span class="md-ellipsis">
+      4.6 Thread 7: Database Writer
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#47-thread-8-websocket-publisher-complete" class="md-nav__link">
+    <span class="md-ellipsis">
+      4.7 Thread 8: WebSocket Publisher COMPLETE
+    </span>
+  </a>
+  
+</li>
+        
+      </ul>
+    </nav>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#phase-5-websocket-layer" class="md-nav__link">
+    <span class="md-ellipsis">
+      Phase 5: WebSocket Layer
+    </span>
+  </a>
+  
+    <nav class="md-nav" aria-label="Phase 5: WebSocket Layer">
+      <ul class="md-nav__list">
+        
+          <li class="md-nav__item">
+  <a href="#51-websocket-server" class="md-nav__link">
+    <span class="md-ellipsis">
+      5.1 WebSocket Server
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#52-data-streams" class="md-nav__link">
+    <span class="md-ellipsis">
+      5.2 Data Streams
+    </span>
+  </a>
+  
+</li>
+        
+      </ul>
+    </nav>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#phase-6-database-layer" class="md-nav__link">
+    <span class="md-ellipsis">
+      Phase 6: Database Layer
+    </span>
+  </a>
+  
+    <nav class="md-nav" aria-label="Phase 6: Database Layer">
+      <ul class="md-nav__list">
+        
+          <li class="md-nav__item">
+  <a href="#61-schema-design" class="md-nav__link">
+    <span class="md-ellipsis">
+      6.1 Schema Design
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#62-sqlalchemy-models" class="md-nav__link">
+    <span class="md-ellipsis">
+      6.2 SQLAlchemy Models
+    </span>
+  </a>
+  
+</li>
+        
+      </ul>
+    </nav>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#phase-7-integration-testing" class="md-nav__link">
+    <span class="md-ellipsis">
+      Phase 7: Integration &amp; Testing
+    </span>
+  </a>
+  
+    <nav class="md-nav" aria-label="Phase 7: Integration &amp; Testing">
+      <ul class="md-nav__list">
+        
+          <li class="md-nav__item">
+  <a href="#71-integration-points" class="md-nav__link">
+    <span class="md-ellipsis">
+      7.1 Integration Points
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#72-example-bots" class="md-nav__link">
+    <span class="md-ellipsis">
+      7.2 Example Bots
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#73-performance-testing" class="md-nav__link">
+    <span class="md-ellipsis">
+      7.3 Performance Testing
+    </span>
+  </a>
+  
+</li>
+        
+      </ul>
+    </nav>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#next-immediate-tasks" class="md-nav__link">
+    <span class="md-ellipsis">
+      Next Immediate Tasks
+    </span>
+  </a>
+  
+</li>
+      
+    </ul>
+  
+</nav>
+                  </div>
+                </div>
+              </div>
+            
+          
+          
+            <div class="md-content" data-md-component="content">
+              <article class="md-content__inner md-typeset">
+                
+                  
+
+
+  
+  
+
+
+<h1 id="build-order-checklist-v2-api-architecture">Build Order Checklist - v2 API Architecture</h1>
+<h2 id="phase-1-core-foundation-complete">Phase 1: Core Foundation COMPLETE</h2>
+<h3 id="exchange-infrastructure">Exchange Infrastructure</h3>
+<ul>
+<li>[x] <strong>Order</strong> - Basic order data model</li>
+<li>[x] <strong>Trade</strong> - Trade execution record</li>
+<li>[x] <strong>OrderBook</strong> - Bid/ask order storage</li>
+<li>[x] <strong>OrderResult</strong> - Enhanced with error_code, error_message fields</li>
+<li>[x] <strong>ExchangeVenue</strong> - Core exchange with submit_order()</li>
+<li>[x] <strong>MatchingEngine Interface</strong> - Strategy pattern for swappable engines</li>
+<li>[x] <strong>BatchMatchingEngine</strong> - Fair randomized batch matching</li>
+<li>[x] <strong>Exchange Tests</strong> - 45+ comprehensive test cases</li>
+</ul>
+<h3 id="validation-system">Validation System</h3>
+<ul>
+<li>[x] <strong>OrderValidator Interface</strong> - Base validation contract</li>
+<li>[x] <strong>ValidationContext</strong> - Order validation state container</li>
+<li>[x] <strong>ConstraintBasedOrderValidator</strong> - Role-agnostic validation</li>
+<li>[x] <strong>8 Constraint Types</strong>:</li>
+<li>[x] POSITION_LIMIT - Per-instrument position limits</li>
+<li>[x] PORTFOLIO_LIMIT - Total portfolio constraints</li>
+<li>[x] ORDER_SIZE - Min/max order quantities</li>
+<li>[x] ORDER_RATE - Orders per tick limiting</li>
+<li>[x] ORDER_TYPE_ALLOWED - Role-specific order types</li>
+<li>[x] TRADING_WINDOW - Phase-based order acceptance</li>
+<li>[x] INSTRUMENT_ALLOWED - Instrument restrictions</li>
+<li>[x] PRICE_RANGE - Limit order price bounds</li>
+<li>[x] <strong>Validation Tests</strong> - Complete test coverage</li>
+</ul>
+<h3 id="game-loop-legacy">Game Loop (Legacy)</h3>
+<ul>
+<li>[x] <strong>GameLoop</strong> - 5-minute tick orchestration</li>
+<li>[x] <strong>TickPhase Enum</strong> - PRE_OPEN, TRADING, etc.</li>
+<li>[x] <strong>GameConfig</strong> - Configuration data model</li>
+<li>[x] <strong>TradingStrategy Interface</strong> - Bot interface</li>
+</ul>
+<h3 id="documentation">Documentation</h3>
+<ul>
+<li>[x] <strong>Architecture v2</strong> - Complete system design with 7 threads</li>
+<li>[x] <strong>Validation API Reference</strong> - Constraint documentation</li>
+<li>[x] <strong>Trading Phases Guide</strong> - Batch/continuous market modes</li>
+</ul>
+<h2 id="phase-2-rest-api-foundation-complete">Phase 2: REST API Foundation COMPLETE</h2>
+<h3 id="21-fastapi-setup">2.1 FastAPI Setup</h3>
+<ul>
+<li>[x] <strong>Main application</strong> - FastAPI app instance</li>
+<li>[x] <strong>CORS configuration</strong> - Allow external bot connections</li>
+<li>[x] <strong>Exception handlers</strong> - Consistent error responses</li>
+<li>[x] <strong>Request models</strong> - Pydantic schemas for validation</li>
+<li>[x] <strong>Response models</strong> - Standardized API responses</li>
+</ul>
+<h3 id="22-authentication">2.2 Authentication</h3>
+<ul>
+<li>[x] <strong>TeamInfo model</strong> - Bot registration data</li>
+<li>[x] <strong>API key generation</strong> - Unique keys per team</li>
+<li>[x] <strong>Auth middleware</strong> - Validate API keys</li>
+<li>[x] <strong>Team registry</strong> - In-memory team storage</li>
+<li>[x] <strong>POST /auth/register</strong> - Team registration endpoint</li>
+</ul>
+<h3 id="23-basic-endpoints">2.3 Basic Endpoints</h3>
+<ul>
+<li>[x] <strong>POST /orders</strong> - Submit new order with client_order_id</li>
+<li>[ ] <strong>DELETE /orders/{id}</strong> - Cancel order (deferred to commit 3)</li>
+<li>[x] <strong>GET /positions/{team_id}</strong> - Query positions</li>
+<li>[ ] <strong>GET /market/prices</strong> - Current prices (future)</li>
+<li>[x] <strong>GET /health</strong> - API health check with thread status</li>
+</ul>
+<h2 id="phase-3-thread-safe-state">Phase 3: Thread-Safe State</h2>
+<h3 id="31-in-memory-stores">3.1 In-Memory Stores</h3>
+<ul>
+<li>[ ] <strong>PositionCache</strong> - Dict with RLock for positions</li>
+<li>[ ] <strong>OrderBookState</strong> - Thread-safe SortedList wrapper</li>
+<li>[ ] <strong>MarketCache</strong> - Latest prices with read lock</li>
+<li>[ ] <strong>VolatilityState</strong> - Current regime tracking</li>
+<li>[ ] <strong>RoleRegistry</strong> - Team role configurations</li>
+</ul>
+<h3 id="32-queue-infrastructure">3.2 Queue Infrastructure</h3>
+<ul>
+<li>[ ] <strong>OrderQueue</strong> - API -&gt; Validator</li>
+<li>[ ] <strong>ValidationQueue</strong> - Validator -&gt; Matcher</li>
+<li>[ ] <strong>MatchQueue</strong> - For matching engine</li>
+<li>[ ] <strong>TradeQueue</strong> - Matcher -&gt; Publisher</li>
+<li>[ ] <strong>PriceQueue</strong> - Price Model -&gt; Market Data</li>
+<li>[ ] <strong>EventQueue</strong> - Events -&gt; Processing</li>
+<li>[ ] <strong>SignalQueue</strong> - Signals -&gt; Distribution</li>
+</ul>
+<h3 id="33-database-queues">3.3 Database Queues</h3>
+<ul>
+<li>[ ] <strong>TradeDBQueue</strong> - Async trade persistence</li>
+<li>[ ] <strong>PriceDBQueue</strong> - Market data archival</li>
+<li>[ ] <strong>EventDBQueue</strong> - Event log storage</li>
+</ul>
+<h2 id="phase-4-threading-implementation-partial">Phase 4: Threading Implementation (Partial)</h2>
+<h3 id="41-thread-2-order-validator-complete">4.1 Thread 2: Order Validator COMPLETE</h3>
+<ul>
+<li>[x] <strong>Validator thread wrapper</strong> - Queue consumer loop</li>
+<li>[x] <strong>Context builder</strong> - Create ValidationContext from state</li>
+<li>[x] <strong>Error response handler</strong> - Format rejection messages</li>
+<li>[x] <strong>Constraint config loader</strong> - Load market maker constraints</li>
+<li>[x] <strong>Integration with queues</strong> - Connect to pipeline</li>
+<li>[x] <strong>WebSocket rejection notifications</strong> - Send via queue</li>
+</ul>
+<h3 id="42-thread-3-matching-engine-complete">4.2 Thread 3: Matching Engine COMPLETE</h3>
+<ul>
+<li>[x] <strong>Using ContinuousMatchingEngine</strong> - Immediate execution</li>
+<li>[x] <strong>Thread wrapper</strong> - Process match queue</li>
+<li>[x] <strong>Trade generation</strong> - Exchange creates Trade objects</li>
+<li>[x] <strong>Queue integration</strong> - Send trades to publisher</li>
+<li>[x] <strong>WebSocket order acknowledgments</strong> - Send via queue</li>
+</ul>
+<h3 id="43-thread-4-trade-publisher">4.3 Thread 4: Trade Publisher</h3>
+<ul>
+<li>[x] <strong>Publisher thread</strong> - Consume trade queue</li>
+<li>[x] <strong>Position tracking</strong> - Update position dictionary</li>
+<li>[x] <strong>Fee calculation</strong> - Based on maker/taker status</li>
+<li>[x] <strong>WebSocket execution reports</strong> - Send via queue</li>
+<li>[ ] <strong>P&amp;L calculation</strong> - Real-time profit/loss (future)</li>
+<li>[ ] <strong>Async DB write trigger</strong> - Queue for persistence (future)</li>
+</ul>
+<h3 id="44-thread-5-market-simulator">4.4 Thread 5: Market Simulator</h3>
+<ul>
+<li>[ ] <strong>Price Model (GBM)</strong> - Geometric Brownian Motion</li>
+<li>[ ] <strong>SPX price generation</strong> - Primary underlying</li>
+<li>[ ] <strong>SPY correlation</strong> - SPX/10 with tracking error</li>
+<li>[ ] <strong>Volatility integration</strong> - Use current regime</li>
+<li>[ ] <strong>Market Publisher</strong> - Stream via WebSocket</li>
+</ul>
+<h3 id="45-thread-6-event-generator">4.5 Thread 6: Event Generator</h3>
+<ul>
+<li>[ ] <strong>Event types</strong> - Fed, economic, geopolitical</li>
+<li>[ ] <strong>Poisson process</strong> - Random event timing</li>
+<li>[ ] <strong>Impact calculator</strong> - Regime shifts, price jumps</li>
+<li>[ ] <strong>Signal Generator</strong> - Create trading signals</li>
+<li>[ ] <strong>Signal distribution</strong> - Role-based filtering</li>
+</ul>
+<h3 id="46-thread-7-database-writer">4.6 Thread 7: Database Writer</h3>
+<ul>
+<li>[ ] <strong>Batch accumulator</strong> - Collect 1000 trades</li>
+<li>[ ] <strong>Bulk insert logic</strong> - Efficient DB writes</li>
+<li>[ ] <strong>Position snapshots</strong> - Periodic state saves</li>
+<li>[ ] <strong>Error handling</strong> - Queue overflow management</li>
+<li>[ ] <strong>Performance monitoring</strong> - Track write latency</li>
+</ul>
+<h3 id="47-thread-8-websocket-publisher-complete">4.7 Thread 8: WebSocket Publisher COMPLETE</h3>
+<ul>
+<li>[x] <strong>WebSocket thread wrapper</strong> - Async event loop</li>
+<li>[x] <strong>Queue bridge</strong> - asyncio.to_thread for sync/async</li>
+<li>[x] <strong>Message router</strong> - Route by type to broadcast methods</li>
+<li>[x] <strong>Connection checks</strong> - Only send to connected clients</li>
+<li>[x] <strong>Error handling</strong> - Continue on individual failures</li>
+</ul>
+<h2 id="phase-5-websocket-layer">Phase 5: WebSocket Layer</h2>
+<h3 id="51-websocket-server">5.1 WebSocket Server</h3>
+<ul>
+<li>[x] <strong>WebSocket endpoint setup</strong> - /ws routes (ready for integration)</li>
+<li>[x] <strong>Connection manager</strong> - Track active connections</li>
+<li>[x] <strong>Authentication</strong> - Validate on connect</li>
+<li>[ ] <strong>Heartbeat/ping</strong> - Keep connections alive</li>
+<li>[ ] <strong>Reconnection support</strong> - Handle disconnects</li>
+</ul>
+<h3 id="52-data-streams">5.2 Data Streams</h3>
+<ul>
+<li>[x] <strong>Message types defined</strong> - Following FIX conventions</li>
+<li>[x] <strong>Trade execution reports</strong> - Real-time fills with fees</li>
+<li>[x] <strong>Order acknowledgments</strong> - new_order_ack/reject</li>
+<li>[x] <strong>Position snapshots</strong> - On connection</li>
+<li>[x] <strong>Market data format</strong> - Price updates structure</li>
+<li>[x] <strong>Full integration</strong> - Connected to main.py via Thread 8</li>
+<li>[ ] <strong>Signal distribution</strong> - Role-based filtering (future)</li>
+</ul>
+<h2 id="phase-6-database-layer">Phase 6: Database Layer</h2>
+<h3 id="61-schema-design">6.1 Schema Design</h3>
+<ul>
+<li>[ ] <strong>trades table</strong> - Execution history</li>
+<li>[ ] <strong>prices table</strong> - Market data archive</li>
+<li>[ ] <strong>events table</strong> - News event log</li>
+<li>[ ] <strong>positions table</strong> - Snapshot storage</li>
+<li>[ ] <strong>teams table</strong> - Registration data</li>
+</ul>
+<h3 id="62-sqlalchemy-models">6.2 SQLAlchemy Models</h3>
+<ul>
+<li>[ ] <strong>Trade model</strong> - ORM mapping</li>
+<li>[ ] <strong>Price model</strong> - Time series data</li>
+<li>[ ] <strong>Event model</strong> - Event records</li>
+<li>[ ] <strong>Position model</strong> - State snapshots</li>
+<li>[ ] <strong>Database session management</strong> - Thread-safe access</li>
+</ul>
+<h2 id="phase-7-integration-testing">Phase 7: Integration &amp; Testing</h2>
+<h3 id="71-integration-points">7.1 Integration Points</h3>
+<ul>
+<li>[ ] <strong>OrderValidator ↔ Exchange</strong> - Validation before matching</li>
+<li>[ ] <strong>PositionService ↔ OrderValidator</strong> - Position limit checks</li>
+<li>[ ] <strong>All threads connected</strong> - Full pipeline test</li>
+<li>[ ] <strong>Database persistence</strong> - Verify async writes</li>
+<li>[ ] <strong>WebSocket stability</strong> - Multi-client test</li>
+</ul>
+<h3 id="72-example-bots">7.2 Example Bots</h3>
+<ul>
+<li>[ ] <strong>Python REST bot</strong> - Reference implementation</li>
+<li>[ ] <strong>WebSocket market data</strong> - Streaming example</li>
+<li>[ ] <strong>Java bot skeleton</strong> - Multi-language support</li>
+<li>[ ] <strong>Performance test bot</strong> - Load generation</li>
+<li>[ ] <strong>Migration guide</strong> - From embedded to API</li>
+</ul>
+<h3 id="73-performance-testing">7.3 Performance Testing</h3>
+<ul>
+<li>[ ] <strong>Single bot baseline</strong> - Latency measurement</li>
+<li>[ ] <strong>10 bot test</strong> - Concurrency check</li>
+<li>[ ] <strong>30 bot stress test</strong> - Full load</li>
+<li>[ ] <strong>Order latency &lt; 10μs</strong> - Matching performance</li>
+<li>[ ] <strong>1000 orders/second</strong> - Throughput target</li>
+</ul>
+<h2 id="next-immediate-tasks">Next Immediate Tasks</h2>
+<ol>
+<li>Create <code>src/intern_trading_game/api/main.py</code> with FastAPI app</li>
+<li>Implement <code>POST /orders</code> endpoint with Pydantic models</li>
+<li>Create <code>PositionCache</code> class with thread-safe operations</li>
+<li>Add <code>OrderQueue</code> and basic validator thread</li>
+<li>Test order flow with single REST client</li>
+</ol>
+
+
+
+
+
+
+
+
+
+
+
+
+                
+              </article>
+            </div>
+          
+          
+<script>var target=document.getElementById(location.hash.slice(1));target&&target.name&&(target.checked=target.name.startsWith("__tabbed_"))</script>
+        </div>
+        
+          <button type="button" class="md-top md-icon" data-md-component="top" hidden>
+  
+  <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path d="M13 20h-2V8l-5.5 5.5-1.42-1.42L12 4.16l7.92 7.92-1.42 1.42L13 8z"/></svg>
+  Back to top
+</button>
+        
+      </main>
+      
+        <footer class="md-footer">
+  
+  <div class="md-footer-meta md-typeset">
+    <div class="md-footer-meta__inner md-grid">
+      <div class="md-copyright">
+  
+  
+    Made with
+    <a href="https://squidfunk.github.io/mkdocs-material/" target="_blank" rel="noopener">
+      Material for MkDocs
+    </a>
+  
+</div>
+      
+    </div>
+  </div>
+</footer>
+      
+    </div>
+    <div class="md-dialog" data-md-component="dialog">
+      <div class="md-dialog__inner md-typeset"></div>
+    </div>
+    
+    
+    
+      
+      <script id="__config" type="application/json">{"base": "../..", "features": ["navigation.instant", "navigation.tracking", "navigation.expand", "navigation.indexes", "navigation.top", "content.code.copy", "content.code.annotate", "search.highlight", "search.share"], "search": "../../assets/javascripts/workers/search.d50fe291.min.js", "tags": null, "translations": {"clipboard.copied": "Copied to clipboard", "clipboard.copy": "Copy to clipboard", "search.result.more.one": "1 more on this page", "search.result.more.other": "# more on this page", "search.result.none": "No matching documents", "search.result.one": "1 matching document", "search.result.other": "# matching documents", "search.result.placeholder": "Type to start searching", "search.result.term.missing": "Missing", "select.version": "Select version"}, "version": null}</script>
+    
+    
+      <script src="../../assets/javascripts/bundle.13a4f30d.min.js"></script>
+      
+        <script src="../javascripts/mathjax.js"></script>
+      
+        <script src="https://polyfill.io/v3/polyfill.min.js?features=es6"></script>
+      
+        <script src="https://cdn.jsdelivr.net/npm/mathjax@3/es5/tex-mml-chtml.js"></script>
+      
+        <script src="https://unpkg.com/mermaid@10.6.1/dist/mermaid.min.js"></script>
+      
+        <script src="../javascripts/mermaid-init.js"></script>
+      
+    
+  </body>
+</html>
