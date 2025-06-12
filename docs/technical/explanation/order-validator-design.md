@@ -62,14 +62,17 @@ roles:
 ## Integration Points
 
 ### With Game Loop
+
 - Provides current tick phase for trading window validation
 - Tracks order counts per tick
 
 ### With Position Service
+
 - Queries current positions for limit checking
 - Calculates portfolio totals
 
 ### With Exchange
+
 - Validates orders before submission
 - Returns detailed rejection reasons
 
@@ -84,12 +87,14 @@ roles:
 ## Trade-offs
 
 ### Pros
+
 - Clean separation between validation logic and role definitions
 - Easy to add new roles or modify existing ones
 - Configuration changes don't require code changes
 - Validation rules are transparent and auditable
 
 ### Cons
+
 - Less type safety for constraint parameters (they're configuration data)
 - Need to maintain registry of constraint types
 - Slightly more complex than hardcoded validation
@@ -98,6 +103,7 @@ roles:
 ## Error Handling
 
 Each constraint provides:
+
 - **Error Code**: Machine-readable identifier for the specific violation
 - **Error Message**: Human-readable explanation for the trader
 - **Context**: Which constraint failed and why

@@ -99,6 +99,7 @@ class OB,PD,MH,GS persistent
 ### Core Services
 
 **Matching Engine** (Strategy Pattern)
+
 - Abstract interface for order matching algorithms
 - ContinuousMatchingEngine: Immediate order matching as orders arrive
 - BatchMatchingEngine: Collects orders and matches at designated time
@@ -106,6 +107,7 @@ class OB,PD,MH,GS persistent
 - Provides fair randomization within price levels for batch mode
 
 **Tick Controller**
+
 - Orchestrates 5-minute tick cycles (T+0:00 to T+5:00)
 - Publishes tick events to all domain services at precise intervals
 - Enforces trading schedule (Tuesday/Thursday, 9:30 AM - 3:00 PM CT)
@@ -113,6 +115,7 @@ class OB,PD,MH,GS persistent
 - Triggers batch matching at T+3:30
 
 **Exchange Engine**
+
 - Executes order matching via configurable MatchingEngine strategy
 - Supports both continuous (immediate) and batch matching modes
 - Maintains separate order books for each option instrument
@@ -123,6 +126,7 @@ class OB,PD,MH,GS persistent
 - Clean separation allows easy addition of new matching algorithms (e.g., pro-rata)
 
 **Order Validator**
+
 - Pre-validates all incoming orders before submission
 - Queries Position Service for current holdings
 - Delegates role-specific checks to Role Service
@@ -132,6 +136,7 @@ class OB,PD,MH,GS persistent
 ### Domain Services
 
 **Price Model**
+
 - Generates synthetic SPX and SPY underlying prices only
 - Implements correlated Geometric Brownian Motion
 - Maintains SPX-SPY correlation (~0.98) with tracking error
@@ -139,6 +144,7 @@ class OB,PD,MH,GS persistent
 - Publishes new prices at each tick start (T+0:00)
 
 **Volatility State Machine**
+
 - Manages three regimes: Low (10%), Medium (20%), High (50%) annualized
 - Processes event impacts to trigger transitions
 - Implements regime persistence via Markov chains
@@ -147,6 +153,7 @@ class OB,PD,MH,GS persistent
 - High regime: 10-50 ticks typical duration
 
 **Event System**
+
 - Generates news events via Poisson process (λ=1 per 1-4 hours)
 - Creates event types: regime shifters (40%), price jumpers (30%), false signals (30%)
 - Publishes event impacts to trigger state changes
@@ -154,6 +161,7 @@ class OB,PD,MH,GS persistent
 - Manages signal accuracy (66% for hedge funds, 80% for arbitrage)
 
 **Role Service**
+
 - **Market Maker**: ±50 position limit, 80% quoting requirement, +$0.02 maker rebate
 - **Hedge Fund**: ±50 delta neutrality, 1-5 tick advance volatility signals
 - **Arbitrage Desk**: 2:1 SPX/SPY ratio constraint, real-time tracking error signals
@@ -161,6 +169,7 @@ class OB,PD,MH,GS persistent
 - Manages differential fee structures
 
 **Position Service**
+
 - Tracks positions by player, instrument, and quantity
 - Calculates real-time P&L including all fees
 - Computes portfolio Greeks (delta, gamma, vega, theta)
@@ -168,6 +177,7 @@ class OB,PD,MH,GS persistent
 - Provides position snapshots for validation
 
 **Market Data Service**
+
 - Publishes underlying prices from Price Model
 - Distributes 5-level order book depth for options
 - Stores all trades with timestamps and participants

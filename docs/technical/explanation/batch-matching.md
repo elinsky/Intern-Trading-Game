@@ -26,11 +26,13 @@ Result: No match available (liquidity already consumed)
 ```
 
 **Advantages:**
+
 - Immediate feedback
 - Real-time price discovery
 - Simple mental model
 
 **Disadvantages:**
+
 - Speed advantages matter (faster bots win)
 - Can discourage liquidity provision
 - "Winner takes all" dynamics
@@ -52,22 +54,15 @@ At 10:03:30: Batch execution
 ```
 
 **Advantages:**
+
 - No speed advantages within the batch window
 - Fairer for all participants
 - Encourages liquidity provision
 
 **Disadvantages:**
+
 - Delayed execution feedback
 - More complex implementation
-
-## Why Batch Matching for the Game?
-
-The Intern Trading Game uses 5-minute ticks with specific phases:
-
-
-1. **T+0:00**: New prices published
-2. **T+0:30 to T+3:00**: Order submission window
-3. **T+3:30**: Batch matching execution
 
 Batch matching ensures:
 
@@ -93,6 +88,7 @@ The key innovation in our batch matching is fair randomization:
 ```
 
 ### Our Approach (Random Priority)
+
 ```python
 # Orders at price $100 are randomized:
 # Possible orderings (equal probability):

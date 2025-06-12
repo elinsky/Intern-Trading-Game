@@ -84,6 +84,7 @@ Let's walk through an example of the matching process:
 
 
 **Current Order Book:**
+
 - Best Bid: $5.25 (10 contracts)
 - Best Ask: $5.30 (15 contracts)
 

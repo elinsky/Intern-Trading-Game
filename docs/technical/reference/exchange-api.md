@@ -6,13 +6,13 @@ This document provides a comprehensive reference for the Intern Trading Game exc
 
 The exchange system consists of the following core components:
 
-| Component | Description |
-|-----------|-------------|
+| Component       | Description                                                        |
+| --------------- | ------------------------------------------------------------------ |
 | `ExchangeVenue` | The main exchange venue that handles order submission and matching |
-| `OrderBook` | Maintains the order book for a single instrument |
-| `Order` | Represents a trading order (buy or sell) |
-| `Trade` | Represents an executed trade between two orders |
-| `Instrument` | Represents a tradeable instrument (stock or option) |
+| `OrderBook`     | Maintains the order book for a single instrument                   |
+| `Order`         | Represents a trading order (buy or sell)                           |
+| `Trade`         | Represents an executed trade between two orders                    |
+| `Instrument`    | Represents a tradeable instrument (stock or option)                |
 
 ## ExchangeVenue
 

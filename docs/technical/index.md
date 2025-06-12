@@ -24,6 +24,7 @@ Welcome to the technical documentation for the Intern Trading Game. This section
 ### How-To Guides
 
 Practical guides for common tasks:
+
 - **[How to Submit Orders](how-to/how-to-submit-orders.md)** - Order submission patterns
 - **[Use REST API](how-to/use-rest-api.md)** - RESTful API integration
 - **[Use WebSockets](how-to/use-websockets.md)** - Real-time data streaming
@@ -34,6 +35,7 @@ Practical guides for common tasks:
 ### API Reference
 
 Complete API documentation:
+
 - **[API Overview](reference/api-overview.md)** - High-level API architecture
 - **[Exchange API](reference/exchange-api.md)** - Core exchange interface
 - **[REST API](reference/rest-api.md)** - HTTP endpoints reference
@@ -45,6 +47,7 @@ Complete API documentation:
 ### Explanations
 
 In-depth technical concepts:
+
 - **[Order Matching](explanation/order-matching.md)** - How the matching engine works
 - **[Batch Matching](explanation/batch-matching.md)** - Batch processing algorithm
 - **[Trading Phases](explanation/trading-phases.md)** - Tick lifecycle explained

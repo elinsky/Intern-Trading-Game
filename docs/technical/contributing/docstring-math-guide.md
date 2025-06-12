@@ -28,7 +28,7 @@ Without the `r` prefix, Python interprets backslashes as escape sequences:
 
 This breaks LaTeX commands like `\text`, `\frac`, and `\sqrt`, causing formulas to render incorrectly.
 
-### ❌ Incorrect (Without Raw String)
+### Incorrect (Without Raw String)
 
 ```python
 """
@@ -36,7 +36,7 @@ $$\text{Value} = \text{Price} \times \text{Quantity}$$
 """  # Will render as "extValue = extPrice × extQuantity"
 ```
 
-### ✅ Correct (With Raw String)
+### Correct (With Raw String)
 
 ```python
 r"""

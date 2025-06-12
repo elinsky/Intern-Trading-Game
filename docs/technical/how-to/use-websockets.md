@@ -312,21 +312,25 @@ asyncio.run(test_connection("YOUR_API_KEY"))
 ## Common Issues
 
 ### Connection Refused
+
 - Verify the server is running
 - Check the WebSocket URL and port
 - Ensure firewall allows WebSocket connections
 
 ### Authentication Failed
+
 - Verify API key is correct
 - Check API key is passed in query parameter
 - Ensure team is registered
 
 ### Missing Messages
+
 - Implement sequence number tracking
 - Add reconnection logic
 - Buffer messages if processing is slow
 
 ### Memory Leaks
+
 - Clear old data periodically
 - Limit message history size
 - Use weak references for callbacks

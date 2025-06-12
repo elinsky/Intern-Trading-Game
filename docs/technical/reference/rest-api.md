@@ -46,10 +46,11 @@ Health check endpoint.
 Register a new trading team.
 
 **Request Body:**
-| Field | Type | Required | Description |
-|-------|------|----------|-------------|
-| team_name | string | Yes | Display name (1-50 chars) |
-| role | string | Yes | Trading role (currently only "market_maker") |
+
+| Field     | Type   | Required | Description                                  |
+| --------- | ------ | -------- | -------------------------------------------- |
+| team_name | string | Yes      | Display name (1-50 chars)                    |
+| role      | string | Yes      | Trading role (currently only "market_maker") |
 
 **Response:** `TeamInfo`
 ```json
@@ -138,13 +139,13 @@ Submit a new order to the exchange.
 
 **Request Body:**
 
-| Field | Type | Required | Description |
-|-------|------|----------|-------------|
-| instrument_id | string | Yes | Instrument to trade |
-| order_type | string | Yes | "limit" or "market" |
-| side | string | Yes | "buy" or "sell" |
-| quantity | integer | Yes | Number of contracts (> 0) |
-| price | number | Conditional | Required for limit orders |
+| Field         | Type    | Required    | Description               |
+| ------------- | ------- | ----------- | ------------------------- |
+| instrument_id | string  | Yes         | Instrument to trade       |
+| order_type    | string  | Yes         | "limit" or "market"       |
+| side          | string  | Yes         | "buy" or "sell"           |
+| quantity      | integer | Yes         | Number of contracts (> 0) |
+| price         | number  | Conditional | Required for limit orders |
 
 **Response:** `OrderResponse`
 

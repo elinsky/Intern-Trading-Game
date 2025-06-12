@@ -67,12 +67,14 @@ Parameters:
 Validates order type is permitted for the role.
 
 Parameters:
+
 - `allowed_types`: List of allowed order types (e.g., ["limit", "market", "quote"])
 
 ### TRADING_WINDOW
 Validates orders are submitted during allowed phases.
 
 Parameters:
+
 - `allowed_phases`: List of phase names (e.g., ["PRE_OPEN"])
 
 ## Configuration Format

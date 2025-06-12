@@ -180,6 +180,7 @@ sessions:
 ```
 
 **Key Features**:
+
 - Multiple sessions with different rules
 - Opening and closing auctions
 - Overnight trading for specific products
