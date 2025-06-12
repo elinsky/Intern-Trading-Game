@@ -124,6 +124,6 @@ Role-specific signals:
 
 ## Next Steps
 
-- Review [Simulation Details](../simulation/)
-- Understand [Trading Rules](../trading/)
-- Begin [Strategy Development](../../technical/)
+- Review [Simulation Details](../simulation/price-generation.md)
+- Understand [Trading Rules](../trading/order-types.md)
+- Begin [Strategy Development](../../technical/index.md)

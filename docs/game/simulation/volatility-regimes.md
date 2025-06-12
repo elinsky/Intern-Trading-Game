@@ -103,4 +103,4 @@ Example signal:
 
 - Learn about [News Events](news-events.md) that trigger changes
 - Understand [Price Generation](price-generation.md) within each regime
-- Review role-specific strategies in [Roles](../roles/)
+- Review role-specific strategies in [Roles](../roles/overview.md)

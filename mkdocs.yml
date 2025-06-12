@@ -71,9 +71,7 @@ plugins:
         - docs/technical/gen_ref_pages.py
 
 nav:
-  - Home: index-private.md
-  - How-To Guides:
-      - Setup Game Loop: how-to/setup-game-loop.md
+  - Home: index.md
   - Game Documentation:
       - Overview: game/overview.md
       - Fundamentals:
@@ -106,19 +104,23 @@ nav:
           - Formulas: game/appendix/formulas.md
           - Glossary: game/appendix/glossary.md
   - Technical Documentation:
-      - Architecture: technical/architecture.md
-      - Architecture v2: technical/architecture-v2.md
-      - Architecture v3: technical/architecture-v3.md
+      - Overview: technical/index.md
+      - Architecture:
+          - Current Version (v3): technical/architecture-v3.md
+          - Previous Version (v2): technical/architecture-v2.md
+          - Original Version (v1): technical/architecture.md
       - Build Order: technical/build-order.md
       - Implementation Guide: technical/implementation-guide.md
       - Tutorials:
           - Market Maker Tutorial: technical/tutorials/market-maker-tutorial.md
       - How-To Guides:
+          - Overview: technical/how-to/index.md
           - How to Submit Orders: technical/how-to/how-to-submit-orders.md
           - Use REST API: technical/how-to/use-rest-api.md
           - Use WebSockets: technical/how-to/use-websockets.md
           - WebSocket Integration: technical/how-to/websocket-integration.md
       - Reference:
+          - Overview: technical/reference/index.md
           - API Overview: technical/reference/api-overview.md
           - Exchange API: technical/reference/exchange-api.md
           - REST API: technical/reference/rest-api.md
@@ -132,6 +134,7 @@ nav:
           - Venue: reference/venue.md
           - Instrument: reference/instrument.md
       - Explanation:
+          - Overview: technical/explanation/index.md
           - Order Matching: technical/explanation/order-matching.md
           - Batch Matching: technical/explanation/batch-matching.md
           - Order Validator Design: technical/explanation/order-validator-design.md

@@ -89,4 +89,4 @@ With these concepts understood, explore:
 
 - [Market Structure](market-structure.md) - Detailed instrument specifications
 - [Game Mechanics](game-mechanics.md) - How the simulation operates
-- Your specific [role documentation](../roles/)
+- Your specific [role documentation](../roles/overview.md)

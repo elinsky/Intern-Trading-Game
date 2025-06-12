@@ -124,4 +124,4 @@ No actual market impact:
 
 - Study [Correlation Model](correlation-model.md) for arbitrage
 - Review [Trading Signals](../trading/signals-access.md)
-- Understand role-specific strategies in [Roles](../roles/)
+- Understand role-specific strategies in [Roles](../roles/overview.md)

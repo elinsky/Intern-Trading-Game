@@ -55,9 +55,9 @@ Teams are scored on:
 
 ## Getting Started
 
-1. **Understand Your Role**: Read your specific [role documentation](roles/)
+1. **Understand Your Role**: Read your specific [role documentation](roles/overview.md)
 2. **Learn the Mechanics**: Review [game fundamentals](fundamentals/core-concepts.md)
-3. **Build Your Bot**: Follow the [technical documentation](../../technical/)
+3. **Build Your Bot**: Follow the [technical documentation](../technical/index.md)
 4. **Test Strategies**: Use historical data for backtesting
 5. **Iterate & Improve**: Analyze results and refine your approach
 

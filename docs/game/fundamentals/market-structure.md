@@ -112,4 +112,4 @@ Each tick provides:
 
 - Understand [Game Mechanics](game-mechanics.md)
 - Review [Trading Constraints](../trading/constraints.md)
-- Study your [Role Requirements](../roles/)
+- Study your [Role Requirements](../roles/overview.md)

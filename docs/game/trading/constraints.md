@@ -161,4 +161,4 @@ All orders validated for:
 
 - Review [Execution Rules](execution-rules.md)
 - Understand [Signal Access](signals-access.md)
-- Study your specific [Role Requirements](../roles/)
+- Study your specific [Role Requirements](../roles/overview.md)
