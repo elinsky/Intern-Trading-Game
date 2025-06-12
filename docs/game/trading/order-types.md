@@ -11,7 +11,7 @@ The most common order type, allowing precise price control.
 - Specify exact price (or better)
 - Rest in order book if not immediately fillable
 - Can partially fill
-- Expire at tick end if unfilled
+- Remain active until filled, canceled, or market close
 
 **Syntax Example:**
 ```json
@@ -109,12 +109,12 @@ Simultaneous two-sided markets providing both bid and ask.
 
 ### Size Limits by Role
 
-| Role           | Min Size | Max Size | Max Orders/Tick |
-| -------------- | -------- | -------- | --------------- |
-| Market Maker   | 1        | 1000     | 100             |
-| Hedge Fund     | 1        | 500      | 50              |
-| Arbitrage Desk | 1        | 500      | 75              |
-| Retail         | 1        | 100      | 5               |
+| Role           | Min Size | Max Size | Max Orders/Second |
+| -------------- | -------- | -------- | ----------------- |
+| Market Maker   | 1        | 1000     | 10                |
+| Hedge Fund     | 1        | 500      | 5                 |
+| Arbitrage Desk | 1        | 500      | 7                 |
+| Retail         | 1        | 100      | 1                 |
 
 ### Price Constraints
 

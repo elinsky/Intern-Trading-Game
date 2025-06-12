@@ -16,12 +16,12 @@ Quote fair, tight spreads and profit on every fill—while managing inventory wi
   - **Competitive Advantage**: Enhanced fee structure vs. other roles (+\$0.02 maker vs. +\$0.01 for HF/Arb).
 - **Constraints**:
 
-  - Must quote ≥ 80 % of instruments across BOTH SPX and SPY each tick.
+  - Must quote ≥ 80 % of instruments across BOTH SPX and SPY (measured on 5-minute rolling basis).
   - Inventory limits: Maximum ±50 net contracts per product (SPX/SPY).
   - Must provide two-sided quotes (bid and ask) on each instrument.
 - **Scoring Focus**:
 
-  - **Fee Revenue**: Net maker rebates minus taker fees per tick
+  - **Fee Revenue**: Net maker rebates minus taker fees continuously
   - **Quote Coverage**: Percentage of required instruments quoted (must be ≥ 80%)
   - **Inventory Penalty**: Deduction for positions exceeding ±50 limit
 

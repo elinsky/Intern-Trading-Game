@@ -25,14 +25,17 @@ The game simulates two correlated underlyings with options:
 
 ## How It Works
 
-Every **5 minutes**, a new market tick occurs with precise timing:
+The market operates with **continuous trading** throughout the day:
 
-
-1. **T+0:00 - Price Generation**: New underlying prices calculated
-2. **T+0:30 to T+3:00 - Order Window**: Bots submit orders (2.5 minute window)
-3. **T+3:00 - Order Cutoff**: No new orders accepted after this point
-4. **T+3:30 - Trade Matching**: All orders processed and trades executed
-5. **T+4:00 - Results Published**: Positions, P&L, and market data updated
+1. **9:30 AM - Opening Rotation**: Batch auction determines opening prices
+2. **9:30 AM - 3:00 PM - Continuous Trading**:
+   - Submit orders anytime
+   - Immediate order matching
+   - Real-time position updates
+3. **Throughout the Day**:
+   - Underlying prices update continuously
+   - News events occur randomly (1-4 hours apart)
+   - Role-specific signals provided in real-time
 
 ## Choose Your Role
 
@@ -48,26 +51,58 @@ Each team is assigned one trading role with unique advantages and constraints:
 
 Teams are scored on:
 
-- **Quantitative Performance**: Role-specific metrics (P&L, Sharpe, spread capture)
-- **Strategy Development**: Code quality, innovation, and adaptation
-- **Research & Analysis**: Backtesting, signal validation, risk management
-- **Final Presentation**: Insights, learnings, and recommendations
+- **P&L Performance**: Risk-adjusted returns
+- **Role Compliance**: Meeting specific constraints
+- **Strategy Quality**: Sophistication and robustness
+- **Research Output**: Quality of analysis and documentation
+
+## Trading Schedule
+
+- **Days**: Tuesday and Thursday only
+- **Hours**: 9:30 AM - 3:00 PM CT
+- **Duration**: 4 weeks (8 trading days total)
+
+## Key Features
+
+### Real-time Market Data
+
+- Live order books with depth
+- Continuous price updates
+- Immediate trade confirmations
+
+### Advanced Signals
+
+- Role-specific alpha signals
+- Volatility regime indicators
+- Cross-asset correlations
+
+### Risk Management
+
+- Position limits by instrument
+- Real-time P&L tracking
+- Automated compliance checks
+
+## Success Factors
+
+1. **Technical Excellence**: Robust, low-latency trading infrastructure
+2. **Quantitative Edge**: Data-driven strategy development
+3. **Risk Discipline**: Consistent position and exposure management
+4. **Role Mastery**: Leveraging your desk's unique advantages
 
 ## Getting Started
 
-1. **Understand Your Role**: Read your specific [role documentation](roles/overview.md)
-2. **Learn the Mechanics**: Review [game fundamentals](fundamentals/core-concepts.md)
-3. **Build Your Bot**: Follow the [technical documentation](../technical/index.md)
-4. **Test Strategies**: Use historical data for backtesting
-5. **Iterate & Improve**: Analyze results and refine your approach
+1. Review [Core Concepts](fundamentals/core-concepts.md)
+2. Study your assigned [Role](roles/overview.md)
+3. Understand [Trading Rules](trading/order-types.md)
+4. Set up your [Development Environment](../technical/index.md)
+5. Begin strategy research and backtesting
 
-## Timeline
+## Support Resources
 
-- **Week 1-2**: Learn mechanics, build initial bot
-- **Week 3-6**: Live trading, strategy refinement
-- **Week 7-8**: Final optimization and presentations
+- Game rules documentation (this guide)
+- Technical API documentation
+- Example trading bots
+- Historical market data for backtesting
+- Discord channel for questions
 
-**Trading Schedule**: Tuesdays & Thursdays only, 9:30 AM - 3:00 PM CT
-**Non-Trading Days**: Monday (prep), Wednesday (analysis), Friday (retrospective)
-
-Ready to start? Proceed to [Core Concepts](fundamentals/core-concepts.md)
+Remember: Success comes from understanding your role's edge, managing risk effectively, and executing a well-researched strategy consistently.

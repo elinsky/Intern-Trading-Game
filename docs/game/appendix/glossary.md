@@ -26,7 +26,7 @@
 
 **Call Option**: Contract giving the right to buy the underlying at the strike price at expiration.
 
-**Circuit Breaker**: Maximum price movement allowed per tick (5% in this game).
+**Circuit Breaker**: Maximum price movement allowed in a short period (5% in this game).
 
 **Convergence Trade**: Arbitrage strategy betting that prices will converge to fair value.
 
@@ -168,7 +168,7 @@
 
 **Theta**: Time decay of option value.
 
-**Tick**: 5-minute interval when prices update and trades occur.
+**Tick Size**: Minimum price increment for quotes and trades ($0.01 in this game).
 
 **Tracking Error**: Deviation of SPY from theoretical SPX/10 value.
 
@@ -241,7 +241,7 @@
 
 ## Trading Mechanics Terms
 
-- **Batch Processing**: All orders processed simultaneously per tick
-- **Order Window**: 2-3 minute period to submit orders
+- **Continuous Matching**: Orders matched immediately upon receipt
+- **Opening Rotation**: Batch auction at market open for price discovery
 - **Price Discovery**: Process of finding equilibrium prices
-- **Tick Processing**: 5-minute cycle of price generation and trading
+- **Real-time Processing**: Immediate order validation and execution

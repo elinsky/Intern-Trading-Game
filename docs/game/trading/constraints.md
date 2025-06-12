@@ -8,10 +8,10 @@ Each role operates under specific constraints designed to create realistic tradi
 
 | Role | Fees (Maker/Taker) | Order Limit | Position Limits | Special Requirements |
 |------|--------------------|-------------|-----------------|---------------------|
-| **Market Maker** | +$0.02 / -$0.01 | 100/tick | ±50 per option<br>±200 total | • ≥80% quote uptime<br>• Two-sided quotes |
-| **Hedge Fund** | +$0.01 / -$0.02 | 50/tick | 150 per option<br>500 total | • No two-sided quotes<br>• ±50 delta limit<br>• Volatility signals |
-| **Arbitrage Desk** | +$0.01 / -$0.02 | 75/tick | 100 per option<br>300 total | • Paired trades only<br>• Tracking signals |
-| **Retail Flow** | -$0.01 / -$0.03 | Poisson(3) | 50 total | • Automated only<br>• Behavioral patterns |
+| **Market Maker** | +$0.02 / -$0.01 | 10/second | ±50 per option<br>±200 total | • ≥80% quote uptime<br>• Two-sided quotes |
+| **Hedge Fund** | +$0.01 / -$0.02 | 5/second | 150 per option<br>500 total | • No two-sided quotes<br>• ±50 delta limit<br>• Volatility signals |
+| **Arbitrage Desk** | +$0.01 / -$0.02 | 7/second | 100 per option<br>300 total | • Paired trades only<br>• Tracking signals |
+| **Retail Flow** | -$0.01 / -$0.03 | 1/second | 50 total | • Automated only<br>• Behavioral patterns |
 
 ## Position Limits
 
@@ -47,7 +47,7 @@ Each role operates under specific constraints designed to create realistic tradi
 
 ### Submission Rates
 
-- Orders per tick vary by role
+- Orders per second vary by role
 - Bulk submission allowed
 - No modifications (cancel/replace only)
 
@@ -82,8 +82,8 @@ Net Fee = (Maker Rebate × Maker Volume) - (Taker Fee × Taker Volume)
 
 ### 80% Uptime Rule
 
-- Must maintain active quotes 80% of tick time
-- Measured per instrument
+- Must maintain active quotes 80% of trading time
+- Measured per instrument on rolling 5-minute basis
 - Both bid and ask required
 
 ### Spread Constraints
@@ -106,7 +106,7 @@ Net Fee = (Maker Rebate × Maker Volume) - (Taker Fee × Taker Volume)
 - **Delta Neutrality**: Must maintain portfolio delta within ±50
 - **Signal Usage**: Expected to utilize volatility signals for gamma positioning
 - **Rehedging Requirement**: Must adjust positions when delta limit approached
-- **Performance Focus**: Window-based P&L from gamma scalping/premium collection
+- **Performance Focus**: Continuous P&L from gamma scalping/premium collection
 
 ### Arbitrage Desk Requirements
 
@@ -117,7 +117,7 @@ Net Fee = (Maker Rebate × Maker Volume) - (Taker Fee × Taker Volume)
 ### Retail Restrictions
 
 - **Order Types**: Market and limit only (no quotes)
-- **Frequency**: Maximum 3 trades per tick
+- **Frequency**: Maximum 1 order per second
 - **No Signals**: Trade on public information only
 
 ## Risk Controls
@@ -133,10 +133,10 @@ All orders validated for:
 
 ### Real-Time Monitoring
 
-- Position tracking per tick
-- P&L calculation
-- Fee accumulation
-- Constraint violations logged
+- Position tracking continuous
+- P&L calculation real-time
+- Fee accumulation immediate
+- Constraint violations logged instantly
 
 ## Strategic Implications
 

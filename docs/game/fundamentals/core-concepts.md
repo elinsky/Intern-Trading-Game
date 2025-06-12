@@ -29,7 +29,7 @@ Automated simulation adds realistic retail trading patterns, market noise, and l
 - **Bid**: Price at which someone is willing to buy
 - **Ask**: Price at which someone is willing to sell
 - **Spread**: Difference between bid and ask prices
-- **Tick**: 5-minute interval when new prices are generated
+- **Opening Rotation**: Batch auction at market open for price discovery
 
 ### Options Terminology
 
@@ -48,7 +48,7 @@ All participants receive:
 - Current bid/ask prices for all instruments
 - Last trade prices and volumes
 - Order book depth (top 5 levels)
-- Historical tick data
+- Historical price data
 
 ### News Events
 

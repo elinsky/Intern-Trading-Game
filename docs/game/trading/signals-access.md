@@ -6,12 +6,12 @@ The game includes differentiated information access to create realistic advantag
 
 ## Signal Distribution Matrix
 
-| Signal Type             | Market Maker | Hedge Fund | Arbitrage Desk | Retail | Timing          |
-| ----------------------- | ------------ | ---------- | -------------- | ------ | --------------- |
-| **Market Data**         | Yes          | Yes        | Yes            | Yes    | Real-time       |
-| **News Headlines**      | Yes          | Yes        | Yes            | Yes    | Immediate       |
-| **Volatility Forecast** | No           | Yes        | No             | No     | 1-5 ticks early |
-| **Tracking Error**      | No           | No         | Yes            | No     | Real-time       |
+| Signal Type             | Market Maker | Hedge Fund | Arbitrage Desk | Retail | Timing            |
+| ----------------------- | ------------ | ---------- | -------------- | ------ | ----------------- |
+| **Market Data**         | Yes          | Yes        | Yes            | Yes    | Real-time         |
+| **News Headlines**      | Yes          | Yes        | Yes            | Yes    | Immediate         |
+| **Volatility Forecast** | No           | Yes        | No             | No     | 60 seconds early  |
+| **Tracking Error**      | No           | No         | Yes            | No     | Real-time         |
 
 ## Public Information (All Roles)
 
@@ -66,7 +66,7 @@ Static reference data available to all:
   "forecast": {
     "next_regime": "high",
     "probability": 0.66,
-    "ticks_until_change": 3
+    "seconds_until_change": 60
   },
   "confidence": "high"
 }
@@ -75,7 +75,7 @@ Static reference data available to all:
 **Characteristics**:
 
 - Accuracy: ~66%
-- Lead time: 1-5 ticks
+- Lead time: 60 seconds
 - Updates when forecast changes
 - Silent during stable regimes
 

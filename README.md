@@ -17,31 +17,38 @@ Welcome to the Intern Trading Game! This repo contains the core simulation engin
 - **Underlying Assets**: Simulated SPX and SPY spot prices
 - **Instruments**: European options on SPX and SPY (~15 strikes covering ±30%, weekly expiries)
 - **Trading Schedule**: Tuesday & Thursday only, 9:30 AM - 3:00 PM CT
-- **Tick Frequency**: Every 5 minutes (66 ticks per trading day)
-- **Submission**: Intern bots submit orders during 2-3 minute window
+- **Market Structure**: Continuous trading with opening rotation
+- **Order Processing**: Real-time matching with immediate execution
 - **Evaluation**: Role-specific KPIs and quantitative research quality
 
 ---
 
-## Core Gameplay Loop
+## Core Trading Flow
 
-1. **Tick Starts**
-   - A new underlying price is simulated
-   - A news event is published (may or may not trigger a volatility regime change)
-   - Option prices are implied (but not published)
+1. **Market Open (9:30 AM)**
 
-2. **Bot Submission Window (T+0:30 to T+3:00)**
-   - 2.5 minute window with hard cutoffs
-   - Bots read market data and submit orders
-   - No orders accepted outside this window
+   - Opening rotation determines initial prices
+   - All pre-market orders participate in batch auction
+   - Continuous trading begins after rotation
 
-3. **Tick Processes**
-   - Matching engine executes trades, applies fees, and updates P&L
-   - Full market snapshot is published (order book, fills, position, P&L)
+2. **Continuous Trading (9:30 AM - 3:00 PM)**
 
-4. **Results and Analysis**
-   - Interns can access dashboards or query data
-   - Bots sleep or wait until the next tick
+   - Underlying prices update continuously
+   - Orders processed immediately upon receipt
+   - Real-time position and P&L updates
+   - News events occur throughout the day
+
+3. **Market Dynamics**
+
+   - Price-time priority matching
+   - Immediate execution for crossing orders
+   - Market data updates in real-time
+
+4. **Risk Management**
+
+   - Position limits enforced continuously
+   - Real-time compliance monitoring
+   - Instant execution reports
 
 ## Roles
 
@@ -53,7 +60,7 @@ Each intern team is assigned one of three trading roles. Each role exploits diff
 
 - **Signal Access**: None
 - **Constraints**:
-  - Must quote ≥80% of instruments each tick across both products
+  - Must quote ≥80% of instruments continuously across both products
   - Position limits: ±50 per option, ±200 total
   - Enhanced fee structure: +$0.02 maker, -$0.01 taker
 - **Scoring Focus**:

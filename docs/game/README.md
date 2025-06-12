@@ -16,7 +16,7 @@ Welcome to the Intern Trading Game documentation. This guide contains all busine
 
 - [Core Concepts](fundamentals/core-concepts.md) - Key terminology and concepts
 - [Market Structure](fundamentals/market-structure.md) - SPX/SPY instruments and options
-- [Game Mechanics](fundamentals/game-mechanics.md) - Tick structure and order flow
+- [Game Mechanics](fundamentals/game-mechanics.md) - Continuous trading and order flow
 
 ### Simulation
 

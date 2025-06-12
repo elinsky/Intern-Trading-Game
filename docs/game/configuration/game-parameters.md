@@ -6,13 +6,14 @@ The Intern Trading Game simulation has numerous configurable parameters that con
 
 ## Market Structure Parameters
 
-### Tick Configuration
+### Trading Configuration
 
-| Parameter        | Default Value | Range    | Description                     |
-| ---------------- | ------------- | -------- | ------------------------------- |
-| tick_duration    | 5 minutes     | 1-60 min | Time between market updates     |
-| order_window     | 3 minutes     | 1-4 min  | Time to submit orders each tick |
-| batch_processing | true          | -        | Orders processed simultaneously |
+| Parameter           | Default Value | Range       | Description                        |
+| ------------------- | ------------- | ----------- | ---------------------------------- |
+| trading_hours       | 9:30-15:00 CT | -           | Market open hours                  |
+| opening_rotation    | true          | -           | Batch auction at market open       |
+| continuous_matching | true          | -           | Real-time order matching           |
+| latency_target      | < 5ms         | 1-50ms      | Target execution latency           |
 
 ### Instrument Configuration
 
@@ -36,11 +37,11 @@ The Intern Trading Game simulation has numerous configurable parameters that con
 
 ### Regime Definitions
 
-| Regime | Annual Vol | 5-min Std Dev | Persistence  |
-| ------ | ---------- | ------------- | ------------ |
-| Low    | 10%        | 0.04%         | 50-200 ticks |
-| Medium | 20%        | 0.09%         | 30-100 ticks |
-| High   | 50%        | 0.22%         | 10-50 ticks  |
+| Regime | Annual Vol | Per-Second Std | Persistence     |
+| ------ | ---------- | -------------- | --------------- |
+| Low    | 10%        | 0.0016%        | 30 min - 2 hrs  |
+| Medium | 20%        | 0.0032%        | 20 min - 1 hr   |
+| High   | 50%        | 0.0080%        | 10 min - 30 min |
 
 ### Transition Matrix
 
