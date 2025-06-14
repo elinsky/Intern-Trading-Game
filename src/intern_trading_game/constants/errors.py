@@ -3,6 +3,7 @@
 
 class ErrorCodes:
     """Error codes for API responses."""
+
     CANCEL_FAILED = "CANCEL_FAILED"
     INTERNAL_ERROR = "INTERNAL_ERROR"
     INVALID_ORDER_TYPE = "INVALID_ORDER_TYPE"
@@ -12,8 +13,9 @@ class ErrorCodes:
 
 class ErrorMessages:
     """Error messages for user responses."""
+
     ORDER_NOT_FOUND = "Order not found"
-    
+
     @staticmethod
     def format_cancel_failed(reason: str) -> str:
         """Format cancel failure message."""

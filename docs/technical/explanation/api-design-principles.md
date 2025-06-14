@@ -351,7 +351,7 @@ Every trading bot needs exactly 5 operations to function:
 Limits per team:
 
 - **Orders**: 10 per second
-- **Cancels**: 10 per second  
+- **Cancels**: 10 per second
 - **Queries**: 100 per second
 
 Exceeded limits return:

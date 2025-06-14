@@ -70,19 +70,19 @@ sequenceDiagram
     participant Validator
     participant Exchange
     participant WebSocket
-    
+
     Bot->>API: POST /orders
     API->>Validator: Validate order
-    
+
     alt Order Valid
         Validator-->>API: Validation passed
         API-->>Bot: ApiResponse(success=true, order_id="ORD_123")
         Note over Bot: ~1ms round trip
-        
+
         Validator->>Exchange: Forward order
         Exchange->>WebSocket: new_order_ack
         WebSocket-->>Bot: Order in book notification
-        
+
         Exchange->>Exchange: Match order
         Exchange->>WebSocket: execution_report
         WebSocket-->>Bot: Fill details
@@ -103,11 +103,11 @@ sequenceDiagram
     participant Validator
     participant Exchange
     participant WebSocket
-    
+
     Bot->>API: DELETE /orders/{order_id}
     API->>Validator: Validate cancellation
     Validator->>Exchange: Attempt cancel
-    
+
     alt Cancel Successful
         Exchange-->>Validator: Order cancelled
         Validator-->>API: Success
@@ -261,7 +261,7 @@ response = api.get_positions()
 # Success response with data
 # response = {
 #     "success": true,
-#     "request_id": "req_12348", 
+#     "request_id": "req_12348",
 #     "order_id": null,
 #     "data": {
 #         "positions": {
@@ -293,12 +293,12 @@ response = api.get_positions()
 async def submit_order_with_tracking(order):
     # Synchronous validation
     response = api.submit_order(order)
-    
+
     if not response.success:
         # Handle validation error immediately
         handle_validation_error(response.error)
         return None
-    
+
     # Track order for async updates
     pending_orders[response.order_id] = order
     return response.order_id
@@ -370,7 +370,7 @@ def on_execution_report(msg):
 The API communication design provides:
 
 - **Fast validation feedback** via REST API
-- **Rich execution details** via WebSocket  
+- **Rich execution details** via WebSocket
 - **Clear separation** between validation and execution
 - **Predictable latency** for better bot performance
 
