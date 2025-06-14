@@ -193,7 +193,7 @@ class OrderValidationService(OrderValidationServiceInterface):
             trader_role=team.role,
             tick_phase=TickPhase.TRADING,
             current_positions=team_positions,
-            orders_this_tick=team_orders,
+            orders_this_second=team_orders,
         )
 
         # Run validation through configured constraints

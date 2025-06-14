@@ -140,7 +140,7 @@ class TestOrderValidationService:
         assert context.trader_role == "market_maker"
         assert context.tick_phase == TickPhase.TRADING
         assert context.current_positions == {"SPX-20240315-4500C": 25}
-        assert context.orders_this_tick == 3
+        assert context.orders_this_second == 3
 
     def test_validate_new_order_rejected_position_limit(
         self,
@@ -297,7 +297,7 @@ class TestOrderValidationService:
         # Then - Verify correct state in context
         context = mock_validator.validate_order.call_args[0][0]
         assert context.current_positions == expected_positions
-        assert context.orders_this_tick == expected_count
+        assert context.orders_this_second == expected_count
 
     def test_validate_new_order_with_complex_positions(
         self,

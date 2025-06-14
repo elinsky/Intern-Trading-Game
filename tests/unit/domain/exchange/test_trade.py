@@ -20,8 +20,14 @@ class TestTradeValidation:
             ({"price": -100}, "Trade price must be positive"),
             ({"quantity": 0}, "Trade quantity must be positive"),
             ({"quantity": -10}, "Trade quantity must be positive"),
-            ({"aggressor_side": "invalid"}, "Aggressor side must be 'buy' or 'sell'"),
-            ({"aggressor_side": "BUY"}, "Aggressor side must be 'buy' or 'sell'"),
+            (
+                {"aggressor_side": "invalid"},
+                "Aggressor side must be 'buy' or 'sell'",
+            ),
+            (
+                {"aggressor_side": "BUY"},
+                "Aggressor side must be 'buy' or 'sell'",
+            ),
         ],
     )
     def test_trade_validation(self, invalid_params, expected_error):
@@ -63,7 +69,9 @@ class TestTradeValidation:
         Then the trade should be rejected
         """
         # Given - Trade with fractional quantity (invalid for options)
-        with pytest.raises(ValueError, match="Trade quantity must be a whole number"):
+        with pytest.raises(
+            ValueError, match="Trade quantity must be a whole number"
+        ):
             Trade(
                 instrument_id="SPX_4500_CALL",
                 buyer_id="MM_001",

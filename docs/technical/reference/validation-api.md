@@ -18,7 +18,7 @@ class ValidationContext:
     trader_role: str                      # Role (for loading constraints)
     tick_phase: TickPhase                 # Current market phase
     current_positions: Dict[str, int]     # Current positions by instrument
-    orders_this_tick: int                 # Orders already submitted
+    orders_this_second: int               # Orders already submitted this second
     metadata: Dict[str, Any]              # Additional context
 ```
 
@@ -61,7 +61,9 @@ Parameters:
 Validates order submission rate.
 
 Parameters:
-- `max_orders_per_tick`: Maximum orders allowed per tick
+- `max_orders_per_second`: Maximum orders allowed per second
+
+**Known Limitation**: The current implementation does not reset the counter each second. Orders are counted from system start, making this constraint effectively enforce a total order limit rather than a per-second rate limit. This will be fixed in a future update.
 
 ### ORDER_TYPE_ALLOWED
 Validates order type is permitted for the role.
@@ -116,7 +118,7 @@ context = ValidationContext(
     trader_role="market_maker",
     tick_phase=TickPhase.PRE_OPEN,
     current_positions={"SPX_CALL_4500": 40},
-    orders_this_tick=5
+    orders_this_second=5
 )
 
 result = validator.validate_order(context)

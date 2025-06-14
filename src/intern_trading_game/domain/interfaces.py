@@ -369,8 +369,8 @@ class ValidationContext:
         Current phase of the trading tick
     current_positions : Dict[str, int]
         Current positions by instrument_id (positive=long, negative=short)
-    orders_this_tick : int
-        Number of orders already submitted by this trader in current tick
+    orders_this_second : int
+        Number of orders already submitted by this trader in current second
     metadata : Dict[str, Any]
         Additional context that may be needed by custom constraints
 
@@ -389,7 +389,7 @@ class ValidationContext:
     trader_role: str
     tick_phase: "TickPhase"
     current_positions: Dict[str, int] = field(default_factory=dict)
-    orders_this_tick: int = 0
+    orders_this_second: int = 0
     metadata: Dict[str, Any] = field(default_factory=dict)
 
 

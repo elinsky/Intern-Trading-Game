@@ -10,7 +10,7 @@ from fastapi.testclient import TestClient
 from intern_trading_game.api.main import (
     app,
     exchange,
-    orders_this_tick,
+    orders_this_second,
     positions,
     team_registry,
 )
@@ -34,7 +34,7 @@ def system_context():
     exchange.instruments.clear()
     exchange.all_order_ids.clear()
     positions.clear()
-    orders_this_tick.clear()
+    orders_this_second.clear()
     team_registry.teams.clear()
     team_registry.api_key_to_team.clear()
     team_registry._team_counter = 0
@@ -87,7 +87,7 @@ def system_context():
                 "client": client,
                 "exchange": exchange,
                 "positions": positions,
-                "orders_this_tick": orders_this_tick,
+                "orders_this_second": orders_this_second,
                 "team_registry": team_registry,
                 "threads": threads,
             }

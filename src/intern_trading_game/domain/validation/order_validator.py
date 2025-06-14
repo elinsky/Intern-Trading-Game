@@ -195,13 +195,15 @@ class OrderRateConstraint(Constraint):
         self, context: ValidationContext, config: ConstraintConfig
     ) -> ValidationResult:
         """Check order rate constraint."""
-        max_orders = config.parameters.get("max_orders_per_tick", float("inf"))
+        max_orders = config.parameters.get(
+            "max_orders_per_second", float("inf")
+        )
 
-        if context.orders_this_tick < max_orders:
+        if context.orders_this_second < max_orders:
             return ValidationResult(True)
         return ValidationResult(
             False,
-            f"Already submitted {context.orders_this_tick} orders this tick",
+            f"Already submitted {context.orders_this_second} orders this second",
         )
 
 

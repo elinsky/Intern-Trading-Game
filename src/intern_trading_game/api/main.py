@@ -90,8 +90,11 @@ HARDCODED_FEE_CONFIG = {
 positions: Dict[str, Dict[str, int]] = {}
 positions_lock = threading.RLock()
 
-# Track orders per tick
-orders_this_tick: Dict[str, int] = {}
+# Track orders per second
+# TODO: Implement proper per-second rate limiting with timestamp tracking
+# Current implementation only increments counter without resetting each second
+# Should store (count, last_reset_timestamp) and reset when second changes
+orders_this_second: Dict[str, int] = {}
 orders_lock = threading.RLock()
 
 # Pending orders waiting for response
@@ -107,9 +110,19 @@ def get_team_positions(team_id: str) -> Dict[str, int]:
 
 
 def get_team_order_count(team_id: str) -> int:
-    """Thread-safe retrieval of team order count for current tick."""
+    """Thread-safe retrieval of team order count for current second.
+
+    WARNING: Current implementation does not reset counter each second.
+    This is a known limitation - the counter will continuously increment
+    until the system is restarted. See TODO above for planned fix.
+
+    Returns
+    -------
+    int
+        Number of orders submitted (never resets in current implementation)
+    """
     with orders_lock:
-        return orders_this_tick.get(team_id, 0)
+        return orders_this_second.get(team_id, 0)
 
 
 def validator_thread():
@@ -196,10 +209,12 @@ def validator_thread():
 
                     # Update order count
                     with orders_lock:
-                        current_count = orders_this_tick.get(
+                        current_count = orders_this_second.get(
                             team_info.team_id, 0
                         )
-                        orders_this_tick[team_info.team_id] = current_count + 1
+                        orders_this_second[team_info.team_id] = (
+                            current_count + 1
+                        )
                 else:
                     # Send rejection via WebSocket
                     websocket_queue.put(
@@ -658,7 +673,7 @@ async def register_team(registration: TeamRegistration):
         positions[team_info.team_id] = {}
 
     with orders_lock:
-        orders_this_tick[team_info.team_id] = 0
+        orders_this_second[team_info.team_id] = 0
 
     return team_info
 

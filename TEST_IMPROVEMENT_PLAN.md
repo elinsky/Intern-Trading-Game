@@ -44,13 +44,16 @@ Add critical unit tests for core domain models and missing constraint tests to e
 - [x] Added validation for fractional quantities (business rule)
 - [x] 100% test coverage achieved
 
-#### 1.4 Missing Constraint Tests in OrderValidator
+#### 1.4 Missing Constraint Tests in OrderValidator **COMPLETED**
 
-- [ ] Test PortfolioLimitConstraint with various position scenarios
-- [ ] Test OrderRateConstraint with rapid order submission
-- [ ] Test OrderTypeConstraint for role-specific order types
-- [ ] Test PriceRangeConstraint for limit order price bounds
-- [ ] Test constraint creation from configuration
+- [x] Test PortfolioLimitConstraint with various position scenarios
+- [x] Test OrderRateConstraint with rapid order submission
+- [x] Test OrderTypeConstraint for role-specific order types
+- [x] Test PriceRangeConstraint for limit order price bounds
+- [x] Test constraint creation from configuration
+- [x] Updated OrderRateConstraint to use max_orders_per_second (continuous trading)
+- [x] Updated ValidationContext from orders_this_tick to orders_this_second
+- [x] Added 15 focused tests covering all missing constraints
 
 #### 1.5 Create Shared Test Fixtures Module
 
