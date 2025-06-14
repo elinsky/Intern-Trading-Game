@@ -6,7 +6,7 @@ and related data structures used throughout the trading system.
 
 from abc import ABC, abstractmethod
 from dataclasses import dataclass, field
-from typing import Any, Dict
+from typing import Dict
 
 from .exchange.core.order import Order
 from .exchange.order_result import OrderResult
@@ -32,8 +32,6 @@ class ValidationContext:
         Current positions by instrument_id (positive=long, negative=short)
     orders_this_second : int
         Number of orders already submitted by this trader in current second
-    metadata : Dict[str, Any]
-        Additional context that may be needed by custom constraints
 
     Notes
     -----
@@ -50,7 +48,6 @@ class ValidationContext:
     trader_role: str
     current_positions: Dict[str, int] = field(default_factory=dict)
     orders_this_second: int = 0
-    metadata: Dict[str, Any] = field(default_factory=dict)
 
 
 class OrderValidator(ABC):
