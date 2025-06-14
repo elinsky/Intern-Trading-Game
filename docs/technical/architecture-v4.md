@@ -120,7 +120,12 @@ graph TB
 2. **Thread Count**: 5 threads total (Main + 4 daemon threads)
 3. **Thread Communication**: Queue-based message passing
 4. **Shared State**: Protected by RLock for thread safety
-5. **Service Boundaries**: Logical separation in code structure
+5. **Service Boundaries**: Clear domain separation achieved
+   - Exchange domain: core types, order book, matching, validation
+   - Underlying domain: market data for underlying assets
+   - Signals domain: trading signals for roles
+   - Events domain: market news events
+   - Game domain: configuration and game-specific logic
 6. **API Surface**: Single REST API with 5 endpoints + WebSocket endpoint
 
 ### Queue Usage (Current)
@@ -438,40 +443,49 @@ graph TB
 
 ### Immediate Actions (This Sprint)
 
-#### 1. Domain Reorganization
+#### 1. Domain Reorganization ✅ COMPLETED
 **Goal**: Create clear service boundaries in code structure
 
 ```
 ├── domain/
-│   ├── exchange/           # Move exchange-related code
-│   │   ├── core/          # order.py, trade.py, instrument.py
-│   │   ├── book/          # order_book.py, matching_engine.py
-│   │   ├── validation/    # Move validation directory here
-│   │   └── venue.py
+│   ├── exchange/           # Exchange-related code
+│   │   ├── core/          # order.py, trade.py, instrument.py ✅
+│   │   ├── book/          # order_book.py, matching_engine.py ✅
+│   │   ├── validation/    # order_validator.py ✅
+│   │   ├── venue.py       # ✅
+│   │   ├── order_result.py
+│   │   └── types.py
 │   │
-│   ├── positions/          # Position tracking domain
-│   │   └── models.py      # Position-related models
+│   ├── positions/          # Position tracking domain (empty, ready for use)
 │   │
-│   ├── market/            # Market data domain
-│   │   └── models.py      # MarketData class
+│   ├── underlying/         # Underlying market data domain ✅
+│   │   └── market_data.py # UnderlyingMarketData class
 │   │
-│   ├── events/            # Event system domain
-│   │   ├── news_event.py  # NewsEvent class
+│   ├── events/            # Event system domain ✅
+│   │   └── news_event.py  # NewsEvent class
+│   │
+│   ├── signals/           # Trading signals domain ✅
 │   │   └── signal.py      # Signal class
 │   │
-│   └── game/              # Game-specific domain
-│       ├── teams.py       # Team/role models
+│   └── game/              # Game-specific domain ✅
 │       └── config.py      # GameConfig class
 ```
 
-**Tasks**:
+**Completed Tasks**:
 
-- [ ] Create new directory structure
-- [ ] Move instrument.py from models/ to exchange/core/
-- [ ] Move validation/ directory to exchange/
-- [ ] Split models/core.py into appropriate domains
-- [ ] Update all imports
-- [ ] Delete empty models/ directory
+- [x] Create new directory structure
+- [x] Move instrument.py from models/ to exchange/core/
+- [x] Move order.py and trade.py to exchange/core/
+- [x] Move order_book.py to exchange/book/
+- [x] Move matching_engine.py to exchange/book/
+- [x] Move validation/ directory to exchange/validation/
+- [x] Split models/core.py into appropriate domains:
+  - UnderlyingMarketData → domain/underlying/ (made product-agnostic)
+  - Signal → domain/signals/ (separate from events)
+  - NewsEvent → domain/events/
+  - GameConfig → domain/game/
+- [x] Update all imports throughout codebase
+- [x] Delete models/ directory
 
 #### 2. Interface Cleanup
 **Goal**: Fix inconsistencies and remove unused code

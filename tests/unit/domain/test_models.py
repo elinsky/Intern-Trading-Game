@@ -1,17 +1,15 @@
 """Unit tests for core data models.
 
-Tests the fundamental data structures including MarketData,
+Tests the fundamental data structures including UnderlyingMarketData,
 Signal, NewsEvent, and GameConfig following Given-When-Then pattern.
 """
 
 from datetime import datetime, time
 
-from intern_trading_game.domain.models import (
-    GameConfig,
-    NewsEvent,
-    Signal,
-    UnderlyingMarketData,
-)
+from intern_trading_game.domain.events import NewsEvent
+from intern_trading_game.domain.game import GameConfig
+from intern_trading_game.domain.signals import Signal
+from intern_trading_game.domain.underlying import UnderlyingMarketData
 
 
 class TestUnderlyingMarketData:

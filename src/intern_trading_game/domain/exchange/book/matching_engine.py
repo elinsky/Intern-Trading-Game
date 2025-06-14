@@ -29,10 +29,10 @@ from collections import defaultdict
 from dataclasses import dataclass, field
 from typing import Dict, List
 
-from .book.order_book import OrderBook
-from .core.order import Order
-from .core.trade import Trade
-from .order_result import OrderResult
+from ..core.order import Order
+from ..core.trade import Trade
+from ..order_result import OrderResult
+from .order_book import OrderBook
 
 
 class MatchingEngine(ABC):

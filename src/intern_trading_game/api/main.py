@@ -10,8 +10,8 @@ import uvicorn
 from fastapi import FastAPI, WebSocket, WebSocketDisconnect
 from fastapi.middleware.cors import CORSMiddleware
 
+from ..domain.exchange.book.matching_engine import ContinuousMatchingEngine
 from ..domain.exchange.core.instrument import Instrument
-from ..domain.exchange.matching_engine import ContinuousMatchingEngine
 from ..domain.exchange.validation.order_validator import (
     ConstraintBasedOrderValidator,
     ConstraintConfig,

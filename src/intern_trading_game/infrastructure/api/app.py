@@ -13,8 +13,8 @@ from ...data.state.managers import (
     get_team_order_count,
     get_team_positions,
 )
+from ...domain.exchange.book.matching_engine import ContinuousMatchingEngine
 from ...domain.exchange.core.instrument import Instrument
-from ...domain.exchange.matching_engine import ContinuousMatchingEngine
 from ...domain.exchange.validation.order_validator import (
     ConstraintBasedOrderValidator,
     ConstraintConfig,

@@ -7,14 +7,14 @@ the exchange.
 
 from typing import Dict, List, Optional, Set
 
+from .book.matching_engine import (
+    ContinuousMatchingEngine,
+    MatchingEngine,
+)
 from .book.order_book import OrderBook
 from .core.instrument import Instrument
 from .core.order import Order
 from .core.trade import Trade
-from .matching_engine import (
-    ContinuousMatchingEngine,
-    MatchingEngine,
-)
 from .order_result import OrderResult
 
 

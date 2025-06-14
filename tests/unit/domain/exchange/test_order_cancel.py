@@ -13,14 +13,14 @@ from typing import Any, List, Tuple
 
 import pytest
 
+from intern_trading_game.domain.exchange.book.matching_engine import (
+    ContinuousMatchingEngine,
+)
 from intern_trading_game.domain.exchange.core.instrument import Instrument
 from intern_trading_game.domain.exchange.core.order import (
     Order,
     OrderSide,
     OrderType,
-)
-from intern_trading_game.domain.exchange.matching_engine import (
-    ContinuousMatchingEngine,
 )
 from intern_trading_game.domain.exchange.venue import ExchangeVenue
 
