@@ -8,8 +8,10 @@ market data generation.
 
 import pytest
 
-from intern_trading_game.domain.exchange.order import Order
 from intern_trading_game.domain.exchange.order_book import OrderBook
+from tests.fixtures import (
+    create_test_order,
+)
 
 
 # Test Fixtures
@@ -30,7 +32,7 @@ def book_with_liquidity():
     """
     book = OrderBook("SPX_CALL_4500_20240315")
 
-    # Add sell orders (asks)
+    # Add custom orders to match the original test's expectations
     book.add_order(
         create_test_order(
             side="sell", price=100.0, quantity=20, trader_id="mm1"
@@ -59,24 +61,6 @@ def book_with_liquidity():
     )
 
     return book
-
-
-# Helper Functions
-def create_test_order(
-    side="buy",
-    price=100.0,
-    quantity=10,
-    trader_id="test_trader",
-    instrument_id="SPX_CALL_4500_20240315",
-):
-    """Helper to create orders with sensible defaults for SPX options."""
-    return Order(
-        instrument_id=instrument_id,
-        side=side,
-        quantity=quantity,
-        price=price,
-        trader_id=trader_id,
-    )
 
 
 class TestOrderBookBasics:

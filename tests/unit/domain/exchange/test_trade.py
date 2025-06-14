@@ -8,6 +8,7 @@ from datetime import datetime
 import pytest
 
 from intern_trading_game.domain.exchange.trade import Trade
+from tests.fixtures import TEST_PRICES, create_test_trade
 
 
 class TestTradeValidation:
@@ -131,20 +132,17 @@ class TestTradeBusinessLogic:
         When accessing the value property
         Then it should return price * quantity
         """
-        # Given - SPX option trade at $128.50 for 10 contracts
-        trade = Trade(
-            instrument_id="SPX_4500_CALL",
+        # Given - SPX option trade at typical ask price for 10 contracts
+        trade = create_test_trade(
+            price=TEST_PRICES["typical_ask"],
+            quantity=10,
             buyer_id="HF_002",
             seller_id="MM_001",
-            price=128.50,
-            quantity=10,
-            buyer_order_id="BUY_123",
-            seller_order_id="SELL_456",
-            aggressor_side="sell",
+            aggressor_side="buy",  # HF lifted the offer
         )
 
         # When/Then - Value should be price * quantity
-        assert trade.value == 1285.0  # $128.50 * 10 contracts
+        assert trade.value == 1005.0  # $100.50 * 10 contracts
 
     def test_trade_to_dict(self):
         """
