@@ -47,7 +47,8 @@ Order validation ensures market integrity:
 
 ## Related Resources
 
-- **[Architecture Overview](../architecture-v3.md)** - System design and components
+- **[Architecture v4](../architecture-v4.md)** - Current service-oriented architecture
+- **[Architecture v3](../architecture-v3.md)** - Layered system design
 - **[API Reference](../reference/index.md)** - Detailed API specifications
 - **[How-To Guides](../how-to/index.md)** - Practical implementation guides
 

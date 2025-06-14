@@ -53,7 +53,8 @@ Each intern team plays one of the following:
 
 #### Architecture & Design
 
-- **[Architecture Overview](technical/architecture.md)** - System component overview
+- **[Architecture v4](technical/architecture-v4.md)** - Service-oriented architecture (current)
+- **[Architecture Overview](technical/architecture.md)** - Original system design
 - **[Build Order](technical/build-order.md)** - Implementation roadmap
 - **[Implementation Guide](technical/implementation-guide.md)** - Technical setup details
 

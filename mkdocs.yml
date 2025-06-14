@@ -110,8 +110,9 @@ nav:
   - Technical Documentation:
       - Overview: technical/index.md
       - Architecture:
-          - Current Version (v3): technical/architecture-v3.md
-          - Previous Version (v2): technical/architecture-v2.md
+          - Current Version (v4): technical/architecture-v4.md
+          - Previous Version (v3): technical/architecture-v3.md
+          - Earlier Version (v2): technical/architecture-v2.md
           - Original Version (v1): technical/architecture.md
       - Build Order: technical/build-order.md
       - Implementation Guide: technical/implementation-guide.md
