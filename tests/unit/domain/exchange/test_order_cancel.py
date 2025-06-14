@@ -13,6 +13,7 @@ from typing import Any, List, Tuple
 
 import pytest
 
+from intern_trading_game.domain.exchange.core.instrument import Instrument
 from intern_trading_game.domain.exchange.matching_engine import (
     ContinuousMatchingEngine,
 )
@@ -22,7 +23,6 @@ from intern_trading_game.domain.exchange.order import (
     OrderType,
 )
 from intern_trading_game.domain.exchange.venue import ExchangeVenue
-from intern_trading_game.domain.models.instrument import Instrument
 
 
 class MockQueueProcessor:

@@ -13,9 +13,9 @@ from ...data.state.managers import (
     get_team_order_count,
     get_team_positions,
 )
+from ...domain.exchange.core.instrument import Instrument
 from ...domain.exchange.matching_engine import ContinuousMatchingEngine
 from ...domain.exchange.venue import ExchangeVenue
-from ...domain.models.instrument import Instrument
 from ...domain.validation.order_validator import (
     ConstraintBasedOrderValidator,
     ConstraintConfig,

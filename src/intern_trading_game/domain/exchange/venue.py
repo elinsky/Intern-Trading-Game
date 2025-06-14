@@ -7,7 +7,7 @@ the exchange.
 
 from typing import Dict, List, Optional, Set
 
-from ..models.instrument import Instrument
+from .core.instrument import Instrument
 from .matching_engine import (
     ContinuousMatchingEngine,
     MatchingEngine,

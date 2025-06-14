@@ -10,7 +10,7 @@ modules = [
     "intern_trading_game.domain.exchange.order",
     "intern_trading_game.domain.exchange.trade",
     "intern_trading_game.domain.exchange.venue",
-    "intern_trading_game.domain.models.instrument",
+    "intern_trading_game.domain.exchange.core.instrument",
 ]
 
 # Generate the API reference pages

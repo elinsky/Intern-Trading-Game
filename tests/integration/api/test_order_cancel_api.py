@@ -17,12 +17,12 @@ from datetime import datetime
 import pytest
 
 from intern_trading_game.api.main import exchange
+from intern_trading_game.domain.exchange.core.instrument import Instrument
 from intern_trading_game.domain.exchange.order import (
     Order,
     OrderSide,
     OrderType,
 )
-from intern_trading_game.domain.models.instrument import Instrument
 from intern_trading_game.infrastructure.api.models import TeamInfo
 
 # Tests enabled - use api_context fixture for threading support

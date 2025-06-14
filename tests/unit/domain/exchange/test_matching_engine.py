@@ -22,7 +22,7 @@ from intern_trading_game.domain.exchange import (
     Order,
     OrderBook,
 )
-from intern_trading_game.domain.models.instrument import Instrument
+from intern_trading_game.domain.exchange.core.instrument import Instrument
 
 # Test fixtures
 

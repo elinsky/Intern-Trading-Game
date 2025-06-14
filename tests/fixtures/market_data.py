@@ -7,9 +7,9 @@ consistent test objects across the test suite.
 from datetime import datetime, timedelta
 from typing import Dict, List, Optional, Tuple
 
+from intern_trading_game.domain.exchange.core.instrument import Instrument
 from intern_trading_game.domain.exchange.order import Order
 from intern_trading_game.domain.exchange.trade import Trade
-from intern_trading_game.domain.models.instrument import Instrument
 
 # Test data constants
 TEST_PRICES = {
