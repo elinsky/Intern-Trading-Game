@@ -5,6 +5,7 @@ This module contains classes for the trading exchange, order book, orders,
 and trades.
 """
 
+from .book.order_book import OrderBook
 from .core.order import Order
 from .core.trade import Trade
 from .matching_engine import (
@@ -12,7 +13,6 @@ from .matching_engine import (
     ContinuousMatchingEngine,
     MatchingEngine,
 )
-from .order_book import OrderBook
 from .order_result import OrderResult
 from .venue import ExchangeVenue
 

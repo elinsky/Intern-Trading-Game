@@ -6,7 +6,7 @@ import mkdocs_gen_files
 
 # Define the modules to document
 modules = [
-    "intern_trading_game.domain.exchange.order_book",
+    "intern_trading_game.domain.exchange.book.order_book",
     "intern_trading_game.domain.exchange.core.order",
     "intern_trading_game.domain.exchange.core.trade",
     "intern_trading_game.domain.exchange.venue",

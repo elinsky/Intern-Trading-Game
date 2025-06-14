@@ -8,7 +8,7 @@ market data generation.
 
 import pytest
 
-from intern_trading_game.domain.exchange.order_book import OrderBook
+from intern_trading_game.domain.exchange.book.order_book import OrderBook
 from tests.fixtures import (
     create_test_order,
 )

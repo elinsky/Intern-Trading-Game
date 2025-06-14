@@ -9,7 +9,7 @@ from dataclasses import dataclass, field
 from datetime import datetime, time
 from typing import Dict, List
 
-from ..exchange.order_book import OrderBook
+from ..exchange.book.order_book import OrderBook
 
 
 @dataclass
