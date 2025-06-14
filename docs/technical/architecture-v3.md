@@ -190,6 +190,8 @@ graph TB
 ### 3. Thread Layer (Infrastructure)
 **Purpose**: Concurrent processing of orders through the trading pipeline.
 
+> **Note**: For a detailed analysis of the threading architecture, including design patterns, synchronization mechanisms, and implementation guidelines, see the [Thread Layer Design](explanation/thread-layer-design.md) document.
+
 **Current Threads** (4 threads implemented):
 
 1. **Main Thread**: FastAPI server (not shown as separate thread)

@@ -143,6 +143,7 @@ nav:
           - Batch Matching: technical/explanation/batch-matching.md
           - Order Validator Design: technical/explanation/order-validator-design.md
           - Trading Phases: technical/explanation/trading-phases.md
+          - Thread Layer Design: technical/explanation/thread-layer-design.md
       - Contributing:
           - Math in Docstrings: technical/contributing/docstring-math-guide.md
 

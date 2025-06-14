@@ -35,6 +35,11 @@ Order validation ensures market integrity:
 - **[Trading Phases](trading-phases.md)** breaks down different market phases the game supports
 - Order windows, matching times, and settlement explained
 
+### Concurrency & Threading
+
+- **[Thread Layer Design](thread-layer-design.md)** explains the concurrent processing architecture
+- Queue-based communication patterns and synchronization mechanisms
+
 ## Related Resources
 
 - **[Architecture Overview](../architecture-v3.md)** - System design and components

@@ -96,6 +96,8 @@
 
 ## Phase 4: Threading Implementation (Partial)
 
+> **Architecture Reference**: For detailed threading design patterns, synchronization mechanisms, and best practices, see the [Thread Layer Design](explanation/thread-layer-design.md) document.
+
 ### 4.1 Thread 2: Order Validator COMPLETE
 
 - [x] **Validator thread wrapper** - Queue consumer loop

@@ -7,6 +7,7 @@ Welcome to the technical documentation for the Intern Trading Game. This section
 ### Current Architecture
 
 - **[Architecture v3](architecture-v3.md)** - Current system architecture (recommended)
+- **[Thread Layer Design](explanation/thread-layer-design.md)** - Detailed threading architecture and patterns
 - **[Architecture v2](architecture-v2.md)** - Previous architecture version
 - **[Architecture v1](architecture.md)** - Original architecture design
 

@@ -173,6 +173,8 @@ class TradingBot:
 
 ## Threading Architecture
 
+> **Note**: For comprehensive details on the threading model, see the [Thread Layer Design](../explanation/thread-layer-design.md) document.
+
 The system uses dedicated threads for each stage:
 
 1. **Thread 2: Validator** - Validates orders, sends rejections
