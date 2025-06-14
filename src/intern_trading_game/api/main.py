@@ -92,6 +92,7 @@ positions_lock = threading.RLock()
 
 # Track orders per second
 # TODO: Implement proper per-second rate limiting with timestamp tracking
+# See https://github.com/Elinsky/Intern-Trading-Game/issues/1
 # Current implementation only increments counter without resetting each second
 # Should store (count, last_reset_timestamp) and reset when second changes
 orders_this_second: Dict[str, int] = {}
@@ -114,7 +115,7 @@ def get_team_order_count(team_id: str) -> int:
 
     WARNING: Current implementation does not reset counter each second.
     This is a known limitation - the counter will continuously increment
-    until the system is restarted. See TODO above for planned fix.
+    until the system is restarted. See GitHub issue #1 and TODO above.
 
     Returns
     -------
