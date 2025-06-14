@@ -1,20 +1,20 @@
 """Domain models for the trading system."""
 
-# Import specific models to avoid star imports
-from ..exchange.core.instrument import (
-    Instrument,
-)
-from .core import (
-    GameConfig,
-    MarketData,
-    NewsEvent,
-    Signal,
-)
+# Import from new domain locations
+from ..events.news_event import NewsEvent
+from ..exchange.core.instrument import Instrument
+from ..game.config import GameConfig
+from ..signals.signal import Signal
+from ..underlying.market_data import UnderlyingMarketData
+
+# Keep old name for backward compatibility during migration
+MarketData = UnderlyingMarketData
 
 __all__ = [
     "GameConfig",
-    "MarketData",
+    "MarketData",  # Deprecated, use UnderlyingMarketData
     "NewsEvent",
     "Signal",
+    "UnderlyingMarketData",
     "Instrument",
 ]

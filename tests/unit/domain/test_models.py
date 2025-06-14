@@ -8,64 +8,68 @@ from datetime import datetime, time
 
 from intern_trading_game.domain.models import (
     GameConfig,
-    MarketData,
     NewsEvent,
     Signal,
+    UnderlyingMarketData,
 )
 
 
-class TestMarketData:
-    """Test suite for MarketData dataclass."""
+class TestUnderlyingMarketData:
+    """Test suite for UnderlyingMarketData dataclass."""
 
-    def test_market_data_creation(self):
-        """Test creating MarketData with required fields.
+    def test_underlying_market_data_creation(self):
+        """Test creating UnderlyingMarketData for different products.
 
-        Given - Market information at a specific time
-        When - We create a MarketData instance
-        Then - All fields should be accessible and correct
+        Given - Market information for SPX and SPY
+        When - We create separate UnderlyingMarketData instances
+        Then - Each instance should contain product-specific data
         """
         # Given - Market information at a timestamp
         timestamp = datetime(2024, 3, 21, 10, 30, 0)
-        spx = 5234.50
-        spy = 523.15
-        books = {}
+        spx_price = 5234.50
+        spy_price = 523.15
 
-        # When - We create MarketData
-        data = MarketData(
-            timestamp=timestamp,
-            spx_price=spx,
-            spy_price=spy,
-            order_book_snapshots=books,
+        # When - We create separate instances for each underlying
+        spx_data = UnderlyingMarketData(
+            symbol="SPX", timestamp=timestamp, price=spx_price
+        )
+        spy_data = UnderlyingMarketData(
+            symbol="SPY", timestamp=timestamp, price=spy_price
         )
 
-        # Then - All fields are set correctly
-        assert data.timestamp == timestamp
-        assert data.spx_price == 5234.50
-        assert data.spy_price == 523.15
-        assert data.order_book_snapshots == {}
+        # Then - Each instance has correct product-specific data
+        assert spx_data.symbol == "SPX"
+        assert spx_data.timestamp == timestamp
+        assert spx_data.price == 5234.50
 
-    def test_market_data_immutability(self):
-        """Test that MarketData acts as immutable data.
+        assert spy_data.symbol == "SPY"
+        assert spy_data.timestamp == timestamp
+        assert spy_data.price == 523.15
 
-        Given - A MarketData instance
-        When - We try to modify fields
-        Then - The dataclass should allow modifications (not frozen)
+    def test_underlying_data_product_agnostic(self):
+        """Test that UnderlyingMarketData works for any product.
+
+        Given - Different underlying products
+        When - We create instances for various underlyings
+        Then - The class should handle any product equally well
         """
-        # Given - MarketData instance
-        data = MarketData(
-            timestamp=datetime.now(),
-            spx_price=5200.0,
-            spy_price=520.0,
-            order_book_snapshots={},
+        # Given - Various underlying products
+        timestamp = datetime.now()
+
+        # When - We create instances for different products
+        ndx_data = UnderlyingMarketData(
+            symbol="NDX", timestamp=timestamp, price=15000.0
+        )
+        vix_data = UnderlyingMarketData(
+            symbol="VIX", timestamp=timestamp, price=18.5
         )
 
-        # When - We modify a field
-        original_price = data.spx_price
-        data.spx_price = 5250.0
+        # Then - All products work with the same structure
+        assert ndx_data.symbol == "NDX"
+        assert ndx_data.price == 15000.0
 
-        # Then - Modification is allowed (dataclass not frozen)
-        assert data.spx_price == 5250.0
-        assert data.spx_price != original_price
+        assert vix_data.symbol == "VIX"
+        assert vix_data.price == 18.5
 
 
 class TestSignal:
