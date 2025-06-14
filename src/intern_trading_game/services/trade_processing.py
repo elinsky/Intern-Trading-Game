@@ -9,9 +9,9 @@ from datetime import datetime
 from queue import Queue
 from typing import Dict, List, Optional, Tuple
 
-from ..domain.exchange.order import Order
+from ..domain.exchange.core.order import Order
+from ..domain.exchange.core.trade import Trade
 from ..domain.exchange.order_result import OrderResult
-from ..domain.exchange.trade import Trade
 from ..infrastructure.api.models import OrderResponse, TeamInfo
 from .interfaces import TradeProcessingServiceInterface
 from .position_management import PositionManagementService

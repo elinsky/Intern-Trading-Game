@@ -7,7 +7,7 @@ from typing import Dict
 
 from fastapi import Depends, HTTPException, WebSocket, WebSocketDisconnect
 
-from ...domain.exchange.order import Order, OrderSide, OrderType
+from ...domain.exchange.core.order import Order, OrderSide, OrderType
 from .auth import get_current_team, team_registry
 from .models import (
     OrderRequest,

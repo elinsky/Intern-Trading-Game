@@ -7,7 +7,7 @@ from typing import Dict
 from fastapi import APIRouter, Depends, HTTPException
 
 from ...constants.errors import ErrorCodes
-from ...domain.exchange.order import Order, OrderSide, OrderType
+from ...domain.exchange.core.order import Order, OrderSide, OrderType
 from ...infrastructure.api.auth import TeamInfo, get_current_team
 from ...infrastructure.api.models import ApiError, ApiResponse, OrderRequest
 

@@ -18,7 +18,7 @@ import pytest
 
 from intern_trading_game.api.main import exchange
 from intern_trading_game.domain.exchange.core.instrument import Instrument
-from intern_trading_game.domain.exchange.order import (
+from intern_trading_game.domain.exchange.core.order import (
     Order,
     OrderSide,
     OrderType,

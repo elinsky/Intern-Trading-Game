@@ -8,7 +8,7 @@ from abc import ABC, abstractmethod
 from dataclasses import dataclass, field
 from typing import Any, Dict
 
-from .exchange.order import Order
+from .exchange.core.order import Order
 from .exchange.order_result import OrderResult
 
 

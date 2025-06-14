@@ -7,7 +7,7 @@ business logic for the trading system.
 from typing import Optional, Tuple
 
 from ..constants.errors import ErrorMessages
-from ..domain.exchange.order import Order
+from ..domain.exchange.core.order import Order
 from ..domain.exchange.order_result import OrderResult
 from ..domain.exchange.venue import ExchangeVenue
 from ..domain.interfaces import ValidationContext

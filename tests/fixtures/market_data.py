@@ -8,8 +8,8 @@ from datetime import datetime, timedelta
 from typing import Dict, List, Optional, Tuple
 
 from intern_trading_game.domain.exchange.core.instrument import Instrument
-from intern_trading_game.domain.exchange.order import Order
-from intern_trading_game.domain.exchange.trade import Trade
+from intern_trading_game.domain.exchange.core.order import Order
+from intern_trading_game.domain.exchange.core.trade import Trade
 
 # Test data constants
 TEST_PRICES = {

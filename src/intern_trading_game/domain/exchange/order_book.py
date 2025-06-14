@@ -10,8 +10,8 @@ from collections import deque
 from dataclasses import dataclass, field
 from typing import Dict, List, Optional, Set, Tuple
 
-from .order import Order
-from .trade import Trade
+from .core.order import Order
+from .core.trade import Trade
 
 
 @dataclass

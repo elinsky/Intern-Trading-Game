@@ -19,7 +19,7 @@ All interfaces follow SOLID principles, particularly:
 from abc import ABC, abstractmethod
 from typing import Dict, Optional, Tuple
 
-from ..domain.exchange.order import Order
+from ..domain.exchange.core.order import Order
 from ..domain.exchange.order_result import OrderResult
 from ..infrastructure.api.models import OrderResponse, TeamInfo
 

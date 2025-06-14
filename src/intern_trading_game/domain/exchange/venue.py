@@ -8,14 +8,14 @@ the exchange.
 from typing import Dict, List, Optional, Set
 
 from .core.instrument import Instrument
+from .core.order import Order
+from .core.trade import Trade
 from .matching_engine import (
     ContinuousMatchingEngine,
     MatchingEngine,
 )
-from .order import Order
 from .order_book import OrderBook
 from .order_result import OrderResult
-from .trade import Trade
 
 
 class ExchangeVenue:

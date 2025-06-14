@@ -5,7 +5,7 @@ Tests for the exchange system.
 import pytest
 
 from intern_trading_game.domain.exchange.core.instrument import Instrument
-from intern_trading_game.domain.exchange.order import Order
+from intern_trading_game.domain.exchange.core.order import Order
 from intern_trading_game.domain.exchange.venue import ExchangeVenue
 
 

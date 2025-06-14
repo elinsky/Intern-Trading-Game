@@ -9,10 +9,10 @@ from unittest.mock import patch
 import pytest
 
 from intern_trading_game.domain.exchange.core.instrument import Instrument
+from intern_trading_game.domain.exchange.core.order import Order
 from intern_trading_game.domain.exchange.matching_engine import (
     BatchMatchingEngine,
 )
-from intern_trading_game.domain.exchange.order import Order
 from intern_trading_game.domain.exchange.venue import ExchangeVenue
 from tests.fixtures import (
     create_matched_orders,

@@ -4,13 +4,13 @@ from unittest.mock import create_autospec
 
 import pytest
 
-from intern_trading_game.domain.exchange.order import (
+from intern_trading_game.domain.exchange.core.order import (
     Order,
     OrderSide,
     OrderType,
 )
+from intern_trading_game.domain.exchange.core.trade import Trade
 from intern_trading_game.domain.exchange.order_result import OrderResult
-from intern_trading_game.domain.exchange.trade import Trade
 from intern_trading_game.domain.exchange.venue import ExchangeVenue
 from intern_trading_game.services.order_matching import (
     OrderMatchingService,

@@ -8,7 +8,7 @@ to avoid circular imports between venue.py and matching_engine.py.
 from dataclasses import dataclass, field
 from typing import List, Optional
 
-from .trade import Trade
+from .core.trade import Trade
 
 
 @dataclass
