@@ -1,6 +1,6 @@
 """Unit tests for core data models.
 
-Tests the fundamental data structures including TickPhase, MarketData,
+Tests the fundamental data structures including MarketData,
 Signal, NewsEvent, and GameConfig following Given-When-Then pattern.
 """
 
@@ -11,53 +11,7 @@ from intern_trading_game.domain.models import (
     MarketData,
     NewsEvent,
     Signal,
-    TickPhase,
 )
-
-
-class TestTickPhase:
-    """Test suite for TickPhase enumeration."""
-
-    def test_tick_phase_values(self):
-        """Test that tick phases have correct timing values.
-
-        Given - The TickPhase enumeration with defined phases
-        When - We access the phase values
-        Then - Each phase should have the correct (minutes, seconds) tuple
-        """
-        # Given - TickPhase enum is imported
-
-        # When - We check each phase value
-        market_data = TickPhase.MARKET_DATA.value
-        pre_open = TickPhase.PRE_OPEN.value
-        open_phase = TickPhase.OPEN.value
-        trading = TickPhase.TRADING.value
-        closed = TickPhase.CLOSED.value
-
-        # Then - Values match expected timing
-        assert market_data == (0, 0), "Market data update at T+0:00"
-        assert pre_open == (0, 30), "Pre-open phase at T+0:30"
-        assert open_phase == (3, 0), "Open phase at T+3:00"
-        assert trading == (3, 30), "Trading phase at T+3:30"
-        assert closed == (5, 0), "Closed phase at T+5:00"
-
-    def test_total_seconds_calculation(self):
-        """Test conversion of phase timing to total seconds.
-
-        Given - TickPhase with (minutes, seconds) timing
-        When - We call total_seconds property
-        Then - It should return correct total seconds from tick start
-        """
-        # Given - Various tick phases
-
-        # When - We calculate total seconds for each phase
-
-        # Then - Calculations are correct
-        assert TickPhase.MARKET_DATA.total_seconds == 0
-        assert TickPhase.PRE_OPEN.total_seconds == 30
-        assert TickPhase.OPEN.total_seconds == 180
-        assert TickPhase.TRADING.total_seconds == 210
-        assert TickPhase.CLOSED.total_seconds == 300
 
 
 class TestMarketData:
@@ -66,12 +20,11 @@ class TestMarketData:
     def test_market_data_creation(self):
         """Test creating MarketData with required fields.
 
-        Given - Market information for a specific tick
+        Given - Market information at a specific time
         When - We create a MarketData instance
         Then - All fields should be accessible and correct
         """
-        # Given - Market information at tick 42
-        tick_num = 42
+        # Given - Market information at a timestamp
         timestamp = datetime(2024, 3, 21, 10, 30, 0)
         spx = 5234.50
         spy = 523.15
@@ -79,7 +32,6 @@ class TestMarketData:
 
         # When - We create MarketData
         data = MarketData(
-            tick=tick_num,
             timestamp=timestamp,
             spx_price=spx,
             spy_price=spy,
@@ -87,7 +39,6 @@ class TestMarketData:
         )
 
         # Then - All fields are set correctly
-        assert data.tick == 42
         assert data.timestamp == timestamp
         assert data.spx_price == 5234.50
         assert data.spy_price == 523.15
@@ -102,7 +53,6 @@ class TestMarketData:
         """
         # Given - MarketData instance
         data = MarketData(
-            tick=1,
             timestamp=datetime.now(),
             spx_price=5200.0,
             spy_price=520.0,
@@ -134,14 +84,14 @@ class TestSignal:
         # When - We create the signal
         signal = Signal(
             signal_type="volatility",
-            tick_horizon=3,
+            horizon_minutes=15,
             data=signal_data,
             accuracy=0.66,
         )
 
         # Then - Signal contains correct information
         assert signal.signal_type == "volatility"
-        assert signal.tick_horizon == 3
+        assert signal.horizon_minutes == 15
         assert signal.data["low"] == 0.2
         assert signal.data["medium"] == 0.5
         assert signal.data["high"] == 0.3
@@ -160,14 +110,14 @@ class TestSignal:
         # When - We create the signal
         signal = Signal(
             signal_type="tracking_error",
-            tick_horizon=1,
+            horizon_minutes=5,
             data=signal_data,
             accuracy=0.80,
         )
 
         # Then - Signal contains tracking information
         assert signal.signal_type == "tracking_error"
-        assert signal.tick_horizon == 1
+        assert signal.horizon_minutes == 5
         assert signal.data["magnitude"] == 0.15
         assert signal.data["direction"] == "positive"
         assert signal.accuracy == 0.80
@@ -191,7 +141,7 @@ class TestNewsEvent:
             event_type="regime_shift",
             description="Fed announces unexpected rate hike",
             impact_magnitude=0.02,
-            tick_announced=45,
+            timestamp_announced=datetime(2024, 3, 21, 14, 0, 0),
         )
 
         # Then - Event captures market-moving news
@@ -199,7 +149,7 @@ class TestNewsEvent:
         assert event.event_type == "regime_shift"
         assert "Fed" in event.description
         assert event.impact_magnitude == 0.02
-        assert event.tick_announced == 45
+        assert event.timestamp_announced == datetime(2024, 3, 21, 14, 0, 0)
 
     def test_false_signal_event(self):
         """Test creating a false signal news event.
@@ -216,7 +166,7 @@ class TestNewsEvent:
             event_type="false_signal",
             description="Analyst upgrades tech sector",
             impact_magnitude=0.001,
-            tick_announced=50,
+            timestamp_announced=datetime(2024, 3, 21, 14, 30, 0),
         )
 
         # Then - Event has minimal impact
@@ -242,11 +192,9 @@ class TestGameConfig:
 
         # Then - Defaults match standard game setup
         assert config.session_name == "training_session_1"
-        assert config.tick_duration_seconds == 300
         assert config.trading_days == ["Tuesday", "Thursday"]
         assert config.market_open == time(9, 30)
         assert config.market_close == time(15, 0)
-        assert config.total_ticks == 390
         assert config.enable_volatility_events is True
         assert config.enable_news_events is True
         assert config.bot_timeout_seconds == 10.0
@@ -263,30 +211,28 @@ class TestGameConfig:
         # When - We create custom config
         config = GameConfig(
             session_name="quick_test",
-            tick_duration_seconds=60,  # 1 minute ticks
-            total_ticks=10,  # Very short game
             bot_timeout_seconds=2.0,  # Fast timeout
+            enable_volatility_events=False,  # Disable for testing
         )
 
         # Then - Custom values are set
-        assert config.tick_duration_seconds == 60
-        assert config.total_ticks == 10
         assert config.bot_timeout_seconds == 2.0
+        assert config.enable_volatility_events is False
 
-    def test_calculated_properties(self):
-        """Test calculated properties of GameConfig.
+    def test_market_hours(self):
+        """Test market hours configuration.
 
-        Given - GameConfig with specific tick duration
-        When - We access calculated properties
-        Then - Calculations should be correct
+        Given - GameConfig with market hours
+        When - We check the trading schedule
+        Then - Hours should match standard equity markets
         """
-        # Given - Standard 5-minute tick game
+        # Given - Standard game config
         config = GameConfig(session_name="test")
 
-        # When - We check calculated properties
-        ticks_per_hour = config.ticks_per_hour
-        ticks_per_day = config.ticks_per_day
+        # When - We check market hours
+        open_time = config.market_open
+        close_time = config.market_close
 
-        # Then - Calculations match expected values
-        assert ticks_per_hour == 12  # 60 min / 5 min
-        assert ticks_per_day == 66  # 5.5 hours * 12 ticks/hour
+        # Then - Hours match equity market standards
+        assert open_time == time(9, 30)  # 9:30 AM CT
+        assert close_time == time(15, 0)  # 3:00 PM CT

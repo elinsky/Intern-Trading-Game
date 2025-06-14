@@ -13,7 +13,6 @@ from typing import Any, Dict, List, Optional
 from ..exchange.order_result import OrderResult
 from ..interfaces import OrderValidator as OrderValidatorInterface
 from ..interfaces import ValidationContext
-from ..models import TickPhase
 
 
 class ConstraintType(Enum):
@@ -24,7 +23,6 @@ class ConstraintType(Enum):
     ORDER_SIZE = "order_size"
     ORDER_RATE = "order_rate"
     ORDER_TYPE_ALLOWED = "order_type_allowed"
-    TRADING_WINDOW = "trading_window"
     INSTRUMENT_ALLOWED = "instrument_allowed"
     PRICE_RANGE = "price_range"
 
@@ -228,27 +226,6 @@ class OrderTypeConstraint(Constraint):
         )
 
 
-class TradingWindowConstraint(Constraint):
-    """Validates orders are submitted during allowed tick phases."""
-
-    def check(
-        self, context: ValidationContext, config: ConstraintConfig
-    ) -> ValidationResult:
-        """Check trading window constraint."""
-        allowed_phases = config.parameters.get("allowed_phases", [])
-
-        # TickPhase.value is a tuple, but config has phase names
-        # So compare using the enum name instead
-        current_phase_name = context.tick_phase.name
-
-        if current_phase_name in allowed_phases:
-            return ValidationResult(True)
-        return ValidationResult(
-            False,
-            f"Current phase {current_phase_name} not in {allowed_phases}",
-        )
-
-
 class InstrumentAllowedConstraint(Constraint):
     """Validates instrument is allowed for trading by this role."""
 
@@ -339,7 +316,6 @@ class ConstraintBasedOrderValidator(OrderValidatorInterface):
             ConstraintType.ORDER_SIZE: OrderSizeConstraint(),
             ConstraintType.ORDER_RATE: OrderRateConstraint(),
             ConstraintType.ORDER_TYPE_ALLOWED: OrderTypeConstraint(),
-            ConstraintType.TRADING_WINDOW: TradingWindowConstraint(),
             ConstraintType.INSTRUMENT_ALLOWED: InstrumentAllowedConstraint(),
             ConstraintType.PRICE_RANGE: PriceRangeConstraint(),
         }
@@ -466,18 +442,8 @@ def create_constraint(
 
 def get_universal_constraints() -> List[ConstraintConfig]:
     """Get constraints that apply to all roles."""
-    return [
-        ConstraintConfig(
-            constraint_type=ConstraintType.TRADING_WINDOW,
-            parameters={
-                "allowed_phases": [
-                    TickPhase.PRE_OPEN.name,
-                ]
-            },
-            error_code="TRADING_WINDOW_CLOSED",
-            error_message="Orders only accepted during pre-open phase",
-        )
-    ]
+    # TODO: Add phase-based constraints when implementing new phase system
+    return []
 
 
 def load_constraints_from_dict(

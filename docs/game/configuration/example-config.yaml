@@ -4,8 +4,8 @@
 game:
   name: "Intern Trading Game"
   duration_weeks: 8
-  tick_duration_minutes: 5
-  order_window_minutes: 3
+  # Phase schedule configuration (future enhancement)
+  # For now, phases are hardcoded to standard market hours
 
 market:
   underlyings:

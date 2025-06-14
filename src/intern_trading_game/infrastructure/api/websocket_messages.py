@@ -47,7 +47,6 @@ from enum import Enum
 from typing import Optional
 
 from ...domain.exchange.types import LiquidityType
-from ...domain.models import TickPhase
 
 
 class MessageType(str, Enum):
@@ -76,10 +75,6 @@ class MessageType(str, Enum):
         Current position state (custom for this system)
     MARKET_DATA : str
         Market quotes and prices
-    TICK_START : str
-        New trading tick beginning
-    TICK_PHASE : str
-        Trading phase change within tick
     SIGNAL : str
         Role-specific trading signal
     EVENT : str
@@ -97,8 +92,6 @@ class MessageType(str, Enum):
     QUOTE_REJECT = "quote_reject"
     POSITION_SNAPSHOT = "position_snapshot"
     MARKET_DATA = "market_data"
-    TICK_START = "tick_start"
-    TICK_PHASE = "tick_phase"
     SIGNAL = "signal"
     EVENT = "event"
     CONNECTION_STATUS = "connection_status"
@@ -552,74 +545,6 @@ def build_market_data(
         data["ask_size"] = ask_size
 
     return data
-
-
-def build_tick_start(
-    tick_number: int,
-    tick_duration_seconds: int,
-    order_window_open: datetime,
-    order_window_close: datetime,
-    timestamp: Optional[datetime] = None,
-) -> dict:
-    """Build tick start notification.
-
-    Constructs a message announcing the start of a new trading tick
-    with timing information for the order submission window.
-
-    Parameters
-    ----------
-    tick_number : int
-        Sequential tick number
-    tick_duration_seconds : int
-        Total tick duration in seconds
-    order_window_open : datetime
-        When order submission opens
-    order_window_close : datetime
-        When order submission closes
-    timestamp : Optional[datetime]
-        Tick start time (defaults to now)
-
-    Returns
-    -------
-    dict
-        Formatted tick start message
-    """
-    return {
-        "tick_number": tick_number,
-        "tick_duration_seconds": tick_duration_seconds,
-        "order_window_open": order_window_open.isoformat(),
-        "order_window_close": order_window_close.isoformat(),
-        "timestamp": (timestamp or datetime.now()).isoformat(),
-    }
-
-
-def build_tick_phase(
-    phase: TickPhase, tick_number: int, timestamp: Optional[datetime] = None
-) -> dict:
-    """Build tick phase change notification.
-
-    Constructs a message indicating a change in the trading phase
-    within the current tick.
-
-    Parameters
-    ----------
-    phase : TickPhase
-        New trading phase (from core.models)
-    tick_number : int
-        Current tick number
-    timestamp : Optional[datetime]
-        Phase change time (defaults to now)
-
-    Returns
-    -------
-    dict
-        Formatted phase change message
-    """
-    return {
-        "phase": phase.name.lower(),  # Convert enum to lowercase string
-        "tick_number": tick_number,
-        "timestamp": (timestamp or datetime.now()).isoformat(),
-    }
 
 
 def build_connection_status(

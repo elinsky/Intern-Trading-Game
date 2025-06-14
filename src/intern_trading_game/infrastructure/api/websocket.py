@@ -56,7 +56,6 @@ from typing import Dict, Optional, Set
 from fastapi import WebSocket
 
 from ...domain.exchange.types import LiquidityType
-from ...domain.models import TickPhase
 from .models import TeamInfo
 from .websocket_messages import (
     MessageType,
@@ -70,8 +69,6 @@ from .websocket_messages import (
     build_position_snapshot,
     build_quote_ack,
     build_quote_reject,
-    build_tick_phase,
-    build_tick_start,
 )
 
 
@@ -861,53 +858,6 @@ class WebSocketManager:
         team_ids = list(self.active_connections.keys())
         for team_id in team_ids:
             await self.send_to_team(team_id, MessageType.EVENT, data)
-
-    async def broadcast_tick_start(
-        self,
-        tick_number: int,
-        tick_duration_seconds: int,
-        order_window_open: datetime,
-        order_window_close: datetime,
-    ):
-        """Broadcast tick start to all connected teams.
-
-        Parameters
-        ----------
-        tick_number : int
-            Sequential tick number
-        tick_duration_seconds : int
-            Duration of this tick
-        order_window_open : datetime
-            When orders can be submitted
-        order_window_close : datetime
-            When order window closes
-        """
-        data = build_tick_start(
-            tick_number=tick_number,
-            tick_duration_seconds=tick_duration_seconds,
-            order_window_open=order_window_open,
-            order_window_close=order_window_close,
-        )
-
-        team_ids = list(self.active_connections.keys())
-        for team_id in team_ids:
-            await self.send_to_team(team_id, MessageType.TICK_START, data)
-
-    async def broadcast_tick_phase(self, phase: TickPhase, tick_number: int):
-        """Broadcast tick phase change to all connected teams.
-
-        Parameters
-        ----------
-        phase : TickPhase
-            New trading phase
-        tick_number : int
-            Current tick number
-        """
-        data = build_tick_phase(phase=phase, tick_number=tick_number)
-
-        team_ids = list(self.active_connections.keys())
-        for team_id in team_ids:
-            await self.send_to_team(team_id, MessageType.TICK_PHASE, data)
 
     async def send_connection_status(
         self, team_id: str, status: str, message: str

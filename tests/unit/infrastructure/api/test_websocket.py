@@ -408,20 +408,20 @@ class TestWebSocketManager:
             await manager.connect(ws, team)
             teams.append((team, ws))
 
-        # When - Tick start broadcast
-        await manager.broadcast_tick_start(
-            tick_number=42,
-            tick_duration_seconds=300,
-            order_window_open=datetime.now(),
-            order_window_close=datetime.now(),
-        )
+        # When - Broadcast event to all teams
+        event_data = {
+            "event_type": "news",
+            "headline": "Fed announces rate decision",
+            "impact": "high",
+        }
+        await manager.broadcast_event(event_type="news", event_data=event_data)
 
         # Then - All teams receive message
         for team, ws in teams:
             ws.send_json.assert_called_once()
             msg = ws.send_json.call_args[0][0]
-            assert msg["type"] == "tick_start"
-            assert msg["data"]["tick_number"] == 42
+            assert msg["type"] == "event"
+            assert msg["data"]["event_type"] == "news"
 
     @pytest.mark.asyncio
     @pytest.mark.skip(reason="Test hangs - investigate later")

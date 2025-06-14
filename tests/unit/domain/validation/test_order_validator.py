@@ -8,7 +8,6 @@ import pytest
 
 from intern_trading_game.domain.exchange.order import Order, OrderSide
 from intern_trading_game.domain.interfaces import ValidationContext
-from intern_trading_game.domain.models import TickPhase
 from intern_trading_game.domain.validation.order_validator import (
     ConstraintBasedOrderValidator,
     ConstraintConfig,
@@ -19,7 +18,6 @@ from intern_trading_game.domain.validation.order_validator import (
     PortfolioLimitConstraint,
     PositionLimitConstraint,
     PriceRangeConstraint,
-    TradingWindowConstraint,
     get_universal_constraints,
     load_constraints_from_dict,
 )
@@ -50,7 +48,6 @@ class TestConstraints:
             order=order,
             trader_id="MM1",
             trader_role="market_maker",
-            tick_phase=TickPhase.PRE_OPEN,
             current_positions={"SPX_CALL_4500": 40},
         )
 
@@ -82,7 +79,6 @@ class TestConstraints:
             order=order,
             trader_id="HF1",
             trader_role="hedge_fund",
-            tick_phase=TickPhase.PRE_OPEN,
             current_positions={"SPX_PUT_4400": -100},
         )
 
@@ -113,7 +109,6 @@ class TestConstraints:
             order=order,
             trader_id="HF1",
             trader_role="hedge_fund",
-            tick_phase=TickPhase.PRE_OPEN,
         )
 
         result = constraint.check(context, config)
@@ -121,41 +116,6 @@ class TestConstraints:
         # Then - The constraint rejects the order
         assert not result.is_valid
         assert "600 not in [1, 500]" in result.error_detail
-
-    def test_trading_window_constraint(self):
-        # Given - A trading window constraint allowing only PRE_OPEN phase
-        constraint = TradingWindowConstraint()
-        config = ConstraintConfig(
-            constraint_type=ConstraintType.TRADING_WINDOW,
-            parameters={
-                "allowed_phases": [
-                    TickPhase.PRE_OPEN.name,
-                ]
-            },
-            error_code="WINDOW_CLOSED",
-            error_message="Trading window closed",
-        )
-
-        # When - Attempting to submit an order during TRADING phase
-        order = Order(
-            instrument_id="SPX_CALL_4500",
-            side=OrderSide.BUY,
-            quantity=10,
-            price=100.0,
-            trader_id="MM1",
-        )
-        context = ValidationContext(
-            order=order,
-            trader_id="MM1",
-            trader_role="market_maker",
-            tick_phase=TickPhase.TRADING,
-        )
-
-        result = constraint.check(context, config)
-
-        # Then - The constraint rejects the order
-        assert not result.is_valid
-        assert TickPhase.TRADING.name in result.error_detail
 
 
 class TestOrderValidator:
@@ -193,7 +153,6 @@ class TestOrderValidator:
             order=order,
             trader_id="MM1",
             trader_role="market_maker",
-            tick_phase=TickPhase.PRE_OPEN,
             current_positions={"SPX_CALL_4500": 20},
         )
 
@@ -236,7 +195,6 @@ class TestOrderValidator:
             order=order,
             trader_id="TEST1",
             trader_role="test_role",
-            tick_phase=TickPhase.PRE_OPEN,
             current_positions={"TEST": 100},  # Would also fail position limit
         )
 
@@ -286,7 +244,6 @@ class TestOrderValidator:
             order=order,
             trader_id="MM1",
             trader_role="market_maker",
-            tick_phase=TickPhase.PRE_OPEN,
             current_positions={"TEST": current_pos},
         )
 
@@ -342,9 +299,9 @@ class TestConfigurationLoading:
         # When - Loading constraints from configuration
         role_constraints = load_constraints_from_dict(config)
 
-        # Then - Constraints are correctly parsed and universal constraints added
+        # Then - Constraints are correctly parsed
         mm_constraints = role_constraints["market_maker"]
-        assert len(mm_constraints) >= 3  # 2 explicit + universal
+        assert len(mm_constraints) == 2  # Only explicit constraints now
 
         pos_constraint = next(
             c
@@ -355,24 +312,14 @@ class TestConfigurationLoading:
         assert pos_constraint.parameters["symmetric"] is True
         assert pos_constraint.error_code == "MM_POS"
 
-        window_constraints = [
-            c
-            for c in mm_constraints
-            if c.constraint_type == ConstraintType.TRADING_WINDOW
-        ]
-        assert len(window_constraints) == 1
+        # No trading window constraints in new system
 
     def test_universal_constraints(self):
         # Given - Requesting universal constraints
         constraints = get_universal_constraints()
 
-        # Then - Trading window constraint is returned
-        assert len(constraints) >= 1
-        window_constraint = constraints[0]
-        assert (
-            window_constraint.constraint_type == ConstraintType.TRADING_WINDOW
-        )
-        assert window_constraint.error_code == "TRADING_WINDOW_CLOSED"
+        # Then - No constraints returned (removed trading window)
+        assert len(constraints) == 0
 
     def test_portfolio_limit_constraint(self):
         # Given - A portfolio limit constraint of 100 total
@@ -396,7 +343,6 @@ class TestConfigurationLoading:
             order=order,
             trader_id="HF1",
             trader_role="hedge_fund",
-            tick_phase=TickPhase.PRE_OPEN,
             current_positions={
                 "SPX_CALL_4500": 40,
                 "SPX_PUT_4400": -30,  # Absolute value = 30
@@ -432,7 +378,6 @@ class TestConfigurationLoading:
             order=order,
             trader_id="HF1",
             trader_role="hedge_fund",
-            tick_phase=TickPhase.PRE_OPEN,
             current_positions={
                 "SPX_CALL_4500": 50,  # Will reduce to 30
                 "SPX_PUT_4400": 40,
@@ -466,7 +411,6 @@ class TestConfigurationLoading:
             order=order,
             trader_id="MM1",
             trader_role="market_maker",
-            tick_phase=TickPhase.PRE_OPEN,
             orders_this_second=10,
         )
 
@@ -507,7 +451,6 @@ class TestConfigurationLoading:
             order=order,
             trader_id="TEST1",
             trader_role="test_role",
-            tick_phase=TickPhase.PRE_OPEN,
             orders_this_second=orders_submitted,
         )
 
@@ -538,7 +481,6 @@ class TestConfigurationLoading:
             order=order,
             trader_id="HF1",
             trader_role="hedge_fund",
-            tick_phase=TickPhase.PRE_OPEN,
         )
 
         result = constraint.check(context, config)
@@ -568,7 +510,6 @@ class TestConfigurationLoading:
             order=order,
             trader_id="HF1",
             trader_role="hedge_fund",
-            tick_phase=TickPhase.PRE_OPEN,
         )
 
         result = constraint.check(context, config)
@@ -599,7 +540,6 @@ class TestConfigurationLoading:
             order=order,
             trader_id="MM1",
             trader_role="market_maker",
-            tick_phase=TickPhase.PRE_OPEN,
         )
 
         result = constraint.check(context, config)
@@ -639,7 +579,6 @@ class TestConfigurationLoading:
             order=order,
             trader_id="MM1",
             trader_role="market_maker",
-            tick_phase=TickPhase.PRE_OPEN,
         )
 
         result = constraint.check(context, config)
@@ -672,7 +611,6 @@ class TestConfigurationLoading:
             order=order,
             trader_id="TEST1",
             trader_role="test",
-            tick_phase=TickPhase.PRE_OPEN,
         )
 
         result = size_constraint.check(context, size_config)
@@ -722,8 +660,8 @@ class TestConfigurationLoading:
         # Then - All constraint types are created correctly
         test_constraints = role_constraints["test_role"]
 
-        # Should have 4 explicit + universal constraints
-        assert len(test_constraints) >= 5
+        # Should have 4 explicit constraints only
+        assert len(test_constraints) == 4
 
         # Check each constraint type is present
         constraint_types = {c.constraint_type for c in test_constraints}
@@ -731,7 +669,6 @@ class TestConfigurationLoading:
         assert ConstraintType.ORDER_RATE in constraint_types
         assert ConstraintType.ORDER_TYPE_ALLOWED in constraint_types
         assert ConstraintType.PRICE_RANGE in constraint_types
-        assert ConstraintType.TRADING_WINDOW in constraint_types  # Universal
 
         # Verify parameters are preserved
         portfolio_constraint = next(

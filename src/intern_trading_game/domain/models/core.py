@@ -7,71 +7,9 @@ configuration, and timing controls.
 
 from dataclasses import dataclass, field
 from datetime import datetime, time
-from enum import Enum
 from typing import Dict, List
 
 from ..exchange.order_book import OrderBook
-
-
-class TickPhase(Enum):
-    """Enumeration of trading phases that work for both batch and continuous markets.
-
-    Phases are named to align with standard exchange conventions (like CBOE)
-    while being generic enough to support different market structures.
-    The tuple values represent (minutes, seconds) offset from tick start
-    for batch markets.
-
-    Attributes
-    ----------
-    MARKET_DATA : tuple[int, int]
-        T+0:00 - Market data update (prices, signals, etc.)
-    PRE_OPEN : tuple[int, int]
-        T+0:30 - Accepts orders but no matching (like CBOE Pre-Open)
-    OPEN : tuple[int, int]
-        T+3:00 - Order acceptance phase ends (batch) or continuous trading (continuous)
-    TRADING : tuple[int, int]
-        T+3:30 - Active matching phase (batch execution or continuous trading)
-    CLOSING : tuple[int, int]
-        T+4:30 - Closing process, cleanup, no new orders
-    CLOSED : tuple[int, int]
-        T+5:00 - Market closed, prepare for next period
-
-    TradingContext
-    --------------
-    Market Assumptions
-        - All participants receive price updates simultaneously
-        - Order submission fairness via random queue position
-        - No latency advantages between participants
-
-    Trading Rules
-        - Orders only accepted during PRE_OPEN phase
-        - Matching occurs during TRADING phase
-        - Position limits checked at order submission
-        - Bot response time limited to maintain game clock
-
-    Notes
-    -----
-    For batch markets:
-    - PRE_OPEN: Accept orders for batch
-    - TRADING: Execute batch matching
-
-    For continuous markets:
-    - PRE_OPEN: Accept orders without matching
-    - TRADING: Continuous matching active
-    """
-
-    MARKET_DATA = (0, 0)
-    PRE_OPEN = (0, 30)
-    OPEN = (3, 0)
-    TRADING = (3, 30)
-    CLOSING = (4, 30)
-    CLOSED = (5, 0)
-
-    @property
-    def total_seconds(self) -> int:
-        """Convert phase timing to seconds from tick start."""
-        minutes, seconds = self.value
-        return minutes * 60 + seconds
 
 
 @dataclass
@@ -79,19 +17,17 @@ class MarketData:
     """Public market information distributed to all strategies.
 
     Contains price and order book information that all participants
-    receive simultaneously at the start of each tick. This ensures
+    receive in real-time during continuous trading. This ensures
     fair access to market information.
 
     Parameters
     ----------
-    tick : int
-        Current tick number (0-indexed)
     timestamp : datetime
-        Real-world time of tick start
+        Real-world timestamp of market data
     spx_price : float
-        S&P 500 index price for this tick
+        S&P 500 index price
     spy_price : float
-        SPDR S&P 500 ETF price for this tick
+        SPDR S&P 500 ETF price
     order_book_snapshots : Dict[str, OrderBook]
         Current state of order books by instrument symbol
 
@@ -107,29 +43,27 @@ class MarketData:
     TradingContext
     --------------
     Market Assumptions
-        - Prices reflect fair value at publication time
-        - Order book snapshots are point-in-time accurate
+        - Prices stream continuously during market hours
+        - Order book updates are real-time
         - All strategies receive identical market data
 
     Trading Rules
-        - Market data published at T+0:00 each tick
+        - Market data streams continuously during open hours
         - Order books show 5 levels of depth
         - No hidden orders or reserve quantities
 
     Examples
     --------
     >>> data = MarketData(
-    ...     tick=42,
     ...     timestamp=datetime(2024, 3, 21, 10, 30, 0),
     ...     spx_price=5234.50,
     ...     spy_price=523.15,
     ...     order_book_snapshots={}
     ... )
-    >>> print(f"Tick {data.tick}: SPX={data.spx_price}")
-    Tick 42: SPX=5234.5
+    >>> print(f"SPX={data.spx_price} at {data.timestamp}")
+    SPX=5234.5 at 2024-03-21 10:30:00
     """
 
-    tick: int
     timestamp: datetime
     spx_price: float
     spy_price: float
@@ -148,8 +82,8 @@ class Signal:
     ----------
     signal_type : str
         Type of signal ("volatility" or "tracking_error")
-    tick_horizon : int
-        Number of ticks in advance (1-5 for volatility)
+    horizon_minutes : int
+        Number of minutes in advance (5-25 for volatility)
     data : Dict[str, float]
         Signal-specific data payload
     accuracy : float
@@ -179,7 +113,7 @@ class Signal:
     --------
     >>> vol_signal = Signal(
     ...     signal_type="volatility",
-    ...     tick_horizon=3,
+    ...     horizon_minutes=15,
     ...     data={"low": 0.2, "medium": 0.5, "high": 0.3},
     ...     accuracy=0.66
     ... )
@@ -188,7 +122,7 @@ class Signal:
     """
 
     signal_type: str
-    tick_horizon: int
+    horizon_minutes: int
     data: Dict[str, float]
     accuracy: float
 
@@ -211,7 +145,7 @@ class NewsEvent:
         Human-readable event description
     impact_magnitude : float
         Size of potential market impact
-    tick_announced : int
+    timestamp_announced : datetime
         When event becomes public
 
     Notes
@@ -225,7 +159,7 @@ class NewsEvent:
     Market Assumptions
         - News reflects real market conditions
         - Impact varies with current volatility
-        - Market digests news over multiple ticks
+        - Market digests news over time
 
     Trading Rules
         - All players see news simultaneously
@@ -239,7 +173,7 @@ class NewsEvent:
     ...     event_type="regime_shift",
     ...     description="Fed announces rate decision",
     ...     impact_magnitude=0.02,
-    ...     tick_announced=45
+    ...     timestamp_announced=datetime(2024, 3, 21, 14, 0, 0)
     ... )
     >>> print(f"Breaking: {event.description}")
     Breaking: Fed announces rate decision
@@ -249,7 +183,7 @@ class NewsEvent:
     event_type: str
     description: str
     impact_magnitude: float
-    tick_announced: int
+    timestamp_announced: datetime
 
 
 @dataclass
@@ -257,23 +191,19 @@ class GameConfig:
     """Configuration parameters for a trading game session.
 
     Defines the operational parameters that control game timing,
-    trading schedule, and session behavior. These settings ensure
-    consistent gameplay across all participants.
+    trading schedule, and session behavior in the continuous
+    trading environment.
 
     Parameters
     ----------
     session_name : str
         Unique identifier for this game session
-    tick_duration_seconds : int, default=300
-        Duration of each tick in seconds (5 minutes)
     trading_days : List[str], default=["Tuesday", "Thursday"]
         Days of week when trading occurs
     market_open : time, default=time(9, 30)
         Market opening time in CT (Central Time)
     market_close : time, default=time(15, 0)
         Market closing time in CT
-    total_ticks : int, default=390
-        Total ticks in a session (65 per day * 6 days)
     enable_volatility_events : bool, default=True
         Whether to generate volatility regime changes
     enable_news_events : bool, default=True
@@ -281,82 +211,49 @@ class GameConfig:
     bot_timeout_seconds : float, default=10.0
         Maximum time allowed for bot response
 
-    Attributes
-    ----------
-    ticks_per_hour : int
-        Calculated as 3600 / tick_duration_seconds
-    ticks_per_day : int
-        Calculated based on market hours
-
     Notes
     -----
     Standard market hours (9:30 AM - 3:00 PM CT) provide 5.5 hours
-    of trading time, which at 5-minute ticks yields:
+    of regular trading time. The system operates continuously
+    during market hours with real-time order matching.
 
-    $\\text{ticks per day} = \\frac{5.5 \\times 60}{5} = 66$
-
-    We use 65 ticks to account for opening/closing procedures.
-
-    Bot timeout ensures game clock stability - strategies that exceed
-    the timeout receive no orders for that tick.
+    Bot timeout ensures system responsiveness - strategies that exceed
+    the timeout may have orders rejected.
 
     TradingContext
     --------------
     Market Assumptions
-        - Consistent tick timing ensures fair play
+        - Continuous trading during market hours
         - All strategies operate under same schedule
         - Market hours reflect equity market standards
 
     Trading Rules
         - No trading outside defined market hours
-        - Tick duration cannot be modified mid-session
-        - Bots must respond within timeout or forfeit turn
+        - Real-time order matching when market is open
+        - Bots must respond within timeout
 
     Examples
     --------
     >>> config = GameConfig(
     ...     session_name="training_session_1",
-    ...     total_ticks=130,  # Two days only
     ...     bot_timeout_seconds=5.0  # Faster for testing
     ... )
     >>> print(f"Session: {config.session_name}")
     Session: training_session_1
-    >>> print(f"Ticks per hour: {config.ticks_per_hour}")
-    Ticks per hour: 12
     """
 
     session_name: str
-    tick_duration_seconds: int = 300
     trading_days: List[str] = field(
         default_factory=lambda: ["Tuesday", "Thursday"]
     )
     market_open: time = time(9, 30)
     market_close: time = time(15, 0)
-    total_ticks: int = 390
     enable_volatility_events: bool = True
     enable_news_events: bool = True
     bot_timeout_seconds: float = 10.0
 
-    @property
-    def ticks_per_hour(self) -> int:
-        """Calculate ticks per hour based on duration."""
-        return 3600 // self.tick_duration_seconds
-
-    @property
-    def ticks_per_day(self) -> int:
-        """Calculate ticks per trading day."""
-        # Market hours in seconds
-        market_seconds = (
-            self.market_close.hour * 3600
-            + self.market_close.minute * 60
-            - self.market_open.hour * 3600
-            - self.market_open.minute * 60
-        )
-        return market_seconds // self.tick_duration_seconds
-
 
 __all__ = [
-    "TickPhase",
     "MarketData",
     "Signal",
     "NewsEvent",

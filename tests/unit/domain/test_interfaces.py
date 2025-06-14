@@ -205,7 +205,6 @@ class TestTradingStrategy:
         from datetime import datetime
 
         market_data = MarketData(
-            tick=10,
             timestamp=datetime.now(),
             spx_price=5200.0,
             spy_price=520.0,
@@ -234,7 +233,7 @@ class TestTradingStrategy:
         # When - Multiple signals are sent
         vol_signal = Signal(
             signal_type="volatility",
-            tick_horizon=3,
+            horizon_minutes=15,
             data={"low": 0.3, "medium": 0.5, "high": 0.2},
             accuracy=0.66,
         )
@@ -252,6 +251,8 @@ class TestTradingStrategy:
         Then - Strategy should process and store them
         """
         # Given - Strategy that tracks news
+        from datetime import datetime
+
         strategy = SimpleTradingStrategy()
 
         # When - News event is published
@@ -260,7 +261,7 @@ class TestTradingStrategy:
             event_type="regime_shift",
             description="Major economic data released",
             impact_magnitude=0.015,
-            tick_announced=25,
+            timestamp_announced=datetime.now(),
         )
         strategy.on_news(news)
 

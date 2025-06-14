@@ -11,7 +11,6 @@ from ..domain.exchange.order import Order
 from ..domain.exchange.order_result import OrderResult
 from ..domain.exchange.venue import ExchangeVenue
 from ..domain.interfaces import ValidationContext
-from ..domain.models import TickPhase
 from ..domain.validation.order_validator import ConstraintBasedOrderValidator
 from ..infrastructure.api.models import TeamInfo
 from .interfaces import OrderValidationServiceInterface
@@ -192,7 +191,6 @@ class OrderValidationService(OrderValidationServiceInterface):
             order=order,
             trader_id=team.team_id,
             trader_role=team.role,
-            tick_phase=TickPhase.TRADING,
             current_positions=team_positions,
             orders_this_second=team_orders,
         )

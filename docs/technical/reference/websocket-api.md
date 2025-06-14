@@ -154,40 +154,6 @@ Sent when market prices update.
 
 ### Game State Messages
 
-#### tick_start
-
-Sent at the beginning of each 5-minute tick.
-
-```json
-{
-    "seq": 7,
-    "type": "tick_start",
-    "timestamp": "2024-01-15T10:35:00.000000Z",
-    "data": {
-        "tick_number": 42,
-        "tick_duration_seconds": 300,
-        "order_window_open": "2024-01-15T10:35:30.000000Z",
-        "order_window_close": "2024-01-15T10:38:00.000000Z"
-    }
-}
-```
-
-#### tick_phase
-
-Sent when the tick phase changes.
-
-```json
-{
-    "seq": 8,
-    "type": "tick_phase",
-    "timestamp": "2024-01-15T10:35:30.000000Z",
-    "data": {
-        "phase": "pre_open",
-        "tick_number": 42
-    }
-}
-```
-
 #### position_snapshot
 
 Sent immediately after connection establishment.
@@ -221,7 +187,7 @@ Sent to teams with appropriate role permissions.
         "signal_type": "volatility_forecast",
         "forecast": "high",
         "confidence": 0.75,
-        "horizon_ticks": 3
+        "horizon_minutes": 15
     }
 }
 ```
@@ -317,9 +283,6 @@ async def trading_bot():
                 data = msg['data']
                 print(f"Trade executed: {data['executed_quantity']} @ {data['executed_price']}")
                 print(f"Remaining: {data['remaining_quantity']}, Fees: {data['fees']}")
-
-            elif msg['type'] == 'tick_start':
-                print(f"New tick {msg['data']['tick_number']} started")
 
 # Run the bot
 asyncio.run(trading_bot())

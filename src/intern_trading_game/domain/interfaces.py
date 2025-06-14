@@ -12,7 +12,7 @@ from typing import Any, Dict, List
 
 from .exchange.order import Order
 from .exchange.order_result import OrderResult
-from .models import MarketData, NewsEvent, Signal, TickPhase
+from .models import MarketData, NewsEvent, Signal
 
 
 @dataclass
@@ -365,8 +365,6 @@ class ValidationContext:
         ID of the trader submitting the order
     trader_role : str
         Role of the trader (determines which constraints apply)
-    tick_phase : TickPhase
-        Current phase of the trading tick
     current_positions : Dict[str, int]
         Current positions by instrument_id (positive=long, negative=short)
     orders_this_second : int
@@ -387,7 +385,6 @@ class ValidationContext:
     order: Order
     trader_id: str
     trader_role: str
-    tick_phase: "TickPhase"
     current_positions: Dict[str, int] = field(default_factory=dict)
     orders_this_second: int = 0
     metadata: Dict[str, Any] = field(default_factory=dict)

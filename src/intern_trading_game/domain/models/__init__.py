@@ -6,7 +6,6 @@ from .core import (
     MarketData,
     NewsEvent,
     Signal,
-    TickPhase,
 )
 from .instrument import (
     Instrument,
@@ -17,6 +16,5 @@ __all__ = [
     "MarketData",
     "NewsEvent",
     "Signal",
-    "TickPhase",
     "Instrument",
 ]

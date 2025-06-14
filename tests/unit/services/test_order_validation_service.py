@@ -17,7 +17,6 @@ from intern_trading_game.domain.exchange.order import (
 from intern_trading_game.domain.exchange.order_result import OrderResult
 from intern_trading_game.domain.exchange.venue import ExchangeVenue
 from intern_trading_game.domain.interfaces import ValidationContext
-from intern_trading_game.domain.models import TickPhase
 from intern_trading_game.domain.validation.order_validator import (
     ConstraintBasedOrderValidator,
 )
@@ -138,7 +137,6 @@ class TestOrderValidationService:
         assert context.order == sample_order
         assert context.trader_id == "TEAM001"
         assert context.trader_role == "market_maker"
-        assert context.tick_phase == TickPhase.TRADING
         assert context.current_positions == {"SPX-20240315-4500C": 25}
         assert context.orders_this_second == 3
 
