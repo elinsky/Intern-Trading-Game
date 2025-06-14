@@ -141,10 +141,10 @@ def validator_thread(...):
         message = order_queue.get()
         if message is None:
             break  # Shutdown
-        
+
         # Call service for business logic
         result = validation_service.validate_new_order(order, team)
-        
+
         # Route based on result (infrastructure concern)
         if result.status == "accepted":
             match_queue.put((order, team))
@@ -168,25 +168,25 @@ Testing threads requires a different approach than testing business logic:
 ### What to Test in Threads
 
 1. **Message Routing**
-2. 
+2.
    - Accepted orders go to match_queue
    - Rejected orders go to websocket_queue
    - Trades go to trade_queue
 
 3. **Queue Operations**
-4. 
+4.
    - Thread blocks on empty queue
    - Thread processes messages in order
    - Shutdown signal works correctly
 
 5. **State Updates**
-6. 
+6.
    - Locks are acquired/released properly
    - Shared state updates are atomic
    - No race conditions
 
 7. **Error Handling**
-8. 
+8.
    - Thread continues after exceptions
    - Errors are logged appropriately
    - No message loss on error
@@ -203,13 +203,13 @@ Testing threads requires a different approach than testing business logic:
 def test_validator_routes_accepted_orders():
     # Given - Mock service to accept order
     mock_service.validate_new_order.return_value = accepted_result
-    
+
     # When - Send order through thread
     order_queue.put(("new_order", order, team, event))
     order_queue.put(None)  # Shutdown
-    
+
     validator_thread(...)  # Run directly, no actual threading
-    
+
     # Then - Verify routing
     assert not match_queue.empty()
     assert match_queue.get() == (order, team)
@@ -335,6 +335,65 @@ def matching_thread(...):
     external_data_queue.put(request)
     # Continue processing other orders
 ```
+
+## Communication Patterns
+
+The thread layer implements a clean separation of communication channels:
+
+### Validator Thread → API Response Only
+
+The validator thread communicates validation results directly back to the API:
+
+```python
+# Accepted order
+response = ApiResponse(
+    success=True,
+    order_id=order.order_id,
+    timestamp=datetime.now()
+)
+order_responses[order.order_id] = response
+response_event.set()  # Unblock API
+
+# Rejected order
+response = ApiResponse(
+    success=False,
+    error=ApiError(
+        code="POSITION_LIMIT",
+        message="Would exceed limit of 50"
+    )
+)
+order_responses[order.order_id] = response
+response_event.set()  # Unblock API
+```
+
+**Key Point**: The validator does NOT send WebSocket messages for validation results.
+
+### Exchange/Matcher → WebSocket Only
+
+The exchange and downstream threads communicate events via WebSocket:
+
+```python
+# From matcher thread
+websocket_queue.put((
+    "new_order_ack",
+    team_id,
+    {"order_id": order_id, "status": "in_book"}
+))
+
+# From publisher thread
+websocket_queue.put((
+    "execution_report",
+    team_id,
+    {"order_id": order_id, "price": price, "quantity": qty}
+))
+```
+
+This separation ensures:
+- No duplicate messages (validation results aren't sent twice)
+- Clear ownership (validator owns sync responses, exchange owns async events)
+- Predictable latency (API always responds quickly)
+
+See [API Communication Design](api-communication-design.md) for complete details.
 
 ## Summary
 

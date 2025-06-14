@@ -52,11 +52,17 @@ All messages follow a consistent JSON structure:
 
 ## Message Types
 
+### Important Note on Validation
+
+**Validation rejections are NOT sent via WebSocket.** They are returned synchronously in the REST API response. WebSocket only sends execution-related events that happen after validation.
+
+See [API Communication Design](../explanation/api-communication-design.md) for the complete communication model.
+
 ### Order Messages
 
 #### new_order_ack
 
-Sent when an order is accepted by the exchange.
+Sent when an order is accepted by the exchange and enters the order book.
 
 ```json
 {
@@ -76,24 +82,7 @@ Sent when an order is accepted by the exchange.
 }
 ```
 
-#### new_order_reject
-
-Sent when an order fails validation.
-
-```json
-{
-    "seq": 2,
-    "type": "new_order_reject",
-    "timestamp": "2024-01-15T10:30:45.234567Z",
-    "data": {
-        "order_id": "ORD-123457",
-        "client_order_id": "MY-ORDER-002",
-        "status": "rejected",
-        "reason": "Position limit exceeded",
-        "error_code": "POS_LIMIT"
-    }
-}
-```
+Note: This message indicates the order has been accepted by the exchange, not just validated.
 
 #### execution_report
 
@@ -120,14 +109,14 @@ Sent when an order is filled (partially or completely).
 }
 ```
 
-#### cancel_ack
+#### order_cancelled
 
-Sent when an order cancellation succeeds.
+Sent when an order is successfully cancelled at the exchange.
 
 ```json
 {
     "seq": 4,
-    "type": "cancel_ack",
+    "type": "order_cancelled",
     "timestamp": "2024-01-15T10:30:47.456789Z",
     "data": {
         "order_id": "ORD-123456",
@@ -139,22 +128,7 @@ Sent when an order cancellation succeeds.
 }
 ```
 
-#### cancel_reject
-
-Sent when an order cancellation fails.
-
-```json
-{
-    "seq": 5,
-    "type": "cancel_reject",
-    "timestamp": "2024-01-15T10:30:47.567890Z",
-    "data": {
-        "order_id": "ORD-123458",
-        "client_order_id": "MY-ORDER-003",
-        "reason": "Order already filled"
-    }
-}
-```
+Note: Cancellation success/failure is returned synchronously via the REST API. This WebSocket message provides additional details after the cancellation is processed by the exchange.
 
 ### Market Data Messages
 

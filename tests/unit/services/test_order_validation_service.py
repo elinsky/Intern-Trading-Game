@@ -233,9 +233,9 @@ class TestOrderValidationService:
         # When - Request cancellation
         success, reason = service.validate_cancellation("ORD123", "TEAM002")
 
-        # Then - Cancellation should fail
+        # Then - Cancellation should fail with generic error
         assert success is False
-        assert reason == "Order not found or unauthorized"
+        assert reason == "Order not found"
         mock_exchange.cancel_order.assert_called_once_with("ORD123", "TEAM002")
 
     def test_validate_cancellation_order_not_found(
@@ -253,9 +253,9 @@ class TestOrderValidationService:
         # When - Request cancellation of non-existent order
         success, reason = service.validate_cancellation("BADORD", "TEAM001")
 
-        # Then - Cancellation should fail
+        # Then - Cancellation should fail with generic error
         assert success is False
-        assert reason == "Order not found or unauthorized"
+        assert reason == "Order not found"
 
     @pytest.mark.parametrize(
         "positions,order_count,expected_positions,expected_count",

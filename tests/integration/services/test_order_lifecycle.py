@@ -417,9 +417,9 @@ class TestOrderLifecycleIntegration:
             "validation_service"
         ].validate_cancellation(order.order_id, mm2.team_id)
 
-        # Then - Should be rejected
+        # Then - Should be rejected with generic error
         assert success is False
-        assert "does not own" in reason
+        assert reason == "Order not found"  # Generic error for security
 
         # Verify order still in book
         exchange = service_context["exchange"]

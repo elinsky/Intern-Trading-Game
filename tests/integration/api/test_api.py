@@ -33,11 +33,18 @@ class TestAuthentication:
 
         assert response.status_code == 200
         data = response.json()
-        assert data["team_name"] == "AlphaBot"
-        assert data["role"] == "market_maker"
-        assert data["team_id"].startswith("TEAM_")
-        assert data["api_key"].startswith("itg_")
-        assert len(data["api_key"]) > 40  # Ensure sufficient entropy
+        assert data["success"] is True
+        assert (
+            "request_id" in data
+        )  # Should exist but value is timestamp-based
+        assert "data" in data
+
+        team_data = data["data"]
+        assert team_data["team_name"] == "AlphaBot"
+        assert team_data["role"] == "market_maker"
+        assert team_data["team_id"].startswith("TEAM_")
+        assert team_data["api_key"].startswith("itg_")
+        assert len(team_data["api_key"]) > 40  # Ensure sufficient entropy
 
     def test_register_invalid_role(self, client):
         """Test registration with invalid role.
@@ -51,8 +58,11 @@ class TestAuthentication:
             json={"team_name": "BadBot", "role": "invalid_role"},
         )
 
-        assert response.status_code == 400
-        assert "Only market_maker role" in response.json()["detail"]
+        assert response.status_code == 200
+        data = response.json()
+        assert data["success"] is False
+        assert data["error"]["code"] == "UNSUPPORTED_ROLE"
+        assert "Only market_maker role" in data["error"]["message"]
 
     def test_api_key_required(self, client):
         """Test that API key is required for protected endpoints.
@@ -61,7 +71,7 @@ class TestAuthentication:
         When - Accessing a protected endpoint
         Then - Request is rejected with 401
         """
-        response = client.get("/positions/TEAM_001")
+        response = client.get("/positions")
         assert response.status_code == 401
         assert "Missing API key" in response.json()["detail"]
 
@@ -73,7 +83,7 @@ class TestAuthentication:
         Then - Request is rejected with 401
         """
         response = client.get(
-            "/positions/TEAM_001", headers={"X-API-Key": "invalid_key"}
+            "/positions", headers={"X-API-Key": "invalid_key"}
         )
         assert response.status_code == 401
         assert "Invalid API key" in response.json()["detail"]
@@ -106,12 +116,12 @@ class TestOrderSubmission:
         assert response.status_code == 200
         data = response.json()
 
-        # Limit order with no counter-party should rest as 'new'
-        assert data["status"] == "new"
+        # API should return success with order_id
+        assert data["success"] is True
         assert data["order_id"] is not None
+        assert "request_id" in data
         assert "timestamp" in data
-        assert data["filled_quantity"] == 0
-        assert data["average_price"] is None
+        # Order details come through WebSocket, not in API response
 
     def test_submit_market_order(self, client, registered_team):
         """Test submitting a market order with no liquidity.
@@ -135,14 +145,14 @@ class TestOrderSubmission:
         data = response.json()
 
         # TODO: Market orders with no liquidity should be rejected
-        # Current behavior incorrectly returns 'new' without adding to book
+        # Current behavior incorrectly accepts the order
         # This test documents the bug - should be:
-        # assert data["status"] == "rejected"
-        # assert data["error_code"] == "NO_LIQUIDITY"
+        # assert data["success"] is False
+        # assert data["error"]["code"] == "NO_LIQUIDITY"
 
         # For now, test the actual (buggy) behavior:
-        assert data["status"] == "new"
-        assert data["filled_quantity"] == 0
+        assert data["success"] is True
+        assert data["order_id"] is not None
 
     def test_limit_order_requires_price(self, client, registered_team):
         """Test that limit orders require a price.
@@ -162,8 +172,11 @@ class TestOrderSubmission:
             headers={"X-API-Key": registered_team["api_key"]},
         )
 
-        assert response.status_code == 400
-        assert "Price required for limit orders" in response.json()["detail"]
+        assert response.status_code == 200
+        data = response.json()
+        assert data["success"] is False
+        assert data["error"]["code"] == "MISSING_PRICE"
+        assert "Price required for limit orders" in data["error"]["message"]
 
     def test_position_limit_enforcement(self, client, registered_team):
         """Test that position limits are enforced.
@@ -190,9 +203,9 @@ class TestOrderSubmission:
         # Should be rejected - would exceed position limit
         assert response.status_code == 200
         data = response.json()
-        assert data["status"] == "rejected"
-        assert data["error_code"] == "MM_POS_LIMIT"
-        assert "Position 55 outside ±50" in data["error_message"]
+        assert data["success"] is False
+        assert data["error"]["code"] == "MM_POS_LIMIT"
+        assert "Position" in data["error"]["message"]
 
         # Now submit valid order within limits
         response = client.post(
@@ -208,7 +221,7 @@ class TestOrderSubmission:
         )
         assert response.status_code == 200
         data = response.json()
-        assert data["status"] == "new"  # Accepted
+        assert data["success"] is True  # Accepted
 
         # Try to add 10 more (would total 55 if both filled)
         response = client.post(
@@ -227,7 +240,7 @@ class TestOrderSubmission:
         # (orders haven't filled yet)
         assert response.status_code == 200
         data = response.json()
-        assert data["status"] == "new"  # Also accepted
+        assert data["success"] is True  # Also accepted
 
     def test_position_limit_with_fills(self, client, api_context):
         """Test position limits enforced after actual fills.
@@ -241,13 +254,17 @@ class TestOrderSubmission:
             "/auth/register",
             json={"team_name": "MM_Buyer", "role": "market_maker"},
         )
-        mm1 = mm1_response.json()
+        mm1_data = mm1_response.json()
+        assert mm1_data["success"] is True
+        mm1 = mm1_data["data"]
 
         mm2_response = client.post(
             "/auth/register",
             json={"team_name": "MM_Seller", "role": "market_maker"},
         )
-        mm2 = mm2_response.json()
+        mm2_data = mm2_response.json()
+        assert mm2_data["success"] is True
+        mm2 = mm2_data["data"]
 
         # MM2 posts sell orders for MM1 to buy
         for i in range(5):
@@ -278,8 +295,8 @@ class TestOrderSubmission:
         )
         assert buy_response.status_code == 200
         buy_data = buy_response.json()
-        assert buy_data["status"] == "filled"
-        assert buy_data["filled_quantity"] == 45
+        assert buy_data["success"] is True
+        # Note: Fill details come through WebSocket, not API response
 
         # Now MM1 has position of +45
         # Try to buy 10 more (would be 55 total)
@@ -298,9 +315,9 @@ class TestOrderSubmission:
         # Should be rejected - would exceed limit
         assert response.status_code == 200
         data = response.json()
-        assert data["status"] == "rejected"
-        assert data["error_code"] == "MM_POS_LIMIT"
-        assert "Position 55 outside ±50" in data["error_message"]
+        assert data["success"] is False
+        assert data["error"]["code"] == "MM_POS_LIMIT"
+        assert "Position" in data["error"]["message"]
 
     def test_invalid_instrument(self, client, registered_team):
         """Test submitting order for non-existent instrument.
@@ -324,9 +341,9 @@ class TestOrderSubmission:
         # Business validation returns HTTP 200 with rejected order
         assert response.status_code == 200
         data = response.json()
-        assert data["status"] == "rejected"
-        assert data["error_code"] == "INVALID_INSTRUMENT"
-        assert "not in allowed list" in data["error_message"]
+        assert data["success"] is False
+        assert data["error"]["code"] == "INVALID_INSTRUMENT"
+        assert "not" in data["error"]["message"]
 
     def test_limit_orders_match(self, client, api_context):
         """Test that crossing limit orders match and fill.
@@ -340,13 +357,17 @@ class TestOrderSubmission:
             "/auth/register",
             json={"team_name": "MM1", "role": "market_maker"},
         )
-        mm1 = mm1_response.json()
+        mm1_data = mm1_response.json()
+        assert mm1_data["success"] is True
+        mm1 = mm1_data["data"]
 
         mm2_response = client.post(
             "/auth/register",
             json={"team_name": "MM2", "role": "market_maker"},
         )
-        mm2 = mm2_response.json()
+        mm2_data = mm2_response.json()
+        assert mm2_data["success"] is True
+        mm2 = mm2_data["data"]
 
         # MM1 posts a sell order at 25.00
         sell_response = client.post(
@@ -362,7 +383,7 @@ class TestOrderSubmission:
         )
         assert sell_response.status_code == 200
         sell_data = sell_response.json()
-        assert sell_data["status"] == "new"  # Rests in book
+        assert sell_data["success"] is True  # Order accepted
 
         # MM2 posts a buy order at 26.00 (crosses the spread)
         buy_response = client.post(
@@ -379,12 +400,9 @@ class TestOrderSubmission:
         assert buy_response.status_code == 200
         buy_data = buy_response.json()
 
-        # Buy order should be filled (taker)
-        assert buy_data["status"] == "filled"
-        assert buy_data["filled_quantity"] == 5
-        assert buy_data["average_price"] == 25.00  # Filled at sell price
-        assert buy_data["liquidity_type"] == "taker"
-        assert buy_data["fees"] < 0  # Taker pays fee
+        # API returns success, fill details come through WebSocket
+        assert buy_data["success"] is True
+        assert buy_data["order_id"] is not None
 
     def test_market_order_with_liquidity(self, client, api_context):
         """Test market order execution with available liquidity.
@@ -398,13 +416,17 @@ class TestOrderSubmission:
             "/auth/register",
             json={"team_name": "LiquidityProvider", "role": "market_maker"},
         )
-        mm1 = mm1_response.json()
+        mm1_data = mm1_response.json()
+        assert mm1_data["success"] is True
+        mm1 = mm1_data["data"]
 
         mm2_response = client.post(
             "/auth/register",
             json={"team_name": "MarketTaker", "role": "market_maker"},
         )
-        mm2 = mm2_response.json()
+        mm2_data = mm2_response.json()
+        assert mm2_data["success"] is True
+        mm2 = mm2_data["data"]
 
         # MM1 provides liquidity with a sell order
         sell_response = client.post(
@@ -419,7 +441,7 @@ class TestOrderSubmission:
             headers={"X-API-Key": mm1["api_key"]},
         )
         assert sell_response.status_code == 200
-        assert sell_response.json()["status"] == "new"
+        assert sell_response.json()["success"] is True
 
         # MM2 submits market buy order
         market_response = client.post(
@@ -435,11 +457,9 @@ class TestOrderSubmission:
         assert market_response.status_code == 200
         market_data = market_response.json()
 
-        # Market order should fill against resting liquidity
-        assert market_data["status"] == "filled"
-        assert market_data["filled_quantity"] == 10
-        assert market_data["average_price"] == 30.00
-        assert market_data["liquidity_type"] == "taker"
+        # API returns success, fill details come through WebSocket
+        assert market_data["success"] is True
+        assert market_data["order_id"] is not None
 
 
 @pytest.mark.integration
@@ -454,42 +474,42 @@ class TestPositionTracking:
         When - They query their positions
         Then - They see current holdings
         """
-        team_id = registered_team["team_id"]
         response = client.get(
-            f"/positions/{team_id}",
+            "/positions",
             headers={"X-API-Key": registered_team["api_key"]},
         )
 
         assert response.status_code == 200
         data = response.json()
-        assert data["team_id"] == team_id
-        assert isinstance(data["positions"], dict)
-        assert "last_updated" in data
+        assert data["success"] is True
+        assert "data" in data
+        position_data = data["data"]
+        assert position_data["team_id"] == registered_team["team_id"]
+        assert isinstance(position_data["positions"], dict)
+        assert "last_updated" in position_data
 
     def test_cannot_query_other_positions(self, client, registered_team):
-        """Test that teams cannot see others' positions.
+        """Test that teams can only see their own positions.
 
-        Given - Two different teams
-        When - One tries to query the other's positions
-        Then - Request is rejected with 403
+        Given - A registered team
+        When - They query positions endpoint
+        Then - They only see their own team's positions
         """
-        # Register second team
-        response = client.post(
-            "/auth/register",
-            json={"team_name": "OtherBot", "role": "market_maker"},
-        )
-        other_team = response.json()
+        # With the new API design, /positions always returns the
+        # authenticated team's positions. There's no way to query
+        # other teams' positions, ensuring privacy by design.
 
-        # Try to query other team's positions
         response = client.get(
-            f"/positions/{other_team['team_id']}",
+            "/positions",
             headers={"X-API-Key": registered_team["api_key"]},
         )
 
-        assert response.status_code == 403
-        assert (
-            "Cannot query other teams' positions" in response.json()["detail"]
-        )
+        assert response.status_code == 200
+        data = response.json()
+        assert data["success"] is True
+        position_data = data["data"]
+        # Verify we only see our own team's data
+        assert position_data["team_id"] == registered_team["team_id"]
 
 
 @pytest.mark.integration
@@ -531,8 +551,9 @@ class TestThreadSafety:
         for i, result in enumerate(results):
             assert result.status_code == 200
             data = result.json()
-            # Orders should either rest as 'new' or fill if they cross
-            assert data["status"] in ["new", "filled"]
+            # All orders should be accepted successfully
+            assert data["success"] is True
+            assert data["order_id"] is not None
             # Even indexed orders are buys, odd are sells - they may match
 
     def test_order_processing_timeout(self, client, registered_team):

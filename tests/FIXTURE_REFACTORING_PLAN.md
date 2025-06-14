@@ -158,15 +158,15 @@ def multi_team_setup(service_context):
             created_at=datetime.now(),
         ),
     }
-    
+
     # Register all teams and initialize positions
     for team in teams.values():
         team_registry.teams[team.team_id] = team
         team_registry.api_key_to_team[team.api_key] = team.team_id
         service_context["positions"][team.team_id] = {}
-    
+
     yield teams
-    
+
     # Cleanup
     for team in teams.values():
         del team_registry.teams[team.team_id]

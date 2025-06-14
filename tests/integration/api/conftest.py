@@ -135,4 +135,6 @@ def registered_team(client):
         "/auth/register", json={"team_name": "TestBot", "role": "market_maker"}
     )
     assert response.status_code == 200
-    return response.json()
+    data = response.json()
+    assert data["success"] is True
+    return data["data"]  # Return just the team data, not the full ApiResponse

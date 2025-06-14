@@ -40,6 +40,11 @@ Order validation ensures market integrity:
 - **[Thread Layer Design](thread-layer-design.md)** explains the concurrent processing architecture
 - Queue-based communication patterns and synchronization mechanisms
 
+### API Design
+
+- **[API Communication Design](api-communication-design.md)** explains the sync/async communication split
+- REST API for validation responses, WebSocket for execution events
+
 ## Related Resources
 
 - **[Architecture Overview](../architecture-v3.md)** - System design and components

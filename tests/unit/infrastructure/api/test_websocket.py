@@ -157,23 +157,23 @@ class TestWebSocketMessages:
         """Test order cancellation rejection message.
 
         When - Cancel request fails
-        Order might be filled, not found, or unauthorized.
+        Order cancellation fails for any reason (security, state, etc.).
 
-        Then - Reject message explains failure
-        Clear error code and human-readable reason.
+        Then - Reject message shows generic failure
+        Generic error message for security (don't reveal specific reasons).
         """
         # Given - Failed cancellation
         msg = build_cancel_reject(
             order_id="ORD-128",
             client_order_id="CLIENT-5",
-            reason="Order already filled",
+            reason="Order not found",
         )
 
         # Then - Message contains rejection details
         assert msg["order_id"] == "ORD-128"
         assert msg["client_order_id"] == "CLIENT-5"
         assert msg["status"] == "cancel_rejected"
-        assert msg["reason"] == "Order already filled"
+        assert msg["reason"] == "Order not found"
         assert "timestamp" in msg
 
     def test_partial_cancel_ack_message(self):

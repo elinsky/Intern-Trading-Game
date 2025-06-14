@@ -3,22 +3,14 @@
 import asyncio
 import threading
 from contextlib import asynccontextmanager
-from datetime import datetime
 from queue import Queue
 from typing import Dict, Optional
 
 import uvicorn
-from fastapi import (
-    Depends,
-    FastAPI,
-    HTTPException,
-    WebSocket,
-    WebSocketDisconnect,
-)
+from fastapi import FastAPI, WebSocket, WebSocketDisconnect
 from fastapi.middleware.cors import CORSMiddleware
 
 from ..domain.exchange.matching_engine import ContinuousMatchingEngine
-from ..domain.exchange.order import Order, OrderSide, OrderType
 from ..domain.exchange.venue import ExchangeVenue
 from ..domain.models.instrument import Instrument
 from ..domain.validation.order_validator import (
@@ -26,21 +18,19 @@ from ..domain.validation.order_validator import (
     ConstraintConfig,
     ConstraintType,
 )
-from ..infrastructure.api.auth import get_current_team, team_registry
-from ..infrastructure.api.models import (
-    OrderRequest,
-    OrderResponse,
-    PositionResponse,
-    TeamInfo,
-    TeamRegistration,
-)
+from ..infrastructure.api.auth import team_registry
 from ..infrastructure.api.websocket import ws_manager
 from ..infrastructure.config.fee_config import FeeConfig
+from ..infrastructure.threads.validator import (
+    validator_thread as validator_thread_impl,
+)
 from ..services import OrderValidationService
 from ..services.order_matching import OrderMatchingService
 from ..services.position_management import PositionManagementService
 from ..services.trade_processing import TradeProcessingService
 from ..services.trading_fees import TradingFeeService
+from .endpoints import auth, orders
+from .endpoints import positions as positions_endpoints
 
 # Thread-safe queues
 order_queue: Queue = Queue()  # API -> Validator
@@ -100,7 +90,9 @@ orders_lock = threading.RLock()
 
 # Pending orders waiting for response
 pending_orders: Dict[str, threading.Event] = {}
-order_responses: Dict[str, OrderResponse] = {}
+order_responses: Dict[
+    str, Dict
+] = {}  # Now stores ApiResponse objects with order_id:request_id keys
 
 
 # Helper functions for service dependency injection
@@ -127,183 +119,20 @@ def get_team_order_count(team_id: str) -> int:
 
 
 def validator_thread():
-    """Thread 2: Order Validator - validates orders from queue.
+    """Wrapper for validator thread implementation.
 
-    This thread implements the order validation pipeline, continuously
-    processing messages from the order queue. It handles both new order
-    submissions and cancellation requests, maintaining strict FIFO
-    processing order to ensure market fairness.
-
-    The validator thread acts as a gatekeeper for new orders, ensuring
-    that only orders meeting all constraints (position limits, order
-    size, etc.) proceed to execution. For cancellations, it verifies
-    ownership before forwarding to the exchange.
-
-    Notes
-    -----
-    The thread uses a blocking get() on the order queue, which means
-    it sleeps when no messages are available, minimizing CPU usage.
-
-    Messages follow a 4-tuple format:
-    (message_type, data, team_info, response_event)
-    where message_type is either "new_order" or "cancel_order".
-
-    A None value in the queue signals thread shutdown, allowing for
-    graceful termination during API shutdown.
-
-    The validation context includes current positions and order counts,
-    which are retrieved thread-safely using locks to prevent race
-    conditions with the trade publisher thread.
-
-    TradingContext
-    --------------
-    In production, this thread would also:
-    - Track order rates per tick for rate limiting
-    - Validate against real-time market conditions
-    - Check margin requirements
-    - Enforce trading session rules
-    - Provide detailed cancellation failure reasons
-
-    Examples
-    --------
-    The thread processes messages in this sequence:
-
-    For new orders:
-
-    1. Receive ("new_order", order, team_info, response_event)
-    2. Build ValidationContext with current state
-    3. Run constraint validation
-    4. If valid: forward to match_queue
-    5. If invalid: send rejection via response_event
-
-    For cancellations:
-
-    1. Receive ("cancel_order", order_id, team_info, response_event)
-    2. Call exchange.cancel_order() with ownership check
-    3. Send cancel_ack or cancel_reject via WebSocket
-    4. Return response via response_event
+    Calls the imported validator thread with all required parameters.
     """
-    print("Validator thread started")
-
-    while True:
-        try:
-            # Get message from queue (4-tuple format)
-            queue_data = order_queue.get()
-            if queue_data is None:  # Shutdown signal
-                break
-
-            # Unpack the consistent 4-tuple format
-            message_type, data, team_info, response_event = queue_data
-
-            if message_type == "new_order":
-                # Handle new order submission
-                order = data
-
-                # Validate order using service
-                result = validation_service.validate_new_order(
-                    order, team_info
-                )
-
-                if result.status == "accepted":
-                    # Send to matching engine
-                    match_queue.put((order, team_info))
-
-                    # Update order count
-                    with orders_lock:
-                        current_count = orders_this_second.get(
-                            team_info.team_id, 0
-                        )
-                        orders_this_second[team_info.team_id] = (
-                            current_count + 1
-                        )
-                else:
-                    # Send rejection via WebSocket
-                    websocket_queue.put(
-                        (
-                            "new_order_reject",
-                            team_info.team_id,
-                            {
-                                "order_id": order.order_id,
-                                "client_order_id": order.client_order_id,
-                                "reason": result.error_message,
-                                "error_code": result.error_code,
-                            },
-                        )
-                    )
-
-                    # Send rejection response
-                    response = OrderResponse(
-                        order_id=order.order_id,
-                        status="rejected",
-                        timestamp=datetime.now(),
-                        error_code=result.error_code,
-                        error_message=result.error_message,
-                    )
-                    order_responses[order.order_id] = response
-                    response_event.set()
-
-            elif message_type == "cancel_order":
-                # Handle order cancellation
-                order_id = data
-
-                # Validate and attempt cancellation using service
-                success, reason = validation_service.validate_cancellation(
-                    order_id, team_info.team_id
-                )
-
-                if success:
-                    # Send cancel acknowledgment via WebSocket
-                    websocket_queue.put(
-                        (
-                            "order_cancel_ack",
-                            team_info.team_id,
-                            {
-                                "order_id": order_id,
-                                "client_order_id": None,  # TODO: track this
-                                "cancelled_quantity": 0,  # TODO: get from exchange
-                                "reason": "user_requested",
-                            },
-                        )
-                    )
-
-                    # Create success response
-                    response = OrderResponse(
-                        order_id=order_id,
-                        status="cancelled",
-                        timestamp=datetime.now(),
-                    )
-                else:
-                    # Use failure reason from service
-                    error_code = "CANCEL_FAILED"
-
-                    # Send cancel rejection via WebSocket
-                    websocket_queue.put(
-                        (
-                            "order_cancel_reject",
-                            team_info.team_id,
-                            {
-                                "order_id": order_id,
-                                "client_order_id": None,
-                                "reason": reason,
-                            },
-                        )
-                    )
-
-                    # Create rejection response
-                    response = OrderResponse(
-                        order_id=order_id,
-                        status="rejected",
-                        timestamp=datetime.now(),
-                        error_code=error_code,
-                        error_message=f"Cancel failed: {reason}",
-                    )
-
-                # Send response back to API thread
-                order_responses[order_id] = response
-                response_event.set()
-
-        except Exception as e:
-            print(f"Validator thread error: {e}")
+    validator_thread_impl(
+        order_queue=order_queue,
+        match_queue=match_queue,
+        websocket_queue=websocket_queue,
+        validation_service=validation_service,
+        orders_this_tick=orders_this_second,  # Note: using orders_this_second
+        orders_lock=orders_lock,
+        pending_orders=pending_orders,
+        order_responses=order_responses,
+    )
 
 
 def matching_thread():
@@ -348,22 +177,10 @@ def matching_thread():
                 trade_queue.put((result, order, team_info))
 
             except Exception as e:
-                # Handle exchange errors using service
-                result = matching_service.handle_exchange_error(e, order)
-
-                # Create response from error result
-                response = OrderResponse(
-                    order_id=result.order_id,
-                    status=result.status,
-                    timestamp=datetime.now(),
-                    error_code=result.error_code,
-                    error_message=result.error_message,
-                )
-
-                # Find the response event
-                if order.order_id in pending_orders:
-                    order_responses[order.order_id] = response
-                    pending_orders[order.order_id].set()
+                # Log exchange errors - validator already sent response
+                print(f"Exchange error for order {order.order_id}: {e}")
+                # Note: The validator has already responded to the API
+                # so we just log the error here
 
         except Exception as e:
             print(f"Matching thread error: {e}")
@@ -392,14 +209,8 @@ def trade_publisher_thread():
             result, order, team_info = trade_data
 
             # Use service for all business logic
-            response = trade_service.process_trade_result(
-                result, order, team_info
-            )
-
-            # Send response back (infrastructure concern)
-            if order.order_id in pending_orders:
-                order_responses[order.order_id] = response
-                pending_orders[order.order_id].set()
+            # Note: No API response needed - validator already responded
+            trade_service.process_trade_result(result, order, team_info)
 
         except Exception as e:
             print(f"Trade publisher thread error: {e}")
@@ -500,7 +311,7 @@ async def websocket_async_loop():
                     await ws_manager.send_position_snapshot(
                         team_id, data["positions"]
                     )
-                elif msg_type == "order_cancel_ack":
+                elif msg_type == "order_cancelled":
                     await ws_manager.broadcast_cancel_ack(team_id, **data)
                 elif msg_type == "order_cancel_reject":
                     await ws_manager.broadcast_cancel_reject(team_id, **data)
@@ -656,183 +467,10 @@ async def root():
     }
 
 
-@app.post("/auth/register", response_model=TeamInfo)
-async def register_team(registration: TeamRegistration):
-    """Register a new trading team."""
-    # For MVP, only support market_maker
-    if registration.role != "market_maker":
-        raise HTTPException(
-            status_code=400, detail="Only market_maker role supported in MVP"
-        )
-
-    team_info = team_registry.register_team(
-        team_name=registration.team_name, role=registration.role
-    )
-
-    # Initialize tracking
-    with positions_lock:
-        positions[team_info.team_id] = {}
-
-    with orders_lock:
-        orders_this_second[team_info.team_id] = 0
-
-    return team_info
-
-
-@app.post("/orders", response_model=OrderResponse)
-async def submit_order(
-    request: OrderRequest, team: TeamInfo = Depends(get_current_team)
-):
-    """Submit a new order through the queue system."""
-    # Convert request to Order
-    try:
-        order_type = OrderType[request.order_type.upper()]
-    except KeyError:
-        raise HTTPException(
-            status_code=400, detail=f"Invalid order type: {request.order_type}"
-        )
-
-    # Validate price for limit orders
-    if order_type == OrderType.LIMIT and request.price is None:
-        raise HTTPException(
-            status_code=400, detail="Price required for limit orders"
-        )
-
-    # Convert side to enum
-    try:
-        side = OrderSide(request.side)
-    except ValueError:
-        raise HTTPException(
-            status_code=400,
-            detail=f"Invalid side: {request.side}. Must be 'buy' or 'sell'",
-        )
-
-    # Create order
-    order = Order(
-        trader_id=team.team_id,
-        instrument_id=request.instrument_id,
-        order_type=order_type,
-        side=side,
-        quantity=request.quantity,
-        price=request.price,
-        client_order_id=request.client_order_id,
-    )
-
-    # Create response event
-    response_event = threading.Event()
-    pending_orders[order.order_id] = response_event
-
-    # Submit to queue with message type
-    order_queue.put(("new_order", order, team, response_event))
-
-    # Wait for response (with timeout)
-    if response_event.wait(timeout=5.0):
-        # Get response
-        response = order_responses.pop(order.order_id)
-        pending_orders.pop(order.order_id)
-        return response
-    else:
-        # Timeout
-        pending_orders.pop(order.order_id, None)
-        raise HTTPException(status_code=504, detail="Order processing timeout")
-
-
-@app.delete("/orders/{order_id}", response_model=OrderResponse)
-async def cancel_order(
-    order_id: str, team: TeamInfo = Depends(get_current_team)
-):
-    """Cancel an existing order (FIX MsgType=F).
-
-    Implements standard exchange order cancellation following
-    FIX protocol semantics. Cancels are processed in FIFO
-    order with all other order messages to ensure temporal
-    fairness in the market.
-
-    Parameters
-    ----------
-    order_id : str
-        The exchange-assigned order ID to cancel (FIX Tag 37)
-    team : TeamInfo
-        Authenticated team information from API key
-
-    Returns
-    -------
-    OrderResponse
-        Status will be 'cancelled' on success or 'rejected'
-        with error details on failure
-
-    Raises
-    ------
-    HTTPException
-        504 Gateway Timeout if processing exceeds 5 seconds
-
-    Notes
-    -----
-    Cancel requests enter the same queue as new orders,
-    maintaining strict FIFO processing. This ensures a
-    cancel submitted at T+1ms cannot jump ahead of a
-    new order submitted at T+0ms.
-
-    The validator thread verifies ownership before
-    cancelling to prevent market manipulation.
-
-    TradingContext
-    --------------
-    In fast markets, cancellation may fail if the order
-    has already been matched by an earlier message in
-    the queue. This race condition is inherent to all
-    exchanges and traders must handle cancel rejections.
-
-    Real exchanges often provide more detailed reject
-    reasons (e.g., ALREADY_FILLED vs NOT_FOUND). Future
-    enhancement could add this granularity.
-
-    Examples
-    --------
-    >>> # Cancel a resting limit order
-    >>> response = await client.delete(
-    ...     "/orders/ORD_12345",
-    ...     headers={"X-API-Key": api_key}
-    ... )
-    >>> if response.json()["status"] == "cancelled":
-    ...     print("Order successfully cancelled")
-    """
-    # Create response event for async processing
-    response_event = threading.Event()
-    pending_orders[order_id] = response_event
-
-    # Submit cancel request to queue
-    order_queue.put(("cancel_order", order_id, team, response_event))
-
-    # Wait for response with timeout
-    if response_event.wait(timeout=5.0):
-        # Get response
-        response = order_responses.pop(order_id)
-        pending_orders.pop(order_id)
-        return response
-    else:
-        # Timeout
-        pending_orders.pop(order_id, None)
-        raise HTTPException(status_code=504, detail="Cancel request timeout")
-
-
-@app.get("/positions/{team_id}", response_model=PositionResponse)
-async def get_positions(
-    team_id: str, current_team: TeamInfo = Depends(get_current_team)
-):
-    """Get positions for a team."""
-    # Teams can only query their own positions
-    if team_id != current_team.team_id:
-        raise HTTPException(
-            status_code=403, detail="Cannot query other teams' positions"
-        )
-
-    with positions_lock:
-        team_positions = positions.get(team_id, {}).copy()
-
-    return PositionResponse(
-        team_id=team_id, positions=team_positions, last_updated=datetime.now()
-    )
+# Include routers
+app.include_router(auth.router)
+app.include_router(orders.router)
+app.include_router(positions_endpoints.router)
 
 
 @app.websocket("/ws")

@@ -162,15 +162,23 @@ graph TB
 - Can be written in any language
 
 ### 2. API Layer (Infrastructure)
-**Purpose**: HTTP and WebSocket interfaces for external communication.
+**Purpose**: HTTP and WebSocket interfaces for external communication following a minimalist design philosophy.
+
+**Design Philosophy**:
+
+- **5 Core Operations Only** - Everything a bot needs, nothing more
+- **Unified Response Format** - Single ApiResponse structure for all endpoints
+- **Fast Validation** - Immediate responses (~1ms) for all requests
+- **Clear Separation** - Sync API for validation, async WebSocket for execution
 
 **Components**:
 
-- **REST API**: FastAPI server running in the main thread
-  - `/auth/register` - Team registration
-  - `/orders` - Order submission
-  - `/orders/{order_id}` - Order cancellation
-  - `/positions/{team_id}` - Position queries
+- **REST API**: FastAPI server running in the main thread (5 core operations)
+  - `POST /auth/register` - Team registration (get API key)
+  - `POST /orders` - Submit order
+  - `DELETE /orders/{order_id}` - Cancel order
+  - `GET /orders` - Get open orders
+  - `GET /positions` - Get positions
 - **WebSocket Server**: Real-time execution reports and position updates
 - **Authentication**: API key validation using `team_registry`
 
@@ -180,12 +188,23 @@ graph TB
 - Request validation and serialization
 - Authentication and authorization
 - Queue message creation for order processing
+- Immediate validation responses (~1ms) via unified ApiResponse
 
 **Implementation Details**:
 
 - FastAPI with async/await for high performance
 - Lifespan context manager for startup/shutdown
 - Thread-safe team registry for API key management
+- Unified `ApiResponse` format for all REST endpoints:
+  ```python
+  class ApiResponse:
+      success: bool                # Did the request succeed?
+      request_id: str              # Echo of client's request ID
+      order_id: Optional[str]      # For order operations
+      data: Optional[Dict]         # For query operations
+      error: Optional[ApiError]    # Present when success=false
+      timestamp: datetime          # Server timestamp
+  ```
 
 ### 3. Thread Layer (Infrastructure)
 **Purpose**: Concurrent processing of orders through the trading pipeline.
@@ -213,6 +232,13 @@ graph TB
 - Graceful shutdown via `None` sentinel values
 - No shared service instances between threads
 - FIFO queue processing for fairness
+
+**Communication Model**:
+
+- **Validator Thread** → API responses only (immediate feedback)
+- **Exchange/Matcher** → WebSocket events only (execution updates)
+- No duplicate messages between channels
+- Clear ownership of each message type
 
 ### 4. Service Layer (Business Logic)
 **Purpose**: Encapsulates all business logic and orchestration.
@@ -311,19 +337,34 @@ The architecture enforces strict dependency rules:
 ## Data Flow Example
 
 ### Complete Order Flow (Current Implementation)
+
+**Synchronous API Response Path** (~1ms):
 ```
 1. Bot -> REST API (POST /orders)
-2. REST API -> order_queue
+2. REST API -> order_queue (with response_event)
 3. Validator Thread -> OrderValidationService -> ConstraintBasedOrderValidator
-4. If valid: -> match_queue
-5. Matching Thread -> OrderMatchingService -> ExchangeVenue -> ContinuousMatchingEngine
-6. If matched: -> trade_queue
-7. Publisher Thread -> TradeProcessingService:
+4. Validator Thread -> Sets ApiResponse in shared dict
+5. REST API <- ApiResponse (success/failure with order_id or error)
+6. Bot <- Immediate response
+```
+
+**Asynchronous Execution Path** (for accepted orders):
+```
+1. If valid: Validator -> match_queue
+2. Matching Thread -> OrderMatchingService -> ExchangeVenue -> ContinuousMatchingEngine
+3. Exchange -> WebSocket: new_order_ack (order entered book)
+4. If matched: -> trade_queue
+5. Publisher Thread -> TradeProcessingService:
    - -> TradingFeeService (calculate fees)
    - -> PositionManagementService (update positions)
    - -> websocket_queue (execution report)
-8. WebSocket Thread -> WebSocketManager -> Bot
+6. WebSocket Thread -> WebSocketManager -> Bot (real-time updates)
 ```
+
+**Key Points**:
+- API returns immediately after validation (~1ms)
+- Execution details arrive asynchronously via WebSocket
+- Clear separation between validation (sync) and execution (async)
 
 ## Key Architectural Benefits
 

@@ -34,7 +34,9 @@ class TestMinimalAPIIntegration:
             json={"team_name": "TestMM", "role": "market_maker"},
         )
         assert registration_response.status_code == 200
-        team_data = registration_response.json()
+        response_data = registration_response.json()
+        assert response_data["success"] is True
+        team_data = response_data["data"]
         api_key = team_data["api_key"]
 
         # When - Submit a limit order
@@ -55,17 +57,21 @@ class TestMinimalAPIIntegration:
         assert order_response.status_code == 200
         order_data = order_response.json()
 
-        # Verify order was processed (API returns the exchange status)
-        assert order_data["status"] in ["new", "accepted", "filled"]
+        # Verify order was processed (API returns success)
+        assert order_data["success"] is True
         assert order_data["order_id"] is not None
         assert "timestamp" in order_data
 
-        # If order didn't fill, it should be resting in the book
-        if order_data["status"] in ["new", "accepted"]:
-            # Verify order is in exchange order book
-            exchange = api_context["exchange"]
-            book = exchange.get_order_book("SPX_4500_CALL")
-            assert len(book.bids) > 0
+        # Order should be resting in the book (no counter party)
+        # Wait a moment for threads to process
+        import time
+
+        time.sleep(0.1)  # 100ms should be enough for thread processing
+
+        # Verify order is in exchange order book
+        exchange = api_context["exchange"]
+        book = exchange.get_order_book("SPX_4500_CALL")
+        assert len(book.bids) > 0
 
     def test_position_query_with_trades(self, api_context):
         """Test position updates after trade execution.
@@ -87,7 +93,9 @@ class TestMinimalAPIIntegration:
             "/auth/register",
             json={"team_name": "PositionTest", "role": "market_maker"},
         )
-        team_data = registration_response.json()
+        response_data = registration_response.json()
+        assert response_data["success"] is True
+        team_data = response_data["data"]
         api_key = team_data["api_key"]
         team_id = team_data["team_id"]
 
@@ -106,12 +114,14 @@ class TestMinimalAPIIntegration:
 
         # When - Query positions
         position_response = client.get(
-            f"/positions/{team_id}", headers={"X-API-Key": api_key}
+            "/positions", headers={"X-API-Key": api_key}
         )
 
         # Then - Position query succeeds
         assert position_response.status_code == 200
-        position_data = position_response.json()
+        response_data = position_response.json()
+        assert response_data["success"] is True
+        position_data = response_data["data"]
 
         assert position_data["team_id"] == team_id
         assert isinstance(position_data["positions"], dict)
@@ -144,38 +154,28 @@ class TestMinimalAPIIntegration:
             "/auth/register",
             json={"team_name": "AuthTest", "role": "market_maker"},
         )
-        team_data = registration_response.json()
+        response_data = registration_response.json()
+        assert response_data["success"] is True
+        team_data = response_data["data"]
         valid_api_key = team_data["api_key"]
-        team_id = team_data["team_id"]
 
         # Test 1: Valid API key should work
         response = client.get(
-            f"/positions/{team_id}", headers={"X-API-Key": valid_api_key}
+            "/positions", headers={"X-API-Key": valid_api_key}
         )
         assert response.status_code == 200
 
         # Test 2: Missing API key should be rejected
-        response = client.get(f"/positions/{team_id}")
+        response = client.get("/positions")
         assert response.status_code == 401
         assert "Missing API key" in response.json()["detail"]
 
         # Test 3: Invalid API key should be rejected
         response = client.get(
-            f"/positions/{team_id}", headers={"X-API-Key": "invalid_key_12345"}
+            "/positions", headers={"X-API-Key": "invalid_key_12345"}
         )
         assert response.status_code == 401
         assert "Invalid API key" in response.json()["detail"]
 
-        # Test 4: Valid key but wrong team should be rejected
-        other_team_response = client.post(
-            "/auth/register",
-            json={"team_name": "OtherTeam", "role": "market_maker"},
-        )
-        other_team_id = other_team_response.json()["team_id"]
-
-        response = client.get(
-            f"/positions/{other_team_id}",
-            headers={"X-API-Key": valid_api_key},  # Wrong team's key
-        )
-        assert response.status_code == 403
-        assert "Cannot query other teams" in response.json()["detail"]
+        # Test 4: With the new API design, teams automatically get their own positions
+        # The /positions endpoint always returns the authenticated team's data

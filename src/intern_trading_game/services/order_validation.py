@@ -6,6 +6,7 @@ business logic for the trading system.
 
 from typing import Optional, Tuple
 
+from ..constants.errors import ErrorMessages
 from ..domain.exchange.order import Order
 from ..domain.exchange.order_result import OrderResult
 from ..domain.exchange.venue import ExchangeVenue
@@ -255,9 +256,9 @@ class OrderValidationService(OrderValidationServiceInterface):
             if success:
                 return (True, None)
             else:
-                # Generic failure reason - future enhancement could
-                # provide more detailed failure codes from exchange
-                return (False, "Order not found or unauthorized")
-        except ValueError as e:
+                # Generic failure reason for security - don't reveal specific details
+                return (False, ErrorMessages.ORDER_NOT_FOUND)
+        except ValueError:
             # Exchange throws ValueError for ownership violations
-            return (False, str(e))
+            # Return generic message for security - don't reveal ownership details
+            return (False, ErrorMessages.ORDER_NOT_FOUND)

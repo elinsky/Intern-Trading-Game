@@ -5,7 +5,9 @@ from datetime import datetime
 from queue import Queue
 from typing import Dict
 
-from ...infrastructure.api.models import OrderResponse
+from ...constants.errors import ErrorCodes, ErrorMessages
+from ...infrastructure.api.models import ApiError, ApiResponse
+from ...infrastructure.api.websocket_messages import MessageType
 from ...services.order_validation import OrderValidationService
 
 
@@ -17,7 +19,7 @@ def validator_thread(
     orders_this_tick: Dict[str, int],
     orders_lock: threading.RLock,
     pending_orders: Dict[str, threading.Event],
-    order_responses: Dict[str, OrderResponse],
+    order_responses: Dict[str, ApiResponse],
 ):
     """Thread 2: Order Validator - validates orders from queue.
 
@@ -36,8 +38,8 @@ def validator_thread(
     The thread uses a blocking get() on the order queue, which means
     it sleeps when no messages are available, minimizing CPU usage.
 
-    Messages follow a 4-tuple format:
-    (message_type, data, team_info, response_event)
+    Messages follow a 5-tuple format:
+    (message_type, data, team_info, response_event, request_id)
     where message_type is either "new_order" or "cancel_order".
 
     A None value in the queue signals thread shutdown, allowing for
@@ -62,30 +64,32 @@ def validator_thread(
 
     For new orders:
 
-    1. Receive ("new_order", order, team_info, response_event)
+    1. Receive ("new_order", order, team_info, response_event, request_id)
     2. Build ValidationContext with current state
     3. Run constraint validation
-    4. If valid: forward to match_queue
-    5. If invalid: send rejection via response_event
+    4. If valid: forward to match_queue and create success ApiResponse
+    5. If invalid: send rejection via WebSocket and create error ApiResponse
 
     For cancellations:
 
-    1. Receive ("cancel_order", order_id, team_info, response_event)
+    1. Receive ("cancel_order", order_id, team_info, response_event, request_id)
     2. Call exchange.cancel_order() with ownership check
     3. Send cancel_ack or cancel_reject via WebSocket
-    4. Return response via response_event
+    4. Return ApiResponse via response_event
     """
     print("Validator thread started")
 
     while True:
         try:
-            # Get message from queue (4-tuple format)
+            # Get message from queue (5-tuple format)
             queue_data = order_queue.get()
             if queue_data is None:  # Shutdown signal
                 break
 
-            # Unpack the consistent 4-tuple format
-            message_type, data, team_info, response_event = queue_data
+            # Unpack the consistent 5-tuple format
+            message_type, data, team_info, response_event, request_id = (
+                queue_data
+            )
 
             if message_type == "new_order":
                 # Handle new order submission
@@ -106,11 +110,29 @@ def validator_thread(
                             team_info.team_id, 0
                         )
                         orders_this_tick[team_info.team_id] = current_count + 1
-                else:
+
+                    # Create success response
+                    response = ApiResponse(
+                        success=True,
+                        request_id=request_id,
+                        order_id=order.order_id,
+                        data=None,
+                        error=None,
+                        timestamp=datetime.now(),
+                    )
+                    response_key = f"{order.order_id}:{request_id}"
+                    order_responses[response_key] = response
+                    response_event.set()
+
+                elif result.status == "rejected":
+                    # When rejected, error fields are guaranteed to be set
+                    assert result.error_code is not None
+                    assert result.error_message is not None
+
                     # Send rejection via WebSocket
                     websocket_queue.put(
                         (
-                            "new_order_reject",
+                            MessageType.NEW_ORDER_REJECT.value,
                             team_info.team_id,
                             {
                                 "order_id": order.order_id,
@@ -122,14 +144,39 @@ def validator_thread(
                     )
 
                     # Send rejection response
-                    response = OrderResponse(
-                        order_id=order.order_id,
-                        status="rejected",
+                    response = ApiResponse(
+                        success=False,
+                        request_id=request_id,
+                        order_id=None,  # No order_id on failure
+                        data=None,
+                        error=ApiError(
+                            code=result.error_code,
+                            message=result.error_message,
+                            details=None,
+                        ),
                         timestamp=datetime.now(),
-                        error_code=result.error_code,
-                        error_message=result.error_message,
                     )
-                    order_responses[order.order_id] = response
+                    response_key = f"{order.order_id}:{request_id}"
+                    order_responses[response_key] = response
+                    response_event.set()
+
+                else:
+                    # Unexpected status - log and treat as rejection
+                    print(f"Unexpected validation status: {result.status}")
+                    response = ApiResponse(
+                        success=False,
+                        request_id=request_id,
+                        order_id=None,
+                        data=None,
+                        error=ApiError(
+                            code=ErrorCodes.INTERNAL_ERROR,
+                            message=f"Unexpected validation status: {result.status}",
+                            details=None,
+                        ),
+                        timestamp=datetime.now(),
+                    )
+                    response_key = f"{order.order_id}:{request_id}"
+                    order_responses[response_key] = response
                     response_event.set()
 
             elif message_type == "cancel_order":
@@ -145,7 +192,7 @@ def validator_thread(
                     # Send cancel acknowledgment via WebSocket
                     websocket_queue.put(
                         (
-                            "order_cancel_ack",
+                            MessageType.CANCEL_ACK.value,
                             team_info.team_id,
                             {
                                 "order_id": order_id,
@@ -157,19 +204,22 @@ def validator_thread(
                     )
 
                     # Create success response
-                    response = OrderResponse(
+                    response = ApiResponse(
+                        success=True,
+                        request_id=request_id,
                         order_id=order_id,
-                        status="cancelled",
+                        data=None,
+                        error=None,
                         timestamp=datetime.now(),
                     )
                 else:
                     # Use failure reason from service
-                    error_code = "CANCEL_FAILED"
+                    error_code = ErrorCodes.CANCEL_FAILED
 
                     # Send cancel rejection via WebSocket
                     websocket_queue.put(
                         (
-                            "order_cancel_reject",
+                            MessageType.CANCEL_REJECT.value,
                             team_info.team_id,
                             {
                                 "order_id": order_id,
@@ -180,16 +230,24 @@ def validator_thread(
                     )
 
                     # Create rejection response
-                    response = OrderResponse(
-                        order_id=order_id,
-                        status="rejected",
+                    response = ApiResponse(
+                        success=False,
+                        request_id=request_id,
+                        order_id=None,
+                        data=None,
+                        error=ApiError(
+                            code=error_code,
+                            message=ErrorMessages.format_cancel_failed(
+                                reason or "Unknown error"
+                            ),
+                            details=None,
+                        ),
                         timestamp=datetime.now(),
-                        error_code=error_code,
-                        error_message=f"Cancel failed: {reason}",
                     )
 
                 # Send response back to API thread
-                order_responses[order_id] = response
+                response_key = f"{order_id}:{request_id}"
+                order_responses[response_key] = response
                 response_event.set()
 
         except Exception as e:
