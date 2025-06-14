@@ -16,8 +16,8 @@ def create_shared_state():
         # Position tracking (thread-safe)
         "positions": {},
         "positions_lock": threading.RLock(),
-        # Track orders per tick
-        "orders_this_tick": {},
+        # Track orders per second
+        "orders_this_second": {},
         "orders_lock": threading.RLock(),
         # Pending orders waiting for response
         "pending_orders": {},
@@ -35,8 +35,8 @@ def get_team_positions(
 
 
 def get_team_order_count(
-    team_id: str, orders_this_tick: Dict, orders_lock: threading.RLock
+    team_id: str, orders_this_second: Dict, orders_lock: threading.RLock
 ) -> int:
-    """Thread-safe retrieval of team order count for current tick."""
+    """Thread-safe retrieval of team order count for current second."""
     with orders_lock:
-        return orders_this_tick.get(team_id, 0)
+        return orders_this_second.get(team_id, 0)

@@ -16,7 +16,7 @@ def validator_thread(
     match_queue: Queue,
     websocket_queue: Queue,
     validation_service: OrderValidationService,
-    orders_this_tick: Dict[str, int],
+    orders_this_second: Dict[str, int],
     orders_lock: threading.RLock,
     pending_orders: Dict[str, threading.Event],
     order_responses: Dict[str, ApiResponse],
@@ -106,10 +106,12 @@ def validator_thread(
 
                     # Update order count
                     with orders_lock:
-                        current_count = orders_this_tick.get(
+                        current_count = orders_this_second.get(
                             team_info.team_id, 0
                         )
-                        orders_this_tick[team_info.team_id] = current_count + 1
+                        orders_this_second[team_info.team_id] = (
+                            current_count + 1
+                        )
 
                     # Create success response
                     response = ApiResponse(

@@ -73,7 +73,7 @@ def create_app() -> FastAPI:
                 team_id, state["positions"], state["positions_lock"]
             ),
             get_order_count_func=lambda team_id: get_team_order_count(
-                team_id, state["orders_this_tick"], state["orders_lock"]
+                team_id, state["orders_this_second"], state["orders_lock"]
             ),
         )
 
@@ -85,7 +85,7 @@ def create_app() -> FastAPI:
                 queues["match_queue"],
                 queues["websocket_queue"],
                 validation_service,
-                state["orders_this_tick"],
+                state["orders_this_second"],
                 state["orders_lock"],
                 state["pending_orders"],
                 state["order_responses"],
@@ -221,7 +221,7 @@ def create_app() -> FastAPI:
         queues["order_queue"],
         state["positions"],
         state["positions_lock"],
-        state["orders_this_tick"],
+        state["orders_this_second"],
         state["orders_lock"],
         state["pending_orders"],
         state["order_responses"],

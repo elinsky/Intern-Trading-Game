@@ -7,6 +7,9 @@ enforces trading rules without any hardcoded role-specific logic.
 import pytest
 
 from intern_trading_game.domain.exchange.core.order import Order, OrderSide
+from intern_trading_game.domain.exchange.validation.interfaces import (
+    ValidationContext,
+)
 from intern_trading_game.domain.exchange.validation.order_validator import (
     ConstraintBasedOrderValidator,
     ConstraintConfig,
@@ -20,7 +23,6 @@ from intern_trading_game.domain.exchange.validation.order_validator import (
     get_universal_constraints,
     load_constraints_from_dict,
 )
-from intern_trading_game.domain.interfaces import ValidationContext
 
 
 class TestConstraints:

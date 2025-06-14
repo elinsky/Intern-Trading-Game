@@ -1,15 +1,15 @@
-"""Core interfaces for the Intern Trading Game.
+"""Validation interfaces for the exchange domain.
 
-This module defines the abstract base classes for order validation
-and related data structures used throughout the trading system.
+This module defines the abstract base classes and data structures for order
+validation within the exchange domain.
 """
 
 from abc import ABC, abstractmethod
 from dataclasses import dataclass, field
 from typing import Dict
 
-from .exchange.core.order import Order
-from .exchange.order_result import OrderResult
+from ..core.order import Order
+from ..order_result import OrderResult
 
 
 @dataclass
@@ -105,8 +105,7 @@ class OrderValidator(ABC):
         The context contains all necessary information including:
         - The order to validate
         - Current trader positions
-        - Orders submitted this tick
-        - Current tick phase
-        - Trader role for loading constraints
+        - Orders submitted this second
+        - Current trader role for loading constraints
         """
         pass

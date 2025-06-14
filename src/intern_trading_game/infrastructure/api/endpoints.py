@@ -24,7 +24,7 @@ def create_endpoints(
     order_queue: Queue,
     positions: Dict[str, Dict[str, int]],
     positions_lock: threading.RLock,
-    orders_this_tick: Dict[str, int],
+    orders_this_second: Dict[str, int],
     orders_lock: threading.RLock,
     pending_orders: Dict[str, threading.Event],
     order_responses: Dict[str, OrderResponse],
@@ -42,8 +42,8 @@ def create_endpoints(
         Shared position state
     positions_lock : threading.RLock
         Lock for position access
-    orders_this_tick : Dict[str, int]
-        Order count tracking
+    orders_this_second : Dict[str, int]
+        Order count tracking per second
     orders_lock : threading.RLock
         Lock for order count access
     pending_orders : Dict[str, threading.Event]
@@ -87,7 +87,7 @@ def create_endpoints(
             positions[team_info.team_id] = {}
 
         with orders_lock:
-            orders_this_tick[team_info.team_id] = 0
+            orders_this_second[team_info.team_id] = 0
 
         return team_info
 

@@ -265,7 +265,7 @@ Always use context managers for locks:
 
 ```python
 with orders_lock:
-    orders_this_tick[team_id] += 1
+    orders_this_second[team_id] += 1
 ```
 
 ## Anti-Patterns to Avoid

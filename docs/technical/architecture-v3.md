@@ -58,7 +58,7 @@ graph TB
 
     subgraph "Data Layer (In-Memory)"
         POS[(positions<br/>Dict with RLock)]
-        ORDERS[(orders_this_tick<br/>Dict with RLock)]
+        ORDERS[(orders_this_second<br/>Dict with RLock)]
         BOOKS[(Order Books<br/>In ExchangeVenue)]
         RESP[(pending_orders<br/>Response Events)]
         Q1[order_queue<br/>API -> Validator]
@@ -305,7 +305,7 @@ graph TB
 **State Storage**:
 
 - **positions**: Team positions with `RLock` for thread safety
-- **orders_this_tick**: Order count tracking per tick
+- **orders_this_second**: Order count tracking per second
 - **Order Books**: Maintained within `ExchangeVenue`
 - **pending_orders**: Threading events for synchronous responses
 

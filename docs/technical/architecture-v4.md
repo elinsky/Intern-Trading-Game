@@ -493,7 +493,7 @@ graph TB
 **Tasks**:
 
 - [ ] Remove unused `metadata` field from ValidationContext
-- [ ] Fix docstring: "orders_this_tick" → "orders_this_second"
+- [x] Fix docstring: "orders_this_tick" → "orders_this_second"
 - [ ] Rename "TradingContext" sections in docstrings
 - [ ] Move ValidationContext to exchange/validation/interfaces.py
 - [ ] Create clear service interfaces in each domain

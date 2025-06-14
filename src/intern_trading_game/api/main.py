@@ -128,7 +128,7 @@ def validator_thread():
         match_queue=match_queue,
         websocket_queue=websocket_queue,
         validation_service=validation_service,
-        orders_this_tick=orders_this_second,  # Note: using orders_this_second
+        orders_this_second=orders_this_second,
         orders_lock=orders_lock,
         pending_orders=pending_orders,
         order_responses=order_responses,
