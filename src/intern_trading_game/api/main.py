@@ -12,12 +12,12 @@ from fastapi.middleware.cors import CORSMiddleware
 
 from ..domain.exchange.core.instrument import Instrument
 from ..domain.exchange.matching_engine import ContinuousMatchingEngine
-from ..domain.exchange.venue import ExchangeVenue
-from ..domain.validation.order_validator import (
+from ..domain.exchange.validation.order_validator import (
     ConstraintBasedOrderValidator,
     ConstraintConfig,
     ConstraintType,
 )
+from ..domain.exchange.venue import ExchangeVenue
 from ..infrastructure.api.auth import team_registry
 from ..infrastructure.api.websocket import ws_manager
 from ..infrastructure.config.fee_config import FeeConfig

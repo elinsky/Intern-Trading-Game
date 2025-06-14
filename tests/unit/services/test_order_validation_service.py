@@ -15,11 +15,11 @@ from intern_trading_game.domain.exchange.core.order import (
     OrderType,
 )
 from intern_trading_game.domain.exchange.order_result import OrderResult
-from intern_trading_game.domain.exchange.venue import ExchangeVenue
-from intern_trading_game.domain.interfaces import ValidationContext
-from intern_trading_game.domain.validation.order_validator import (
+from intern_trading_game.domain.exchange.validation.order_validator import (
     ConstraintBasedOrderValidator,
 )
+from intern_trading_game.domain.exchange.venue import ExchangeVenue
+from intern_trading_game.domain.interfaces import ValidationContext
 from intern_trading_game.infrastructure.api.models import TeamInfo
 from intern_trading_game.services.interfaces import (
     OrderValidationServiceInterface,

@@ -15,12 +15,12 @@ from ...data.state.managers import (
 )
 from ...domain.exchange.core.instrument import Instrument
 from ...domain.exchange.matching_engine import ContinuousMatchingEngine
-from ...domain.exchange.venue import ExchangeVenue
-from ...domain.validation.order_validator import (
+from ...domain.exchange.validation.order_validator import (
     ConstraintBasedOrderValidator,
     ConstraintConfig,
     ConstraintType,
 )
+from ...domain.exchange.venue import ExchangeVenue
 from ...infrastructure.config.fee_config import HARDCODED_FEE_CONFIG
 from ...infrastructure.threads.matcher import matching_thread
 from ...infrastructure.threads.publisher import trade_publisher_thread

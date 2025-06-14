@@ -17,12 +17,12 @@ from intern_trading_game.domain.exchange.core.instrument import Instrument
 from intern_trading_game.domain.exchange.matching_engine import (
     ContinuousMatchingEngine,
 )
-from intern_trading_game.domain.exchange.venue import ExchangeVenue
-from intern_trading_game.domain.validation.order_validator import (
+from intern_trading_game.domain.exchange.validation.order_validator import (
     ConstraintBasedOrderValidator,
     ConstraintConfig,
     ConstraintType,
 )
+from intern_trading_game.domain.exchange.venue import ExchangeVenue
 from intern_trading_game.infrastructure.api.auth import TeamInfo, team_registry
 from intern_trading_game.services import (
     OrderMatchingService,

@@ -75,7 +75,7 @@ def api_context():
 
     # Load constraints for validator
     from intern_trading_game.api.main import validator
-    from intern_trading_game.domain.validation.order_validator import (
+    from intern_trading_game.domain.exchange.validation.order_validator import (
         ConstraintConfig,
         ConstraintType,
     )

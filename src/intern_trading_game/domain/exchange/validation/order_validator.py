@@ -10,9 +10,9 @@ from dataclasses import dataclass
 from enum import Enum
 from typing import Any, Dict, List, Optional
 
-from ..exchange.order_result import OrderResult
-from ..interfaces import OrderValidator as OrderValidatorInterface
-from ..interfaces import ValidationContext
+from ...interfaces import OrderValidator as OrderValidatorInterface
+from ...interfaces import ValidationContext
+from ..order_result import OrderResult
 
 
 class ConstraintType(Enum):

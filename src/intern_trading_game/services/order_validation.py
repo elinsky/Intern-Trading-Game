@@ -9,9 +9,11 @@ from typing import Optional, Tuple
 from ..constants.errors import ErrorMessages
 from ..domain.exchange.core.order import Order
 from ..domain.exchange.order_result import OrderResult
+from ..domain.exchange.validation.order_validator import (
+    ConstraintBasedOrderValidator,
+)
 from ..domain.exchange.venue import ExchangeVenue
 from ..domain.interfaces import ValidationContext
-from ..domain.validation.order_validator import ConstraintBasedOrderValidator
 from ..infrastructure.api.models import TeamInfo
 from .interfaces import OrderValidationServiceInterface
 
