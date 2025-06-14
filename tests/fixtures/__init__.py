@@ -24,20 +24,20 @@ from .market_data import (
     TEST_PRICES,
     TEST_QUANTITIES,
     TEST_SPREADS,
-    create_test_order,
+    create_ladder_orders,
+    create_matched_orders,
+    create_order_book_scenario,
     create_spx_option,
     create_spy_option,
+    create_test_order,
     create_test_spread,
-    create_ladder_orders,
-    create_order_book_scenario,
-    create_matched_orders,
     create_test_trade,
 )
 
 __all__ = [
     # Constants
     "TEST_PRICES",
-    "TEST_QUANTITIES", 
+    "TEST_QUANTITIES",
     "TEST_SPREADS",
     # Order creators
     "create_test_order",

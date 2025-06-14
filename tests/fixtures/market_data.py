@@ -78,10 +78,10 @@ def create_test_order(
     --------
     >>> # Simple buy order
     >>> order = create_test_order()
-    >>> 
+    >>>
     >>> # Sell order with custom price
     >>> order = create_test_order(side="sell", price=101.5)
-    >>> 
+    >>>
     >>> # Market order
     >>> order = create_test_order(price=None)
     """
@@ -122,13 +122,13 @@ def create_spx_option(
     --------
     >>> # ATM call expiring in 30 days
     >>> spx_call = create_spx_option()
-    >>> 
+    >>>
     >>> # OTM put expiring in 7 days
     >>> spx_put = create_spx_option(strike=4400, expiry_days=7, option_type="put")
     """
     expiry = (datetime.now() + timedelta(days=expiry_days)).strftime("%Y%m%d")
     symbol = f"SPX_{option_type.upper()}_{int(strike)}_{expiry}{symbol_suffix}"
-    
+
     return Instrument(
         symbol=symbol,
         strike=strike,
@@ -166,13 +166,13 @@ def create_spy_option(
     --------
     >>> # ATM call expiring in 30 days
     >>> spy_call = create_spy_option()
-    >>> 
+    >>>
     >>> # ITM put expiring in 14 days
     >>> spy_put = create_spy_option(strike=455, expiry_days=14, option_type="put")
     """
     expiry = (datetime.now() + timedelta(days=expiry_days)).strftime("%Y%m%d")
     symbol = f"SPY_{option_type.upper()}_{int(strike)}_{expiry}{symbol_suffix}"
-    
+
     return Instrument(
         symbol=symbol,
         strike=strike,
@@ -218,7 +218,7 @@ def create_test_spread(
     """
     bid_price = mid_price - (spread_width / 2)
     ask_price = mid_price + (spread_width / 2)
-    
+
     return {
         "bid": create_test_order(
             side="buy",
@@ -284,7 +284,7 @@ def create_ladder_orders(
         else:
             # For sells, start at base and go up
             price = base_price + (i * step)
-            
+
         orders.append(
             create_test_order(
                 side=side,
@@ -294,7 +294,7 @@ def create_ladder_orders(
                 instrument_id=instrument_id,
             )
         )
-    
+
     return orders
 
 
@@ -345,13 +345,13 @@ def create_order_book_scenario(
             "asks": [(100.05, 1)],
         },
     }
-    
+
     if scenario not in scenarios:
         raise ValueError(f"Unknown scenario: {scenario}")
-    
+
     scenario_data = scenarios[scenario]
     result = {"bids": [], "asks": []}
-    
+
     # Create bid orders
     for i, (price, qty) in enumerate(scenario_data["bids"]):
         result["bids"].append(
@@ -363,7 +363,7 @@ def create_order_book_scenario(
                 instrument_id=instrument_id,
             )
         )
-    
+
     # Create ask orders
     for i, (price, qty) in enumerate(scenario_data["asks"]):
         result["asks"].append(
@@ -375,7 +375,7 @@ def create_order_book_scenario(
                 instrument_id=instrument_id,
             )
         )
-    
+
     return result
 
 
@@ -418,7 +418,7 @@ def create_matched_orders(
         trader_id=buyer_id,
         instrument_id=instrument_id,
     )
-    
+
     sell_order = create_test_order(
         side="sell",
         price=price,
@@ -426,7 +426,7 @@ def create_matched_orders(
         trader_id=seller_id,
         instrument_id=instrument_id,
     )
-    
+
     return buy_order, sell_order
 
 
@@ -439,6 +439,8 @@ def create_test_trade(
     instrument_id: str = "SPX_CALL_4500_20240315",
     buyer_order_id: Optional[str] = None,
     seller_order_id: Optional[str] = None,
+    timestamp: Optional[datetime] = None,
+    trade_id: Optional[str] = None,
 ) -> Trade:
     """Create a test trade object.
 
@@ -460,6 +462,10 @@ def create_test_trade(
         Buyer's order ID, auto-generated if not provided
     seller_order_id : str, optional
         Seller's order ID, auto-generated if not provided
+    timestamp : datetime, optional
+        Trade timestamp, defaults to current time if not provided
+    trade_id : str, optional
+        Trade ID, auto-generated if not provided
 
     Returns
     -------
@@ -476,7 +482,7 @@ def create_test_trade(
         buyer_order_id = f"BUY_{buyer_id}_{id(buyer_id)}"
     if seller_order_id is None:
         seller_order_id = f"SELL_{seller_id}_{id(seller_id)}"
-        
+
     return Trade(
         instrument_id=instrument_id,
         price=price,
@@ -486,4 +492,6 @@ def create_test_trade(
         aggressor_side=aggressor_side,
         buyer_order_id=buyer_order_id,
         seller_order_id=seller_order_id,
+        timestamp=timestamp,
+        trade_id=trade_id,
     )

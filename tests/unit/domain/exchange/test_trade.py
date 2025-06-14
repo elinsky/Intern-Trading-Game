@@ -157,7 +157,7 @@ class TestTradeBusinessLogic:
         """
         # Given - A completed options trade with known timestamp
         timestamp = datetime(2025, 1, 13, 14, 30, 0)
-        trade = Trade(
+        trade = create_test_trade(
             instrument_id="SPX_4500_PUT",
             buyer_id="ARB_003",
             seller_id="MM_001",
@@ -200,7 +200,7 @@ class TestTradeBusinessLogic:
         Then it should match what was provided at creation
         """
         # Given - Buy aggressor (taker buys from maker)
-        buy_aggressor = Trade(
+        buy_aggressor = create_test_trade(
             instrument_id="SPX_4500_CALL",
             buyer_id="HF_002",  # Taker
             seller_id="MM_001",  # Maker
@@ -212,7 +212,7 @@ class TestTradeBusinessLogic:
         )
 
         # Given - Sell aggressor (taker sells to maker)
-        sell_aggressor = Trade(
+        sell_aggressor = create_test_trade(
             instrument_id="SPX_4500_CALL",
             buyer_id="MM_001",  # Maker
             seller_id="HF_002",  # Taker
