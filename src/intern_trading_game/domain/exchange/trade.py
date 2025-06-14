@@ -150,6 +150,9 @@ class Trade:
         if self.quantity <= 0:
             raise ValueError("Trade quantity must be positive")
 
+        if self.quantity != int(self.quantity):
+            raise ValueError("Trade quantity must be a whole number")
+
         if self.aggressor_side not in ["buy", "sell"]:
             raise ValueError("Aggressor side must be 'buy' or 'sell'")
 

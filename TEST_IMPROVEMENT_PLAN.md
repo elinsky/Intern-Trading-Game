@@ -35,12 +35,14 @@ Add critical unit tests for core domain models and missing constraint tests to e
 - [x] Test string-to-enum conversions - *Completed via OrderBook tests*
 - [x] Added filled_quantity property - *Enhancement completed*
 
-#### 1.3 Trade Model Tests
+#### 1.3 Trade Model Tests **COMPLETED**
 
-- [ ] Test validation of prices and quantities
-- [ ] Test aggressor side validation
-- [ ] Test value calculation
-- [ ] Test serialization (to_dict)
+- [x] Test validation of prices and quantities
+- [x] Test aggressor side validation
+- [x] Test value calculation
+- [x] Test serialization (to_dict)
+- [x] Added validation for fractional quantities (business rule)
+- [x] 100% test coverage achieved
 
 #### 1.4 Missing Constraint Tests in OrderValidator
 
