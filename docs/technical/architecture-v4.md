@@ -516,7 +516,7 @@ graph TB
 
 ### Next Sprint Actions
 
-#### 4. API Endpoint Separation
+#### 4. API Endpoint Separation (IN PROGRESS)
 **Goal**: Split REST endpoints by service domain
 
 **Current**:
@@ -547,10 +547,15 @@ GET    /game/teams/{team_id}
 
 **Tasks**:
 
-- [ ] Create separate FastAPI routers per service
-- [ ] Implement new endpoint structure
-- [ ] Maintain backward compatibility
+- [x] Create separate FastAPI routers per service (exchange.py, game.py created)
+- [ ] Implement new endpoint structure (paths still unchanged)
+- [x] ~~Maintain backward compatibility~~ (not needed per user)
 - [ ] Update API documentation
+
+**Completed**:
+- Created exchange.py router with order endpoints (commit 2b2c561)
+- Created game.py router with team registration (commit c3cdca3)
+- Added get_team_by_name() to prevent duplicate team names
 
 #### 5. Thread Ownership
 **Goal**: Assign threads to specific services
