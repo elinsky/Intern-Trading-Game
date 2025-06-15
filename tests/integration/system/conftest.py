@@ -44,6 +44,7 @@ def system_context():
 
     from intern_trading_game.api.main import (
         matching_thread,
+        position_tracker_thread_wrapper,
         trade_publisher_thread,
         validator_thread,
         websocket_thread,
@@ -55,6 +56,9 @@ def system_context():
     fresh_publisher_t = threading.Thread(
         target=trade_publisher_thread, daemon=True
     )
+    fresh_position_t = threading.Thread(
+        target=position_tracker_thread_wrapper, daemon=True
+    )
     fresh_websocket_t = threading.Thread(target=websocket_thread, daemon=True)
 
     # Temporarily replace the global thread references
@@ -64,6 +68,7 @@ def system_context():
         main_module.validator_t,
         main_module.matching_t,
         main_module.publisher_t,
+        main_module.position_t,
         main_module.websocket_t,
     )
 
@@ -71,6 +76,7 @@ def system_context():
     main_module.validator_t = fresh_validator_t
     main_module.matching_t = fresh_matching_t
     main_module.publisher_t = fresh_publisher_t
+    main_module.position_t = fresh_position_t
     main_module.websocket_t = fresh_websocket_t
 
     try:
@@ -80,6 +86,7 @@ def system_context():
                 "validator": fresh_validator_t,
                 "matching": fresh_matching_t,
                 "publisher": fresh_publisher_t,
+                "position": fresh_position_t,
                 "websocket": fresh_websocket_t,
             }
 
@@ -96,7 +103,8 @@ def system_context():
         main_module.validator_t = original_threads[0]
         main_module.matching_t = original_threads[1]
         main_module.publisher_t = original_threads[2]
-        main_module.websocket_t = original_threads[3]
+        main_module.position_t = original_threads[3]
+        main_module.websocket_t = original_threads[4]
 
 
 # Alias for backwards compatibility and semantic clarity

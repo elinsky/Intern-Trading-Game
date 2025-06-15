@@ -20,9 +20,9 @@ from ..domain.exchange.validation.order_validator import (
 from ..domain.exchange.venue import ExchangeVenue
 from ..domain.positions import (
     PositionManagementService,
-    TradeProcessingService,
     TradingFeeService,
 )
+from ..domain.positions.threads import position_tracker_thread
 from ..infrastructure.api.auth import team_registry
 from ..infrastructure.api.websocket import ws_manager
 from ..infrastructure.config.fee_config import get_hardcoded_fee_schedules
@@ -42,6 +42,7 @@ match_queue: Queue = Queue()  # For matching engine
 trade_queue: Queue = Queue()  # Matcher -> Publisher
 response_queue: Queue = Queue()  # For order responses back to API
 websocket_queue: Queue = Queue()  # Threads -> WebSocket
+position_queue: Queue = Queue()  # Publisher -> Position Tracker
 
 # Game components
 exchange = ExchangeVenue(ContinuousMatchingEngine())
@@ -162,16 +163,17 @@ def matching_thread():
 
 
 def trade_publisher_thread():
-    """Thread 4: Trade Publisher - updates positions and sends responses."""
+    """Thread 4: Trade Publisher - routes trades and sends WebSocket messages.
+
+    This thread now acts as a router, forwarding trades to the position
+    tracker thread and sending execution reports via WebSocket. Position
+    updates are no longer handled here - they're owned by the Position Service.
+    """
     print("Trade publisher thread started")
 
-    # Initialize services once at thread startup
+    # Initialize only the services needed for WebSocket messaging
     role_fees = get_hardcoded_fee_schedules()
     fee_service = TradingFeeService(role_fees)
-    position_service = PositionManagementService(positions, positions_lock)
-    trade_service = TradeProcessingService(
-        fee_service, position_service, websocket_queue
-    )
 
     while True:
         try:
@@ -182,12 +184,65 @@ def trade_publisher_thread():
 
             result, order, team_info = trade_data
 
-            # Use service for all business logic
-            # Note: No API response needed - validator already responded
-            trade_service.process_trade_result(result, order, team_info)
+            # Forward to position tracker for position updates
+            position_queue.put((result, order, team_info))
+
+            # Send WebSocket messages for each fill
+            if result.fills:
+                for trade in result.fills:
+                    # Calculate fee for this specific fill
+                    liquidity_type = fee_service.determine_liquidity_type(
+                        order.order_id, trade
+                    )
+                    fee = fee_service.calculate_fee(
+                        quantity=trade.quantity,
+                        role=team_info.role,
+                        liquidity_type=liquidity_type,
+                    )
+
+                    # Determine counterparty order ID
+                    if order.side.value == "buy":
+                        counterparty_order_id = trade.seller_order_id
+                    else:
+                        counterparty_order_id = trade.buyer_order_id
+
+                    # Send execution report
+                    websocket_queue.put(
+                        (
+                            "execution_report",
+                            team_info.team_id,
+                            {
+                                "order_id": order.order_id,
+                                "client_order_id": order.client_order_id,
+                                "side": order.side.value,
+                                "quantity": trade.quantity,
+                                "price": trade.price,
+                                "liquidity": liquidity_type,
+                                "fee": fee,
+                                "timestamp": trade.timestamp.isoformat(),
+                                "trade_id": trade.trade_id,
+                                "counterparty": counterparty_order_id,
+                                "team_id": team_info.team_id,
+                            },
+                        )
+                    )
 
         except Exception as e:
             print(f"Trade publisher thread error: {e}")
+
+
+def position_tracker_thread_wrapper():
+    """Thread 5: Position Tracker - updates positions based on executed trades.
+
+    This thread is owned by the Position Service and handles all position
+    tracking logic. It consumes trades from the position queue and updates
+    the position state accordingly.
+    """
+    # Initialize position service
+    position_service = PositionManagementService(positions, positions_lock)
+
+    # Run the position tracker thread
+    position_tracker_thread(position_queue, position_service)
 
 
 def websocket_thread():
@@ -298,6 +353,9 @@ async def websocket_async_loop():
 validator_t = threading.Thread(target=validator_thread, daemon=True)
 matching_t = threading.Thread(target=matching_thread, daemon=True)
 publisher_t = threading.Thread(target=trade_publisher_thread, daemon=True)
+position_t = threading.Thread(
+    target=position_tracker_thread_wrapper, daemon=True
+)
 websocket_t = threading.Thread(target=websocket_thread, daemon=True)
 
 
@@ -326,6 +384,7 @@ async def startup():
     validator_t.start()
     matching_t.start()
     publisher_t.start()
+    position_t.start()
     websocket_t.start()
 
     # Setup market maker constraints
@@ -367,7 +426,7 @@ async def startup():
         exchange.list_instrument(instrument)
 
     print(
-        f"✓ API started with {len(instruments)} instruments and 4 processing threads"
+        f"✓ API started with {len(instruments)} instruments and 5 processing threads"
     )
 
 
@@ -384,12 +443,14 @@ async def shutdown():
     order_queue.put(None)
     match_queue.put(None)
     trade_queue.put(None)
+    position_queue.put(None)
     websocket_queue.put(None)
 
     # Wait for threads to finish
     validator_t.join(timeout=1)
     matching_t.join(timeout=1)
     publisher_t.join(timeout=1)
+    position_t.join(timeout=1)
     websocket_t.join(timeout=1)
 
 
@@ -436,6 +497,7 @@ async def root():
             "validator": validator_t.is_alive() if validator_t else False,
             "matching": matching_t.is_alive() if matching_t else False,
             "publisher": publisher_t.is_alive() if publisher_t else False,
+            "position_tracker": position_t.is_alive() if position_t else False,
             "websocket": websocket_t.is_alive() if websocket_t else False,
         },
     }
