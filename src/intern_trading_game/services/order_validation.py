@@ -5,6 +5,8 @@ business logic for the trading system.
 """
 
 import threading
+import time
+from dataclasses import dataclass
 from typing import Dict, Optional, Tuple
 
 from ..constants.errors import ErrorMessages
@@ -17,6 +19,59 @@ from ..domain.exchange.validation.order_validator import (
 from ..domain.exchange.venue import ExchangeVenue
 from ..infrastructure.api.models import TeamInfo
 from .interfaces import OrderValidationServiceInterface
+
+
+@dataclass
+class RateLimitWindow:
+    """Represents a rate limiting window for tracking orders per second.
+
+    This data structure tracks the count of orders within a specific
+    time window (one second) along with the window start timestamp.
+
+    Attributes
+    ----------
+    count : int
+        Number of orders submitted within this window
+    window_start : float
+        Unix timestamp (in seconds) when this window started
+
+    Notes
+    -----
+    Windows are based on integer second boundaries. For example,
+    timestamps 1000.1, 1000.5, and 1000.9 all belong to the same
+    window (second 1000), while 1001.0 starts a new window.
+    """
+
+    count: int
+    window_start: float
+
+    def is_current_window(self, current_time: float) -> bool:
+        """Check if given time is within the same second window.
+
+        Parameters
+        ----------
+        current_time : float
+            Unix timestamp to check
+
+        Returns
+        -------
+        bool
+            True if current_time is in same second as window_start
+
+        Notes
+        -----
+        Uses integer comparison of timestamps to determine if times
+        fall within the same one-second window boundary.
+
+        Examples
+        --------
+        >>> window = RateLimitWindow(count=5, window_start=1000.3)
+        >>> window.is_current_window(1000.9)  # Same second
+        True
+        >>> window.is_current_window(1001.0)  # Next second
+        False
+        """
+        return int(current_time) == int(self.window_start)
 
 
 class OrderValidationService(OrderValidationServiceInterface):
@@ -49,10 +104,10 @@ class OrderValidationService(OrderValidationServiceInterface):
         The exchange venue instance
     _get_positions : callable
         Position retrieval function
-    orders_this_second : Dict[str, int]
-        Internal order count tracking per team (thread-safe)
+    rate_limit_windows : Dict[str, RateLimitWindow]
+        Internal rate limiting windows per team (thread-safe)
     orders_lock : threading.RLock
-        Lock for thread-safe access to order counts
+        Lock for thread-safe access to rate limit windows
 
     Notes
     -----
@@ -132,48 +187,93 @@ class OrderValidationService(OrderValidationServiceInterface):
         self._get_positions = get_positions_func
 
         # Initialize internal rate limiting state
-        self.orders_this_second: Dict[str, int] = {}
+        self.rate_limit_windows: Dict[str, RateLimitWindow] = {}
         self.orders_lock = threading.RLock()
 
-    def get_order_count(self, team_id: str) -> int:
-        """Get current order count for a team (thread-safe).
+    def get_order_count(
+        self, team_id: str, current_time: Optional[float] = None
+    ) -> int:
+        """Get current order count for a team within specified second window.
 
         Parameters
         ----------
         team_id : str
             The team ID to get order count for
+        current_time : float, optional
+            Unix timestamp for current time. If None, uses time.time()
 
         Returns
         -------
         int
-            Number of orders submitted by the team this second
+            Number of orders submitted by the team in specified second window
 
         Notes
         -----
-        This method provides thread-safe access to the internal order
-        count state using the service's internal lock.
-        """
-        with self.orders_lock:
-            return self.orders_this_second.get(team_id, 0)
+        This method implements proper per-second rate limiting by:
+        1. Checking if team has an existing rate limit window
+        2. If window exists and matches requested time, returns count
+        3. If no window or time doesn't match, returns 0 (no orders in that window)
 
-    def increment_order_count(self, team_id: str) -> None:
+        The method does NOT modify the existing window when checking
+        different time periods - it only reports what's in that window.
+
+        The method is thread-safe and uses integer second boundaries
+        for window comparison (e.g., 1000.1 and 1000.9 are same window).
+        """
+        if current_time is None:
+            current_time = time.time()
+
+        with self.orders_lock:
+            window = self.rate_limit_windows.get(team_id)
+
+            if window is None:
+                # No window exists - return 0 for any time
+                return 0
+
+            if window.is_current_window(current_time):
+                # Requested time matches existing window
+                return window.count
+            else:
+                # Requested time is different window - return 0
+                return 0
+
+    def increment_order_count(
+        self, team_id: str, current_time: Optional[float] = None
+    ) -> None:
         """Increment order count for a team after successful validation.
 
         Parameters
         ----------
         team_id : str
             The team ID to increment order count for
+        current_time : float, optional
+            Unix timestamp for current time. If None, uses time.time()
 
         Notes
         -----
         This method should be called by the validator thread after
         successful order validation to update the rate limiting state.
-        It provides thread-safe increment using the service's
-        internal lock.
+        It handles window creation and rollover when entering a new second.
+
+        The method is thread-safe and automatically manages window
+        transitions and count accumulation.
         """
+        if current_time is None:
+            current_time = time.time()
+
         with self.orders_lock:
-            current_count = self.orders_this_second.get(team_id, 0)
-            self.orders_this_second[team_id] = current_count + 1
+            window = self.rate_limit_windows.get(team_id)
+
+            if window is None or not window.is_current_window(current_time):
+                # New team or new second - start fresh window with count 1
+                self.rate_limit_windows[team_id] = RateLimitWindow(
+                    1, current_time
+                )
+            else:
+                # Same window - increment count
+                self.rate_limit_windows[team_id] = RateLimitWindow(
+                    count=window.count + 1, window_start=window.window_start
+                )
 
     def validate_new_order(self, order: Order, team: TeamInfo) -> OrderResult:
         """Validate a new order against all configured constraints.

@@ -5,6 +5,7 @@ following the service-oriented architecture principle of thread ownership.
 """
 
 import threading
+import time
 from datetime import datetime
 from queue import Queue
 from typing import Dict
@@ -123,7 +124,10 @@ def validator_thread(
                     match_queue.put((order, team_info))
 
                     # Update order count through validation service
-                    validation_service.increment_order_count(team_info.team_id)
+                    # Use current time for rate limiting accuracy
+                    validation_service.increment_order_count(
+                        team_info.team_id, time.time()
+                    )
 
                     # Create success response
                     response = ApiResponse(

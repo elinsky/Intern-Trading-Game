@@ -180,8 +180,8 @@ class TestOrderValidationService:
         When - Another order is submitted
         Then - Validation fails with rate limit error
         """
-        # Given - Set high order count in service internal state
-        service.orders_this_second[sample_team.team_id] = 10
+        # Given - Mock high order count in service
+        service.get_order_count = Mock(return_value=10)
         mock_validator.validate_order.return_value = OrderResult(
             order_id=sample_order.order_id,
             status="rejected",
@@ -278,9 +278,8 @@ class TestOrderValidationService:
         """
         # Given - Configure state
         service._get_positions = Mock(return_value=positions)
-        # Set internal order count state
-        if order_count > 0:
-            service.orders_this_second[sample_team.team_id] = order_count
+        # Mock order count retrieval
+        service.get_order_count = Mock(return_value=order_count)
         mock_validator.validate_order.return_value = OrderResult(
             order_id=sample_order.order_id,
             status="accepted",
@@ -348,6 +347,6 @@ class TestOrderValidationService:
         # Then - Service is properly initialized
         assert service.validator is validator
         assert service.exchange is exchange
-        assert service.orders_this_second == {}
+        assert service.rate_limit_windows == {}
         assert service.orders_lock is not None
         assert service._get_positions is get_pos
