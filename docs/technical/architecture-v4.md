@@ -487,27 +487,32 @@ graph TB
 - [x] Update all imports throughout codebase
 - [x] Delete models/ directory
 
-#### 2. Interface Cleanup
+**Additional Work**: Moved trade processing services to positions domain (commit 11af614)
+- Moved TradeProcessingService, TradingFeeService, PositionManagementService
+- Created FeeSchedule domain model in positions/models.py
+- Simplified fee configuration by removing redundant FeeConfig class
+
+#### 2. Interface Cleanup ✅ MOSTLY COMPLETED
 **Goal**: Fix inconsistencies and remove unused code
 
 **Tasks**:
 
-- [ ] Remove unused `metadata` field from ValidationContext
-- [x] Fix docstring: "orders_this_tick" → "orders_this_second"
-- [ ] Rename "TradingContext" sections in docstrings
-- [ ] Move ValidationContext to exchange/validation/interfaces.py
-- [ ] Create clear service interfaces in each domain
+- [x] Remove unused `metadata` field from ValidationContext (commit 9902a17)
+- [x] Fix docstring: "orders_this_tick" → "orders_this_second" (commit 95ad613)
+- [ ] Rename "TradingContext" sections in docstrings (deferred - not critical)
+- [x] Move ValidationContext to exchange/validation/interfaces.py (commit 95ad613)
+- [x] Create clear service interfaces in each domain (basic protocols created)
 
-#### 3. Service API Definition
+#### 3. Service API Definition ✅ COMPLETED
 **Goal**: Define clear APIs for each service domain
 
 **Tasks**:
 
-- [ ] Create exchange/api.py with exchange operations
-- [ ] Create positions/api.py with position operations
-- [ ] Create market/api.py with market data operations
-- [ ] Create game/api.py with game operations
-- [ ] Document API contracts
+- [x] Create exchange/api.py with exchange operations (commit 3ec5133)
+- [x] Create positions/api.py with position operations (commit 3ec5133)
+- [ ] Create market/api.py with market data operations (not needed yet)
+- [x] Create game/api.py with game operations (commit 3ec5133)
+- [x] Document API contracts (protocols have docstrings)
 
 ### Next Sprint Actions
 

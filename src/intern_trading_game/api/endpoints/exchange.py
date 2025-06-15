@@ -1,4 +1,8 @@
-"""Order management endpoints."""
+"""Exchange service endpoints.
+
+This module provides REST API endpoints for exchange operations including
+order submission, cancellation, and order book queries.
+"""
 
 import threading
 from datetime import datetime
@@ -11,7 +15,7 @@ from ...domain.exchange.core.order import Order, OrderSide, OrderType
 from ...infrastructure.api.auth import TeamInfo, get_current_team
 from ...infrastructure.api.models import ApiError, ApiResponse, OrderRequest
 
-router = APIRouter(prefix="/orders", tags=["orders"])
+router = APIRouter(prefix="/orders", tags=["exchange"])
 
 
 def get_order_queue():

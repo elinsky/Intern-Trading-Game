@@ -37,7 +37,7 @@ class TestOrderEndpoints:
     def mock_auth(self, team_info):
         """Mock authentication to return test team."""
         # Need to patch at the FastAPI dependency level
-        from intern_trading_game.api.endpoints.orders import get_current_team
+        from intern_trading_game.api.endpoints.exchange import get_current_team
 
         async def mock_get_current_team():
             return team_info
@@ -68,7 +68,7 @@ class TestOrderEndpoints:
         }
 
         # Mock dependencies using FastAPI's dependency override
-        from intern_trading_game.api.endpoints.orders import (
+        from intern_trading_game.api.endpoints.exchange import (
             get_order_queue,
             get_order_responses,
             get_pending_orders,
@@ -148,7 +148,7 @@ class TestOrderEndpoints:
         }
 
         # Mock dependencies
-        from intern_trading_game.api.endpoints.orders import (
+        from intern_trading_game.api.endpoints.exchange import (
             get_order_queue,
             get_order_responses,
             get_pending_orders,
@@ -246,7 +246,7 @@ class TestOrderEndpoints:
         order_id = "ORD_123456"
 
         # Mock dependencies
-        from intern_trading_game.api.endpoints.orders import (
+        from intern_trading_game.api.endpoints.exchange import (
             get_order_queue,
             get_order_responses,
             get_pending_orders,
@@ -316,13 +316,13 @@ class TestOrderEndpoints:
 
         with (
             patch(
-                "intern_trading_game.api.endpoints.orders.get_order_queue"
+                "intern_trading_game.api.endpoints.exchange.get_order_queue"
             ) as mock_queue,
             patch(
-                "intern_trading_game.api.endpoints.orders.get_pending_orders"
+                "intern_trading_game.api.endpoints.exchange.get_pending_orders"
             ) as mock_pending,
             patch(
-                "intern_trading_game.api.endpoints.orders.get_order_responses"
+                "intern_trading_game.api.endpoints.exchange.get_order_responses"
             ) as mock_responses,
         ):
             # Setup mocks

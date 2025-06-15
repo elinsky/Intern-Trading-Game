@@ -31,7 +31,8 @@ from ..infrastructure.threads.validator import (
 )
 from ..services import OrderValidationService
 from ..services.order_matching import OrderMatchingService
-from .endpoints import auth, orders
+from .endpoints import auth
+from .endpoints import exchange as exchange_endpoints
 from .endpoints import positions as positions_endpoints
 
 # Thread-safe queues
@@ -442,7 +443,7 @@ async def root():
 
 # Include routers
 app.include_router(auth.router)
-app.include_router(orders.router)
+app.include_router(exchange_endpoints.router)
 app.include_router(positions_endpoints.router)
 
 
