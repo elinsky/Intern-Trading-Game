@@ -10,7 +10,6 @@ The tests are organized into sections for clarity and cover all the scenarios
 identified in our design phase.
 """
 
-import random
 from collections import Counter
 
 import pytest
@@ -51,6 +50,10 @@ def order_book():
     return OrderBook("TEST")
 
 
+# Counter for generating unique order IDs
+_order_counter = 0
+
+
 def create_test_order(
     instrument_id: str = "TEST",
     side: str = "buy",
@@ -60,9 +63,11 @@ def create_test_order(
     order_id: str = None,
 ) -> Order:
     """Helper to create test orders with sensible defaults."""
+    global _order_counter
     if order_id is None:
-        # Generate unique order ID
-        order_id = f"ORD-{random.randint(1000, 9999)}"
+        # Generate unique order ID using counter
+        _order_counter += 1
+        order_id = f"ORD-{_order_counter:04d}"
 
     return Order(
         instrument_id=instrument_id,
