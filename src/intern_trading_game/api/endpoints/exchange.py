@@ -39,18 +39,7 @@ def get_order_responses():
     return order_responses
 
 
-def get_orders_lock():
-    """Get the orders lock dependency."""
-    from ..main import orders_lock
-
-    return orders_lock
-
-
-def get_orders_this_second():
-    """Get the orders this second dict dependency."""
-    from ..main import orders_this_second
-
-    return orders_this_second
+# Rate limiting dependencies removed - now handled by OrderValidationService
 
 
 def get_exchange():

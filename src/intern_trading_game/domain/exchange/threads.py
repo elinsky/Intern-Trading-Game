@@ -21,8 +21,6 @@ def validator_thread(
     match_queue: Queue,
     websocket_queue: Queue,
     validation_service: OrderValidationService,
-    orders_this_second: Dict[str, int],
-    orders_lock: threading.RLock,
     pending_orders: Dict[str, threading.Event],
     order_responses: Dict[str, ApiResponse],
 ):
@@ -47,11 +45,7 @@ def validator_thread(
     websocket_queue : Queue
         Queue for sending WebSocket messages to clients
     validation_service : OrderValidationService
-        Service for order validation logic
-    orders_this_second : Dict[str, int]
-        Tracking dictionary for order rate limits per team
-    orders_lock : threading.RLock
-        Lock for thread-safe access to orders_this_second
+        Service for order validation logic (owns rate limiting state)
     pending_orders : Dict[str, threading.Event]
         Events for coordinating order responses
     order_responses : Dict[str, ApiResponse]
@@ -128,14 +122,8 @@ def validator_thread(
                     # Send to matching engine
                     match_queue.put((order, team_info))
 
-                    # Update order count
-                    with orders_lock:
-                        current_count = orders_this_second.get(
-                            team_info.team_id, 0
-                        )
-                        orders_this_second[team_info.team_id] = (
-                            current_count + 1
-                        )
+                    # Update order count through validation service
+                    validation_service.increment_order_count(team_info.team_id)
 
                     # Create success response
                     response = ApiResponse(

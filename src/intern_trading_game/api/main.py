@@ -54,13 +54,7 @@ validation_service: Optional[OrderValidationService] = None
 positions: Dict[str, Dict[str, int]] = {}
 positions_lock = threading.RLock()
 
-# Track orders per second
-# TODO: Implement proper per-second rate limiting with timestamp tracking
-# See https://github.com/Elinsky/Intern-Trading-Game/issues/1
-# Current implementation only increments counter without resetting each second
-# Should store (count, last_reset_timestamp) and reset when second changes
-orders_this_second: Dict[str, int] = {}
-orders_lock = threading.RLock()
+# Global order tracking removed - now owned by OrderValidationService
 
 # Pending orders waiting for response
 pending_orders: Dict[str, threading.Event] = {}
@@ -76,34 +70,20 @@ def get_team_positions(team_id: str) -> Dict[str, int]:
         return positions.get(team_id, {}).copy()
 
 
-def get_team_order_count(team_id: str) -> int:
-    """Thread-safe retrieval of team order count for current second.
-
-    WARNING: Current implementation does not reset counter each second.
-    This is a known limitation - the counter will continuously increment
-    until the system is restarted. See GitHub issue #1 and TODO above.
-
-    Returns
-    -------
-    int
-        Number of orders submitted (never resets in current implementation)
-    """
-    with orders_lock:
-        return orders_this_second.get(team_id, 0)
+# get_team_order_count() function removed - now handled by OrderValidationService
 
 
 def validator_thread_wrapper():
     """Wrapper for Exchange Service validator thread.
 
     Calls the Exchange domain validator thread with all required parameters.
+    Rate limiting state is now owned by the validation service.
     """
     validator_thread(
         order_queue=order_queue,
         match_queue=match_queue,
         websocket_queue=websocket_queue,
         validation_service=validation_service,
-        orders_this_second=orders_this_second,
-        orders_lock=orders_lock,
         pending_orders=pending_orders,
         order_responses=order_responses,
     )
@@ -188,7 +168,6 @@ async def startup():
         validator=validator,
         exchange=exchange,
         get_positions_func=get_team_positions,
-        get_order_count_func=get_team_order_count,
     )
 
     # Start processing threads

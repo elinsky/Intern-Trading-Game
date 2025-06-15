@@ -34,18 +34,7 @@ def get_positions_lock():
     return positions_lock
 
 
-def get_orders_lock():
-    """Get the orders lock dependency."""
-    from ..main import orders_lock
-
-    return orders_lock
-
-
-def get_orders_this_second():
-    """Get the orders this second dict dependency."""
-    from ..main import orders_this_second
-
-    return orders_this_second
+# Rate limiting dependencies removed - now handled by OrderValidationService
 
 
 @router.post("/teams/register", response_model=ApiResponse)
@@ -53,8 +42,6 @@ async def register_team(
     registration: TeamRegistration,
     positions: Dict = Depends(get_positions),
     positions_lock: threading.RLock = Depends(get_positions_lock),
-    orders_lock: threading.RLock = Depends(get_orders_lock),
-    orders_this_second: Dict = Depends(get_orders_this_second),
 ):
     """Register a new team for the trading game.
 
@@ -119,9 +106,7 @@ async def register_team(
     with positions_lock:
         positions[team_info.team_id] = {}
 
-    # Initialize rate limiting
-    with orders_lock:
-        orders_this_second[team_info.team_id] = 0
+    # Rate limiting automatically handled by OrderValidationService
 
     # Return success response
     return ApiResponse(

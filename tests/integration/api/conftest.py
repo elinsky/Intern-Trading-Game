@@ -10,7 +10,6 @@ from fastapi.testclient import TestClient
 from intern_trading_game.api.main import (
     app,
     exchange,
-    orders_this_second,
     positions,
     team_registry,
 )
@@ -32,7 +31,7 @@ def api_context():
     exchange.instruments.clear()
     exchange.all_order_ids.clear()
     positions.clear()
-    orders_this_second.clear()
+    # Rate limiting state now owned by OrderValidationService
     team_registry.teams.clear()
     team_registry.api_key_to_team.clear()
     team_registry._team_counter = 0
@@ -123,7 +122,6 @@ def api_context():
                 "client": client,
                 "exchange": exchange,
                 "positions": positions,
-                "orders_this_second": orders_this_second,
                 "team_registry": team_registry,
                 "threads": threads,
             }

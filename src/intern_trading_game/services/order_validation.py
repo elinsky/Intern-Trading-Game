@@ -4,7 +4,8 @@ This module provides the concrete implementation of order validation
 business logic for the trading system.
 """
 
-from typing import Optional, Tuple
+import threading
+from typing import Dict, Optional, Tuple
 
 from ..constants.errors import ErrorMessages
 from ..domain.exchange.core.order import Order
@@ -23,8 +24,8 @@ class OrderValidationService(OrderValidationServiceInterface):
 
     This service handles all order validation logic including constraint
     checking for new orders and ownership verification for cancellations.
-    It operates statelessly, retrieving required state through injected
-    functions to maintain thread safety in the multi-threaded architecture.
+    It owns and manages rate limiting state internally, providing thread-safe
+    order rate tracking for the multi-threaded architecture.
 
     The service enforces trading rules such as position limits, order
     rate limits, and role-specific constraints to ensure fair and
@@ -39,9 +40,6 @@ class OrderValidationService(OrderValidationServiceInterface):
     get_positions_func : callable
         Function to retrieve current positions for a team
         Signature: (team_id: str) -> Dict[str, int]
-    get_order_count_func : callable
-        Function to retrieve order count for current tick
-        Signature: (team_id: str) -> int
 
     Attributes
     ----------
@@ -51,17 +49,19 @@ class OrderValidationService(OrderValidationServiceInterface):
         The exchange venue instance
     _get_positions : callable
         Position retrieval function
-    _get_order_count : callable
-        Order count retrieval function
+    orders_this_second : Dict[str, int]
+        Internal order count tracking per team (thread-safe)
+    orders_lock : threading.RLock
+        Lock for thread-safe access to order counts
 
     Notes
     -----
-    The service is designed to be stateless, with all required state
-    accessed through injected functions. This design enables:
+    The service owns rate limiting state internally while accessing
+    position state through injected functions. This design enables:
 
-    1. Thread-safe operation in multi-threaded environments
-    2. Easy unit testing with mock state providers
-    3. Clear separation of validation logic from state management
+    1. Thread-safe operation with internal locking for rate limits
+    2. Service ownership of validation-related state
+    3. Clear separation of concerns between services
 
     The validation process builds a complete context including current
     positions and order counts before applying configured constraints.
@@ -115,7 +115,6 @@ class OrderValidationService(OrderValidationServiceInterface):
         validator: ConstraintBasedOrderValidator,
         exchange: ExchangeVenue,
         get_positions_func,
-        get_order_count_func,
     ):
         """Initialize the order validation service.
 
@@ -127,13 +126,54 @@ class OrderValidationService(OrderValidationServiceInterface):
             Exchange venue for cancellation operations
         get_positions_func : callable
             Thread-safe function to get team positions
-        get_order_count_func : callable
-            Thread-safe function to get order count
         """
         self.validator = validator
         self.exchange = exchange
         self._get_positions = get_positions_func
-        self._get_order_count = get_order_count_func
+
+        # Initialize internal rate limiting state
+        self.orders_this_second: Dict[str, int] = {}
+        self.orders_lock = threading.RLock()
+
+    def get_order_count(self, team_id: str) -> int:
+        """Get current order count for a team (thread-safe).
+
+        Parameters
+        ----------
+        team_id : str
+            The team ID to get order count for
+
+        Returns
+        -------
+        int
+            Number of orders submitted by the team this second
+
+        Notes
+        -----
+        This method provides thread-safe access to the internal order
+        count state using the service's internal lock.
+        """
+        with self.orders_lock:
+            return self.orders_this_second.get(team_id, 0)
+
+    def increment_order_count(self, team_id: str) -> None:
+        """Increment order count for a team after successful validation.
+
+        Parameters
+        ----------
+        team_id : str
+            The team ID to increment order count for
+
+        Notes
+        -----
+        This method should be called by the validator thread after
+        successful order validation to update the rate limiting state.
+        It provides thread-safe increment using the service's
+        internal lock.
+        """
+        with self.orders_lock:
+            current_count = self.orders_this_second.get(team_id, 0)
+            self.orders_this_second[team_id] = current_count + 1
 
     def validate_new_order(self, order: Order, team: TeamInfo) -> OrderResult:
         """Validate a new order against all configured constraints.
@@ -184,9 +224,9 @@ class OrderValidationService(OrderValidationServiceInterface):
         The validation result includes detailed error messages to
         help trading algorithms adjust their behavior appropriately.
         """
-        # Get current state using injected functions
+        # Get current state using injected functions and internal state
         team_positions = self._get_positions(team.team_id)
-        team_orders = self._get_order_count(team.team_id)
+        team_orders = self.get_order_count(team.team_id)
 
         # Build validation context with complete state
         context = ValidationContext(

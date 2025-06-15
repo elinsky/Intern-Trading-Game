@@ -50,24 +50,20 @@ class TestOrderValidationService:
         return Mock(return_value={"SPX-20240315-4500C": 25})
 
     @pytest.fixture
-    def mock_get_order_count(self):
-        """Create a mock order count retrieval function."""
-        return Mock(return_value=3)
-
-    @pytest.fixture
     def service(
         self,
         mock_validator,
         mock_exchange,
         mock_get_positions,
-        mock_get_order_count,
     ):
-        """Create an OrderValidationService instance with mocks."""
+        """Create an OrderValidationService instance with mocks.
+
+        Rate limiting state is now owned internally by the service.
+        """
         return OrderValidationService(
             validator=mock_validator,
             exchange=mock_exchange,
             get_positions_func=mock_get_positions,
-            get_order_count_func=mock_get_order_count,
         )
 
     @pytest.fixture
@@ -106,7 +102,6 @@ class TestOrderValidationService:
         sample_team,
         mock_validator,
         mock_get_positions,
-        mock_get_order_count,
     ):
         """Test successful order validation.
 
@@ -130,7 +125,7 @@ class TestOrderValidationService:
 
         # Verify correct state retrieval
         mock_get_positions.assert_called_once_with("TEAM001")
-        mock_get_order_count.assert_called_once_with("TEAM001")
+        # Order count now managed internally by service
 
         # Verify validator called with correct context
         mock_validator.validate_order.assert_called_once()
@@ -140,7 +135,7 @@ class TestOrderValidationService:
         assert context.trader_id == "TEAM001"
         assert context.trader_role == "market_maker"
         assert context.current_positions == {"SPX-20240315-4500C": 25}
-        assert context.orders_this_second == 3
+        assert context.orders_this_second == 0  # Fresh service starts with 0
 
     def test_validate_new_order_rejected_position_limit(
         self,
@@ -178,16 +173,15 @@ class TestOrderValidationService:
         sample_order,
         sample_team,
         mock_validator,
-        mock_get_order_count,
     ):
         """Test order rejection due to rate limit.
 
-        Given - Team has submitted maximum orders this tick
+        Given - Team has submitted maximum orders this second
         When - Another order is submitted
         Then - Validation fails with rate limit error
         """
-        # Given - Configure high order count
-        mock_get_order_count.return_value = 10
+        # Given - Set high order count in service internal state
+        service.orders_this_second[sample_team.team_id] = 10
         mock_validator.validate_order.return_value = OrderResult(
             order_id=sample_order.order_id,
             status="rejected",
@@ -284,7 +278,9 @@ class TestOrderValidationService:
         """
         # Given - Configure state
         service._get_positions = Mock(return_value=positions)
-        service._get_order_count = Mock(return_value=order_count)
+        # Set internal order count state
+        if order_count > 0:
+            service.orders_this_second[sample_team.team_id] = order_count
         mock_validator.validate_order.return_value = OrderResult(
             order_id=sample_order.order_id,
             status="accepted",
@@ -342,19 +338,16 @@ class TestOrderValidationService:
         def get_pos(team_id):
             return {}
 
-        def get_count(team_id):
-            return 0
-
-        # When - Create service
+        # When - Create service (rate limiting handled internally)
         service = OrderValidationService(
             validator=validator,
             exchange=exchange,
             get_positions_func=get_pos,
-            get_order_count_func=get_count,
         )
 
         # Then - Service is properly initialized
         assert service.validator is validator
         assert service.exchange is exchange
+        assert service.orders_this_second == {}
+        assert service.orders_lock is not None
         assert service._get_positions is get_pos
-        assert service._get_order_count is get_count

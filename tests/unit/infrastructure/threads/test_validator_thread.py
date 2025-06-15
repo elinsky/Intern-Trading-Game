@@ -44,10 +44,11 @@ class TestValidatorThread:
 
     @pytest.fixture
     def shared_state(self):
-        """Create shared state dictionaries."""
+        """Create shared state dictionaries.
+
+        Note: Rate limiting state removed - now owned by OrderValidationService.
+        """
         return {
-            "orders_this_second": {},
-            "orders_lock": threading.RLock(),
             "pending_orders": {},
             "order_responses": {},
         }
@@ -115,8 +116,6 @@ class TestValidatorThread:
                 queues["match_queue"],
                 queues["websocket_queue"],
                 mock_validation_service,
-                shared_state["orders_this_second"],
-                shared_state["orders_lock"],
                 shared_state["pending_orders"],
                 shared_state["order_responses"],
             ),
@@ -195,8 +194,6 @@ class TestValidatorThread:
                 queues["match_queue"],
                 queues["websocket_queue"],
                 mock_validation_service,
-                shared_state["orders_this_second"],
-                shared_state["orders_lock"],
                 shared_state["pending_orders"],
                 shared_state["order_responses"],
             ),
@@ -268,8 +265,6 @@ class TestValidatorThread:
                 queues["match_queue"],
                 queues["websocket_queue"],
                 mock_validation_service,
-                shared_state["orders_this_second"],
-                shared_state["orders_lock"],
                 shared_state["pending_orders"],
                 shared_state["order_responses"],
             ),
@@ -330,8 +325,6 @@ class TestValidatorThread:
                 queues["match_queue"],
                 queues["websocket_queue"],
                 mock_validation_service,
-                shared_state["orders_this_second"],
-                shared_state["orders_lock"],
                 shared_state["pending_orders"],
                 shared_state["order_responses"],
             ),

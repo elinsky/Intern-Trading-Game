@@ -128,15 +128,11 @@ def service_context(
     def get_positions(team_id: str) -> Dict[str, int]:
         return test_positions.get(team_id, {}).copy()
 
-    def get_order_count(team_id: str) -> int:
-        return test_order_counts.get(team_id, 0)
-
-    # Initialize services
+    # Initialize services (rate limiting now handled internally)
     validation_service = OrderValidationService(
         validator=validator,
         exchange=exchange,
         get_positions_func=get_positions,
-        get_order_count_func=get_order_count,
     )
 
     fee_service = TradingFeeService(role_fees)
@@ -169,7 +165,7 @@ def service_context(
         "positions": test_positions,
         "order_counts": test_order_counts,
         "get_positions": get_positions,
-        "get_order_count": get_order_count,
+        # get_order_count removed - handled internally by OrderValidationService
     }
 
 

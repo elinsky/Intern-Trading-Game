@@ -146,30 +146,27 @@ class TestGameEndpoints:
         assert "not found" in data["error"]["message"]
 
     def test_team_initialization_with_positions(self, client):
-        """Test that team registration initializes positions and rate limiting.
+        """Test that team registration initializes positions.
 
         Given - New team registration
         When - Team is created
-        Then - Positions and rate limiting are properly initialized
+        Then - Positions are properly initialized
+
+        Note: Rate limiting is now handled internally by OrderValidationService
         """
         # Mock the dependencies
         from intern_trading_game.api.endpoints.game import (
-            get_orders_lock,
-            get_orders_this_second,
             get_positions,
             get_positions_lock,
         )
         from intern_trading_game.api.main import app
 
         positions_dict = {}
-        orders_dict = {}
         mock_lock = MagicMock()
 
         # Override dependencies
         app.dependency_overrides[get_positions] = lambda: positions_dict
         app.dependency_overrides[get_positions_lock] = lambda: mock_lock
-        app.dependency_overrides[get_orders_lock] = lambda: mock_lock
-        app.dependency_overrides[get_orders_this_second] = lambda: orders_dict
 
         try:
             # Register team
@@ -186,12 +183,9 @@ class TestGameEndpoints:
             # Verify initialization
             assert team_id in positions_dict
             assert positions_dict[team_id] == {}
-            assert team_id in orders_dict
-            assert orders_dict[team_id] == 0
+            # Rate limiting now handled internally by OrderValidationService
 
         finally:
             # Clean up
             del app.dependency_overrides[get_positions]
             del app.dependency_overrides[get_positions_lock]
-            del app.dependency_overrides[get_orders_lock]
-            del app.dependency_overrides[get_orders_this_second]
