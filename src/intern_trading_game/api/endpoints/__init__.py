@@ -1,5 +1,5 @@
 """API endpoint modules."""
 
-from . import auth, exchange, positions
+from . import exchange, game, positions
 
-__all__ = ["auth", "exchange", "positions"]
+__all__ = ["exchange", "game", "positions"]

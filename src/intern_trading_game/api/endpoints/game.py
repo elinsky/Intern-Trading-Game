@@ -1,4 +1,8 @@
-"""Authentication and team registration endpoints."""
+"""Game service endpoints.
+
+This module provides REST API endpoints for game operations including
+team registration and management.
+"""
 
 import threading
 from datetime import datetime
@@ -13,7 +17,7 @@ from ...infrastructure.api.models import (
     TeamRegistration,
 )
 
-router = APIRouter(prefix="/auth", tags=["authentication"])
+router = APIRouter(prefix="/auth", tags=["game"])
 
 
 def get_positions():
@@ -52,7 +56,10 @@ async def register_team(
     orders_lock: threading.RLock = Depends(get_orders_lock),
     orders_this_second: Dict = Depends(get_orders_this_second),
 ):
-    """Register a new trading team.
+    """Register a new team for the trading game.
+
+    Creates a new team with the specified name and role, generating
+    a unique team ID and API key for authentication.
 
     Parameters
     ----------
@@ -62,12 +69,15 @@ async def register_team(
     Returns
     -------
     ApiResponse
-        Success response with team details and API key
+        Success response with team credentials or error
 
-    Raises
-    ------
-    HTTPException
-        400 Bad Request if role not supported
+    Notes
+    -----
+    Team names must be unique. Roles include:
+    - market_maker: Enhanced rebates, position limits
+    - hedge_fund: Delta neutrality, volatility signals
+    - arbitrage: SPX/SPY ratio constraints
+    - retail: Standard fees, no special constraints
     """
     # Generate request ID
     request_id = f"req_{datetime.now().timestamp()}"
@@ -87,17 +97,20 @@ async def register_team(
             timestamp=datetime.now(),
         )
 
+    # Register the team
     team_info = team_registry.register_team(
         team_name=registration.team_name, role=registration.role
     )
 
-    # Initialize tracking
+    # Initialize team positions with thread safety
     with positions_lock:
         positions[team_info.team_id] = {}
 
+    # Initialize rate limiting
     with orders_lock:
         orders_this_second[team_info.team_id] = 0
 
+    # Return success response
     return ApiResponse(
         success=True,
         request_id=request_id,

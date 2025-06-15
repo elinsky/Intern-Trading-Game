@@ -130,6 +130,24 @@ class TeamRegistry:
         """Look up team by ID."""
         return self.teams.get(team_id)
 
+    def get_team_by_name(self, team_name: str) -> Optional[TeamInfo]:
+        """Look up team by name.
+
+        Parameters
+        ----------
+        team_name : str
+            The team name to search for
+
+        Returns
+        -------
+        Optional[TeamInfo]
+            Team information if found, None otherwise
+        """
+        for team_info in self.teams.values():
+            if team_info.team_name == team_name:
+                return team_info
+        return None
+
 
 # Global registry instance
 team_registry = TeamRegistry()
