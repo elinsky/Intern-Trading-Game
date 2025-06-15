@@ -129,6 +129,7 @@ graph TB
 6. **API Surface**: Single REST API with 5 endpoints + WebSocket endpoint
 
 ### Queue Usage (Current)
+
 - **order_queue**: REST API → Validator Thread
 - **match_queue**: Validator Thread → Matching Thread
 - **trade_queue**: Matching Thread → Publisher Thread
@@ -137,6 +138,7 @@ graph TB
 - **validation_queue**: Defined but not used (legacy)
 
 ### Shared State (Current)
+
 - **positions**: Team positions (Dict[str, Dict[str, int]])
 - **orders_this_second**: Order rate limiting (Dict[str, int])
 - **team_registry**: Registered teams (Dict[str, TeamInfo])
@@ -260,6 +262,7 @@ graph TB
 **Owns**: Order matching, trade generation, order books
 
 **Responsibilities**:
+
 - Accept and validate orders (format, instrument exists)
 - Match orders using configured algorithm
 - Generate trades with unique IDs
@@ -267,6 +270,7 @@ graph TB
 - Publish trade events
 
 **Does NOT Own**:
+
 - Position tracking
 - Risk limits
 - Team/role concepts
@@ -276,6 +280,7 @@ graph TB
 **Owns**: Position tracking, risk management
 
 **Responsibilities**:
+
 - Track positions by account/instrument
 - Validate position limits
 - Calculate P&L
@@ -283,6 +288,7 @@ graph TB
 - Monitor exposure
 
 **Does NOT Own**:
+
 - Order matching
 - Trade generation
 - Team management
@@ -291,6 +297,7 @@ graph TB
 **Owns**: Price generation, market data distribution
 
 **Responsibilities**:
+
 - Generate realistic price movements
 - Implement volatility regimes
 - Maintain SPX/SPY correlation
@@ -298,6 +305,7 @@ graph TB
 - Store price history
 
 **Does NOT Own**:
+
 - Order matching
 - Position tracking
 - Trade execution
@@ -306,12 +314,14 @@ graph TB
 **Owns**: Market events, news generation
 
 **Responsibilities**:
+
 - Generate/replay market events
 - Calculate event impacts
 - Distribute events to subscribers
 - Maintain event history
 
 **Does NOT Own**:
+
 - Direct price manipulation
 - Trade generation
 - Signal creation
@@ -320,12 +330,14 @@ graph TB
 **Owns**: Trading signals, alpha generation
 
 **Responsibilities**:
+
 - Generate role-specific signals
 - Implement alpha models
 - Research integration
 - Signal distribution
 
 **Does NOT Own**:
+
 - Trade execution
 - Position management
 - Event generation
@@ -334,6 +346,7 @@ graph TB
 **Owns**: Game orchestration, team management
 
 **Responsibilities**:
+
 - Team registration and auth
 - Role assignment
 - Configure other services
@@ -341,6 +354,7 @@ graph TB
 - Game flow control
 
 **Does NOT Own**:
+
 - Order matching
 - Price generation
 - Direct position tracking
@@ -348,41 +362,48 @@ graph TB
 ## Migration Roadmap
 
 ### Phase 1: Code Organization (Current)
+
 - ✅ Reorganize code into service-oriented structure
 - ✅ Maintain monolithic deployment
 - ✅ Establish logical service boundaries
 
 ### Phase 2: Internal APIs (Next)
+
 - [ ] Create internal service interfaces
 - [ ] Replace direct function calls with service APIs
 - [ ] Maintain queue-based async communication
 - [ ] Add service-level testing
 
 ### Phase 3: State Isolation
+
 - [ ] Move shared state into services
 - [ ] Each service owns its data
 - [ ] Replace shared dicts with service calls
 - [ ] Add caching where needed
 
 ### Phase 4: Thread Ownership
+
 - [ ] Assign threads to specific services
 - [ ] Create Position Tracker thread
 - [ ] Create Market Data thread
 - [ ] Refactor Publisher thread
 
 ### Phase 5: Database Layer
+
 - [ ] Add persistence to each service
 - [ ] Implement event sourcing for trades
 - [ ] Add audit trails
 - [ ] Enable crash recovery
 
 ### Phase 6: Service Extraction
+
 - [ ] Extract Position Service first
 - [ ] Add REST/gRPC APIs
 - [ ] Implement service discovery
 - [ ] Add circuit breakers
 
 ### Phase 7: Full Microservices
+
 - [ ] Deploy services independently
 - [ ] Implement service mesh
 - [ ] Add monitoring/tracing
@@ -406,6 +427,7 @@ graph TB
 ## Implementation Guidelines
 
 ### Current Development (Monolith)
+
 1. Maintain service boundaries in code
 2. Use interfaces between services
 3. Avoid cross-service imports
@@ -413,6 +435,7 @@ graph TB
 5. Write service-level tests
 
 ### Future Development (Microservices)
+
 1. Design API-first
 2. Use async messaging for events
 3. Implement idempotency
@@ -422,18 +445,21 @@ graph TB
 ## Key Design Decisions
 
 ### Why Service-Oriented?
+
 1. **Reusability**: Services work for game, backtesting, or production
 2. **Clarity**: Clear ownership and responsibilities
 3. **Scalability**: Natural decomposition points
 4. **Flexibility**: Mix and match services as needed
 
 ### Why Start Monolithic?
+
 1. **Simplicity**: Easier to develop and debug
 2. **Performance**: No network overhead
 3. **Consistency**: Shared state is simpler
 4. **Iteration**: Faster to refactor
 
 ### When to Split Services?
+
 1. When scaling needs differ significantly
 2. When teams need independent deployment
 3. When technology requirements diverge
@@ -548,14 +574,19 @@ GET    /game/teams/{team_id}
 **Tasks**:
 
 - [x] Create separate FastAPI routers per service (exchange.py, game.py created)
-- [ ] Implement new endpoint structure (paths still unchanged)
+- [x] Implement new endpoint structure (paths updated to service-oriented)
 - [x] ~~Maintain backward compatibility~~ (not needed per user)
-- [ ] Update API documentation
+- [x] Update API documentation
 
 **Completed**:
+
 - Created exchange.py router with order endpoints (commit 2b2c561)
 - Created game.py router with team registration (commit c3cdca3)
 - Added get_team_by_name() to prevent duplicate team names
+- Added GET /exchange/orderbook/{instrument_id} endpoint
+- Added GET /game/teams/{team_id} endpoint
+- Updated all endpoint paths to service-oriented structure
+- Updated REST API documentation with new paths and endpoints
 
 #### 5. Thread Ownership
 **Goal**: Assign threads to specific services

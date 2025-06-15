@@ -30,7 +30,7 @@ class TestMinimalAPIIntegration:
 
         # Given - Register a market maker team
         registration_response = client.post(
-            "/auth/register",
+            "/game/teams/register",
             json={"team_name": "TestMM", "role": "market_maker"},
         )
         assert registration_response.status_code == 200
@@ -41,7 +41,7 @@ class TestMinimalAPIIntegration:
 
         # When - Submit a limit order
         order_response = client.post(
-            "/orders",
+            "/exchange/orders",
             json={
                 "instrument_id": "SPX_4500_CALL",
                 "order_type": "limit",
@@ -90,7 +90,7 @@ class TestMinimalAPIIntegration:
 
         # Given - Register team and establish position
         registration_response = client.post(
-            "/auth/register",
+            "/game/teams/register",
             json={"team_name": "PositionTest", "role": "market_maker"},
         )
         response_data = registration_response.json()
@@ -101,7 +101,7 @@ class TestMinimalAPIIntegration:
 
         # Submit an order to create potential position
         client.post(
-            "/orders",
+            "/exchange/orders",
             json={
                 "instrument_id": "SPX_4500_CALL",
                 "order_type": "limit",
@@ -151,7 +151,7 @@ class TestMinimalAPIIntegration:
 
         # Given - Register a team to get valid credentials
         registration_response = client.post(
-            "/auth/register",
+            "/game/teams/register",
             json={"team_name": "AuthTest", "role": "market_maker"},
         )
         response_data = registration_response.json()

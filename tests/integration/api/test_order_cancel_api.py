@@ -125,7 +125,7 @@ def test_cancel_own_resting_order(
 
     # Cancel the order
     response = client.delete(
-        f"/orders/{order.order_id}",
+        f"/exchange/orders/{order.order_id}",
         headers={"X-API-Key": market_maker_team.api_key},
     )
 
@@ -167,7 +167,7 @@ def test_cancel_order_fifo_processing(
 
     # MM1 places a sell order via API
     sell_response = client.post(
-        "/orders",
+        "/exchange/orders",
         json={
             "instrument_id": test_instrument.id,
             "order_type": "limit",
@@ -190,7 +190,7 @@ def test_cancel_order_fifo_processing(
 
     # Submit buy order through API
     buy_response = client.post(
-        "/orders",
+        "/exchange/orders",
         json={
             "instrument_id": test_instrument.id,
             "order_type": "limit",
@@ -206,7 +206,7 @@ def test_cancel_order_fifo_processing(
 
     # Try to cancel (should fail since filled)
     cancel_response = client.delete(
-        f"/orders/{sell_order_id}",
+        f"/exchange/orders/{sell_order_id}",
         headers={"X-API-Key": market_maker_team.api_key},
     )
 
@@ -258,7 +258,8 @@ def test_cannot_cancel_others_orders(
 
     # MM2 tries to cancel MM1's order
     response = client.delete(
-        f"/orders/{order.order_id}", headers={"X-API-Key": second_team.api_key}
+        f"/exchange/orders/{order.order_id}",
+        headers={"X-API-Key": second_team.api_key},
     )
 
     # Should be rejected
@@ -319,7 +320,7 @@ def test_cancel_already_filled_order(
 
     # MM1 tries to cancel (too late)
     response = client.delete(
-        f"/orders/{sell_order.order_id}",
+        f"/exchange/orders/{sell_order.order_id}",
         headers={"X-API-Key": market_maker_team.api_key},
     )
 
@@ -380,7 +381,7 @@ def test_cancel_partially_filled_order(
 
     # MM1 cancels remaining
     response = client.delete(
-        f"/orders/{sell_order.order_id}",
+        f"/exchange/orders/{sell_order.order_id}",
         headers={"X-API-Key": market_maker_team.api_key},
     )
 
@@ -415,7 +416,8 @@ def test_cancel_non_existent_order(client, market_maker_team):
     No system errors or crashes.
     """
     response = client.delete(
-        "/orders/FAKE_123", headers={"X-API-Key": market_maker_team.api_key}
+        "/exchange/orders/FAKE_123",
+        headers={"X-API-Key": market_maker_team.api_key},
     )
 
     assert response.status_code == 200
@@ -453,7 +455,7 @@ def test_double_cancel_same_order(client, test_instrument, market_maker_team):
 
     # First cancel - should succeed
     response1 = client.delete(
-        f"/orders/{order.order_id}",
+        f"/exchange/orders/{order.order_id}",
         headers={"X-API-Key": market_maker_team.api_key},
     )
     assert response1.status_code == 200
@@ -461,7 +463,7 @@ def test_double_cancel_same_order(client, test_instrument, market_maker_team):
 
     # Second cancel - should handle gracefully
     response2 = client.delete(
-        f"/orders/{order.order_id}",
+        f"/exchange/orders/{order.order_id}",
         headers={"X-API-Key": market_maker_team.api_key},
     )
     assert response2.status_code == 200
@@ -510,7 +512,7 @@ def test_race_condition_fill_vs_cancel(
     def submit_buy():
         """Submit buy order."""
         response = client.post(
-            "/orders",
+            "/exchange/orders",
             json={
                 "instrument_id": test_instrument.id,
                 "order_type": "market",
@@ -524,7 +526,7 @@ def test_race_condition_fill_vs_cancel(
     def submit_cancel():
         """Submit cancel."""
         response = client.delete(
-            f"/orders/{sell_order.order_id}",
+            f"/exchange/orders/{sell_order.order_id}",
             headers={"X-API-Key": market_maker_team.api_key},
         )
         results["cancel"] = response
@@ -655,7 +657,7 @@ def test_position_update_after_partial_cancel(
 
     # Cancel the remaining
     response = client.delete(
-        f"/orders/{buy_order.order_id}",
+        f"/exchange/orders/{buy_order.order_id}",
         headers={"X-API-Key": market_maker_team.api_key},
     )
     assert response.status_code == 200

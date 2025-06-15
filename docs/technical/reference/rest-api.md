@@ -10,7 +10,7 @@ http://localhost:8000
 
 ## Authentication
 
-All endpoints except `/auth/register` require authentication via API key.
+All endpoints except `/game/teams/register` require authentication via API key.
 
 Include your API key in the `X-API-Key` header:
 
@@ -39,11 +39,11 @@ interface ApiError {
 }
 ```
 
-## The 5 Core Endpoints
+## Core Endpoints
 
 ### 1. Submit Order
 
-`POST /orders`
+`POST /exchange/orders`
 
 Submit a new order to buy or sell an option.
 
@@ -95,20 +95,23 @@ Submit a new order to buy or sell an option.
 ```
 
 **Notes:**
+
 - Response arrives in ~1ms with validation result only
 - Order type is inferred: price present = limit, price absent = market
 - Execution details arrive via WebSocket
 
 ### 2. Cancel Order
 
-`DELETE /orders/{order_id}`
+`DELETE /exchange/orders/{order_id}`
 
 Cancel a resting order in the order book.
 
 **Request Headers:**
+
 - `X-API-Key`: Required
 
 **Path Parameters:**
+
 - `order_id`: The exchange-assigned order ID to cancel
 
 **Success Response:**
@@ -140,11 +143,12 @@ Cancel a resting order in the order book.
 ```
 
 **Error Code:**
+
 - `CANCEL_FAILED` - Generic cancellation failure (security: doesn't reveal specific reasons)
 
 ### 3. Get Open Orders
 
-`GET /orders`
+`GET /exchange/orders`
 
 Retrieve all open (resting) orders for your team.
 
@@ -203,6 +207,7 @@ Retrieve all open (resting) orders for your team.
 ```
 
 **Notes:**
+
 - Returns only resting orders (not filled or cancelled)
 - Includes partially filled orders with remaining quantity
 - Sorted by submission time (oldest first)
@@ -214,6 +219,7 @@ Retrieve all open (resting) orders for your team.
 Get current net position for each instrument.
 
 **Request Headers:**
+
 - `X-API-Key`: Required
 
 **Success Response:**
@@ -235,6 +241,7 @@ Get current net position for each instrument.
 ```
 
 **Notes:**
+
 - Positive values = long position
 - Negative values = short position
 - Zero values included for previously traded instruments
@@ -242,7 +249,7 @@ Get current net position for each instrument.
 
 ### 5. Register Team
 
-`POST /auth/register`
+`POST /game/teams/register`
 
 One-time registration to obtain API credentials.
 
@@ -291,13 +298,128 @@ One-time registration to obtain API credentials.
 ```
 
 **Important:**
+
 - No authentication required (public endpoint)
 - API key is shown only once - save it immediately
 - No API key retrieval endpoint for security
 
+### 6. Get Order Book
+
+`GET /exchange/orderbook/{instrument_id}`
+
+Get the current order book depth for a specific instrument.
+
+**Request Headers:**
+
+- `X-API-Key`: Required
+
+**Path Parameters:**
+
+- `instrument_id`: The instrument to query (e.g., "SPX_CALL_4500_20240315")
+
+**Success Response:**
+```json
+{
+  "success": true,
+  "request_id": "req_12350",
+  "order_id": null,
+  "data": {
+    "instrument_id": "SPX_CALL_4500_20240315",
+    "bids": [
+      {"price": 99.50, "quantity": 15},
+      {"price": 99.00, "quantity": 20},
+      {"price": 98.50, "quantity": 10}
+    ],
+    "asks": [
+      {"price": 100.50, "quantity": 5},
+      {"price": 101.00, "quantity": 25},
+      {"price": 101.50, "quantity": 30}
+    ],
+    "timestamp": "2024-01-15T10:01:00.001Z"
+  },
+  "error": null,
+  "timestamp": "2024-01-15T10:01:00.001Z"
+}
+```
+
+**Failure Response:**
+```json
+{
+  "success": false,
+  "request_id": "req_12350",
+  "order_id": null,
+  "data": null,
+  "error": {
+    "code": "INVALID_INSTRUMENT",
+    "message": "Instrument SPX_INVALID not found",
+    "details": null
+  },
+  "timestamp": "2024-01-15T10:01:00.001Z"
+}
+```
+
+**Notes:**
+
+- Returns top 5 price levels for both bid and ask sides
+- Aggregates quantity at each price level
+- Empty sides return empty arrays
+
+### 7. Get Team Info
+
+`GET /game/teams/{team_id}`
+
+Get public information about a specific team.
+
+**Request Headers:**
+
+- `X-API-Key`: Required
+
+**Path Parameters:**
+
+- `team_id`: The team ID to query (e.g., "TEAM_123")
+
+**Success Response:**
+```json
+{
+  "success": true,
+  "request_id": "req_12351",
+  "order_id": null,
+  "data": {
+    "team_id": "TEAM_123",
+    "team_name": "AlphaBot",
+    "role": "market_maker",
+    "created_at": "2024-01-15T09:00:00Z"
+  },
+  "error": null,
+  "timestamp": "2024-01-15T10:01:00.001Z"
+}
+```
+
+**Failure Response:**
+```json
+{
+  "success": false,
+  "request_id": "req_12351",
+  "order_id": null,
+  "data": null,
+  "error": {
+    "code": "TEAM_NOT_FOUND",
+    "message": "Team TEAM_999 not found",
+    "details": null
+  },
+  "timestamp": "2024-01-15T10:01:00.001Z"
+}
+```
+
+**Notes:**
+
+- API key is never included in response for security
+- Can query any team's public information
+
 ## Error Codes
 
 ### Validation Errors
+
 - `INVALID_INSTRUMENT` - Unknown instrument_id
 - `INVALID_QUANTITY` - Quantity must be positive integer
 - `INVALID_PRICE` - Price must be positive for limit orders
@@ -305,16 +427,19 @@ One-time registration to obtain API credentials.
 - `MISSING_PRICE` - Limit order requires price
 
 ### Constraint Errors
+
 - `POSITION_LIMIT_EXCEEDED` - Would exceed role-based limit
 - `ORDER_TYPE_NOT_ALLOWED` - Role cannot use this order type
 - `RATE_LIMIT_EXCEEDED` - Too many requests per second
 
 ### Business Errors
+
 - `ORDER_NOT_FOUND` - Order doesn't exist
 - `ORDER_NOT_OWNED` - Security violation
 - `ORDER_ALREADY_FILLED` - Cannot cancel filled order
 - `ORDER_ALREADY_CANCELLED` - Duplicate cancellation
-- `TEAM_NAME_TAKEN` - Name already registered
+- `DUPLICATE_TEAM_NAME` - Name already registered
+- `TEAM_NOT_FOUND` - Team ID doesn't exist
 
 ### System Errors
 - `INTERNAL_ERROR` - Server error (rare)
@@ -323,6 +448,7 @@ One-time registration to obtain API credentials.
 ## Rate Limits
 
 Per-team limits:
+
 - **Submit Order**: 10 per second
 - **Cancel Order**: 10 per second
 - **Get Orders/Positions**: 100 per second
@@ -377,7 +503,7 @@ order = {
     "request_id": "req_12345"
 }
 
-response = requests.post(f"{BASE_URL}/orders", json=order, headers=headers)
+response = requests.post(f"{BASE_URL}/exchange/orders", json=order, headers=headers)
 result = response.json()
 
 if result["success"]:

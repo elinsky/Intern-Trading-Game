@@ -31,7 +31,7 @@ class TestBasicTradingSession:
 
         # Given - Register two market maker teams
         mm1_response = client.post(
-            "/auth/register",
+            "/game/teams/register",
             json={"team_name": "MarketMaker1", "role": "market_maker"},
         )
         assert mm1_response.status_code == 200
@@ -41,7 +41,7 @@ class TestBasicTradingSession:
         mm1_api_key = mm1_data["api_key"]
 
         mm2_response = client.post(
-            "/auth/register",
+            "/game/teams/register",
             json={"team_name": "MarketMaker2", "role": "market_maker"},
         )
         assert mm2_response.status_code == 200
@@ -67,7 +67,7 @@ class TestBasicTradingSession:
 
         # When - MM1 posts resting sell order (provides liquidity)
         mm1_sell_response = client.post(
-            "/orders",
+            "/exchange/orders",
             json={
                 "instrument_id": "SPX_4500_CALL",
                 "order_type": "limit",
@@ -96,7 +96,7 @@ class TestBasicTradingSession:
 
         # When - MM2 submits crossing buy order (takes liquidity)
         mm2_buy_response = client.post(
-            "/orders",
+            "/exchange/orders",
             json={
                 "instrument_id": "SPX_4500_CALL",
                 "order_type": "limit",
@@ -202,7 +202,7 @@ class TestBasicTradingSession:
 
         # Register valid team for comparison
         team_response = client.post(
-            "/auth/register",
+            "/game/teams/register",
             json={"team_name": "ErrorTest", "role": "market_maker"},
         )
         response_data = team_response.json()
@@ -213,7 +213,7 @@ class TestBasicTradingSession:
         # Test 1: Invalid instrument causes business validation rejection
         # Business rule violations return HTTP 200 with rejected order
         response = client.post(
-            "/orders",
+            "/exchange/orders",
             json={
                 "instrument_id": "INVALID_INSTRUMENT",
                 "order_type": "limit",
@@ -234,7 +234,7 @@ class TestBasicTradingSession:
 
         # Test 2: Malformed order should be rejected
         response = client.post(
-            "/orders",
+            "/exchange/orders",
             json={
                 "instrument_id": "SPX_4500_CALL",
                 "order_type": "limit",
@@ -261,7 +261,7 @@ class TestBasicTradingSession:
 
         # Test 5: Valid requests should still work
         valid_response = client.post(
-            "/orders",
+            "/exchange/orders",
             json={
                 "instrument_id": "SPX_4500_CALL",
                 "order_type": "limit",

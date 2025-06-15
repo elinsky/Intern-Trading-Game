@@ -132,7 +132,8 @@ def client(api_context):
 def registered_team(client):
     """Register a test team and return its info."""
     response = client.post(
-        "/auth/register", json={"team_name": "TestBot", "role": "market_maker"}
+        "/game/teams/register",
+        json={"team_name": "TestBot", "role": "market_maker"},
     )
     assert response.status_code == 200
     data = response.json()

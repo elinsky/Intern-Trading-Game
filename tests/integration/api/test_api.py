@@ -27,7 +27,7 @@ class TestAuthentication:
         Then - They receive team ID and API key
         """
         response = client.post(
-            "/auth/register",
+            "/game/teams/register",
             json={"team_name": "AlphaBot", "role": "market_maker"},
         )
 
@@ -54,7 +54,7 @@ class TestAuthentication:
         Then - Registration is rejected with error
         """
         response = client.post(
-            "/auth/register",
+            "/game/teams/register",
             json={"team_name": "BadBot", "role": "invalid_role"},
         )
 
@@ -102,7 +102,7 @@ class TestOrderSubmission:
         Then - Order rests in the book with status 'new'
         """
         response = client.post(
-            "/orders",
+            "/exchange/orders",
             json={
                 "instrument_id": "SPX_4500_CALL",
                 "order_type": "limit",
@@ -131,7 +131,7 @@ class TestOrderSubmission:
         Then - Order should be rejected
         """
         response = client.post(
-            "/orders",
+            "/exchange/orders",
             json={
                 "instrument_id": "SPX_4500_CALL",
                 "order_type": "market",
@@ -162,7 +162,7 @@ class TestOrderSubmission:
         Then - Order is rejected with error
         """
         response = client.post(
-            "/orders",
+            "/exchange/orders",
             json={
                 "instrument_id": "SPX_4500_CALL",
                 "order_type": "limit",
@@ -189,7 +189,7 @@ class TestOrderSubmission:
 
         # First, try to buy 55 contracts in one order (exceeds limit)
         response = client.post(
-            "/orders",
+            "/exchange/orders",
             json={
                 "instrument_id": "SPX_4500_CALL",
                 "order_type": "limit",
@@ -209,7 +209,7 @@ class TestOrderSubmission:
 
         # Now submit valid order within limits
         response = client.post(
-            "/orders",
+            "/exchange/orders",
             json={
                 "instrument_id": "SPX_4500_CALL",
                 "order_type": "limit",
@@ -225,7 +225,7 @@ class TestOrderSubmission:
 
         # Try to add 10 more (would total 55 if both filled)
         response = client.post(
-            "/orders",
+            "/exchange/orders",
             json={
                 "instrument_id": "SPX_4500_CALL",
                 "order_type": "limit",
@@ -251,7 +251,7 @@ class TestOrderSubmission:
         """
         # Register two teams for trading
         mm1_response = client.post(
-            "/auth/register",
+            "/game/teams/register",
             json={"team_name": "MM_Buyer", "role": "market_maker"},
         )
         mm1_data = mm1_response.json()
@@ -259,7 +259,7 @@ class TestOrderSubmission:
         mm1 = mm1_data["data"]
 
         mm2_response = client.post(
-            "/auth/register",
+            "/game/teams/register",
             json={"team_name": "MM_Seller", "role": "market_maker"},
         )
         mm2_data = mm2_response.json()
@@ -269,7 +269,7 @@ class TestOrderSubmission:
         # MM2 posts sell orders for MM1 to buy
         for i in range(5):
             sell_response = client.post(
-                "/orders",
+                "/exchange/orders",
                 json={
                     "instrument_id": "SPX_4500_CALL",
                     "order_type": "limit",
@@ -283,7 +283,7 @@ class TestOrderSubmission:
 
         # MM1 buys 45 contracts (within limit)
         buy_response = client.post(
-            "/orders",
+            "/exchange/orders",
             json={
                 "instrument_id": "SPX_4500_CALL",
                 "order_type": "limit",
@@ -301,7 +301,7 @@ class TestOrderSubmission:
         # Now MM1 has position of +45
         # Try to buy 10 more (would be 55 total)
         response = client.post(
-            "/orders",
+            "/exchange/orders",
             json={
                 "instrument_id": "SPX_4500_CALL",
                 "order_type": "limit",
@@ -327,7 +327,7 @@ class TestOrderSubmission:
         Then - Order is rejected by business validation
         """
         response = client.post(
-            "/orders",
+            "/exchange/orders",
             json={
                 "instrument_id": "INVALID_INSTRUMENT",
                 "order_type": "limit",
@@ -354,7 +354,7 @@ class TestOrderSubmission:
         """
         # Register two teams
         mm1_response = client.post(
-            "/auth/register",
+            "/game/teams/register",
             json={"team_name": "MM1", "role": "market_maker"},
         )
         mm1_data = mm1_response.json()
@@ -362,7 +362,7 @@ class TestOrderSubmission:
         mm1 = mm1_data["data"]
 
         mm2_response = client.post(
-            "/auth/register",
+            "/game/teams/register",
             json={"team_name": "MM2", "role": "market_maker"},
         )
         mm2_data = mm2_response.json()
@@ -371,7 +371,7 @@ class TestOrderSubmission:
 
         # MM1 posts a sell order at 25.00
         sell_response = client.post(
-            "/orders",
+            "/exchange/orders",
             json={
                 "instrument_id": "SPX_4500_CALL",
                 "order_type": "limit",
@@ -387,7 +387,7 @@ class TestOrderSubmission:
 
         # MM2 posts a buy order at 26.00 (crosses the spread)
         buy_response = client.post(
-            "/orders",
+            "/exchange/orders",
             json={
                 "instrument_id": "SPX_4500_CALL",
                 "order_type": "limit",
@@ -413,7 +413,7 @@ class TestOrderSubmission:
         """
         # Register two teams
         mm1_response = client.post(
-            "/auth/register",
+            "/game/teams/register",
             json={"team_name": "LiquidityProvider", "role": "market_maker"},
         )
         mm1_data = mm1_response.json()
@@ -421,7 +421,7 @@ class TestOrderSubmission:
         mm1 = mm1_data["data"]
 
         mm2_response = client.post(
-            "/auth/register",
+            "/game/teams/register",
             json={"team_name": "MarketTaker", "role": "market_maker"},
         )
         mm2_data = mm2_response.json()
@@ -430,7 +430,7 @@ class TestOrderSubmission:
 
         # MM1 provides liquidity with a sell order
         sell_response = client.post(
-            "/orders",
+            "/exchange/orders",
             json={
                 "instrument_id": "SPX_4500_PUT",
                 "order_type": "limit",
@@ -445,7 +445,7 @@ class TestOrderSubmission:
 
         # MM2 submits market buy order
         market_response = client.post(
-            "/orders",
+            "/exchange/orders",
             json={
                 "instrument_id": "SPX_4500_PUT",
                 "order_type": "market",
@@ -531,7 +531,7 @@ class TestThreadSafety:
 
         def submit_order(i):
             return client.post(
-                "/orders",
+                "/exchange/orders",
                 json={
                     "instrument_id": "SPX_4500_CALL",
                     "order_type": "limit",

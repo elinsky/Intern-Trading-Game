@@ -17,7 +17,7 @@ from ...infrastructure.api.models import (
     TeamRegistration,
 )
 
-router = APIRouter(prefix="/auth", tags=["game"])
+router = APIRouter(prefix="/game", tags=["game"])
 
 
 def get_positions():
@@ -48,7 +48,7 @@ def get_orders_this_second():
     return orders_this_second
 
 
-@router.post("/register", response_model=ApiResponse)
+@router.post("/teams/register", response_model=ApiResponse)
 async def register_team(
     registration: TeamRegistration,
     positions: Dict = Depends(get_positions),
@@ -97,6 +97,19 @@ async def register_team(
             timestamp=datetime.now(),
         )
 
+    # Check for duplicate team name
+    existing_team = team_registry.get_team_by_name(registration.team_name)
+    if existing_team is not None:
+        return ApiResponse(
+            success=False,
+            request_id=request_id,
+            error=ApiError(
+                code="DUPLICATE_TEAM_NAME",
+                message=f"Team name '{registration.team_name}' already exists",
+            ),
+            timestamp=datetime.now(),
+        )
+
     # Register the team
     team_info = team_registry.register_team(
         team_name=registration.team_name, role=registration.role
@@ -119,6 +132,53 @@ async def register_team(
             "team_name": team_info.team_name,
             "role": team_info.role,
             "api_key": team_info.api_key,
+            "created_at": team_info.created_at.isoformat(),
+        },
+        timestamp=datetime.now(),
+    )
+
+
+@router.get("/teams/{team_id}", response_model=ApiResponse)
+async def get_team_info(
+    team_id: str,
+):
+    """Get information about a specific team.
+
+    Parameters
+    ----------
+    team_id : str
+        The team ID to query
+
+    Returns
+    -------
+    ApiResponse
+        Success response with team information or error
+    """
+    # Generate request ID
+    request_id = f"req_{datetime.now().timestamp()}"
+
+    # Look up team
+    team_info = team_registry.get_team_by_id(team_id)
+
+    if team_info is None:
+        return ApiResponse(
+            success=False,
+            request_id=request_id,
+            error=ApiError(
+                code="TEAM_NOT_FOUND",
+                message=f"Team {team_id} not found",
+            ),
+            timestamp=datetime.now(),
+        )
+
+    # Return team information (excluding sensitive API key)
+    return ApiResponse(
+        success=True,
+        request_id=request_id,
+        data={
+            "team_id": team_info.team_id,
+            "team_name": team_info.team_name,
+            "role": team_info.role,
             "created_at": team_info.created_at.isoformat(),
         },
         timestamp=datetime.now(),

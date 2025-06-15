@@ -98,7 +98,7 @@ class TestOrderEndpoints:
         try:
             # When - Submit the order (will timeout, but that's OK)
             response = client.post(
-                "/orders",
+                "/exchange/orders",
                 json=order_data,
                 headers={"X-API-Key": "test_key_123"},
             )
@@ -185,7 +185,7 @@ class TestOrderEndpoints:
         try:
             # When - Submit the order
             response = client.post(
-                "/orders",
+                "/exchange/orders",
                 json=order_data,
                 headers={"X-API-Key": "test_key_123"},
             )
@@ -224,7 +224,9 @@ class TestOrderEndpoints:
 
         # When - Submit the invalid order
         response = client.post(
-            "/orders", json=order_data, headers={"X-API-Key": "test_key_123"}
+            "/exchange/orders",
+            json=order_data,
+            headers={"X-API-Key": "test_key_123"},
         )
 
         # Then - Error response returned
@@ -283,7 +285,8 @@ class TestOrderEndpoints:
         try:
             # When - Cancel the order
             response = client.delete(
-                f"/orders/{order_id}", headers={"X-API-Key": "test_key_123"}
+                f"/exchange/orders/{order_id}",
+                headers={"X-API-Key": "test_key_123"},
             )
 
             # Then - Cancellation confirmed
@@ -336,7 +339,7 @@ class TestOrderEndpoints:
 
             # When - Submit order that times out
             response = client.post(
-                "/orders",
+                "/exchange/orders",
                 json=order_data,
                 headers={"X-API-Key": "test_key_123"},
             )

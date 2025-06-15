@@ -36,7 +36,7 @@ class TestWebSocketIntegration:
         """
         # Register team
         reg_response = client.post(
-            "/auth/register",
+            "/game/teams/register",
             json={"team_name": "TestMM", "role": "market_maker"},
         )
         assert reg_response.status_code == 200
@@ -60,7 +60,7 @@ class TestWebSocketIntegration:
         """
         # Register team
         reg_response = client.post(
-            "/auth/register",
+            "/game/teams/register",
             json={"team_name": "TestMM2", "role": "market_maker"},
         )
         assert reg_response.status_code == 200
@@ -71,7 +71,7 @@ class TestWebSocketIntegration:
 
         # Submit an order via REST
         order_resp = client.post(
-            "/orders",
+            "/exchange/orders",
             headers={"X-API-Key": api_key},
             json={
                 "instrument_id": "SPX_4500_CALL",
@@ -95,7 +95,7 @@ class TestWebSocketIntegration:
         """
         # Register team
         reg_response = client.post(
-            "/auth/register",
+            "/game/teams/register",
             json={"team_name": "TestMMReject", "role": "market_maker"},
         )
         response_data = reg_response.json()
@@ -105,7 +105,7 @@ class TestWebSocketIntegration:
 
         # When - Submit order that would exceed limit
         reject_resp = client.post(
-            "/orders",
+            "/exchange/orders",
             headers={"X-API-Key": api_key},
             json={
                 "instrument_id": "SPX_4500_CALL",
@@ -133,7 +133,7 @@ class TestWebSocketIntegration:
         """
         # Given - Register two teams
         team1_response = client.post(
-            "/auth/register",
+            "/game/teams/register",
             json={"team_name": "Team1", "role": "market_maker"},
         )
         team1_response_data = team1_response.json()
@@ -141,7 +141,7 @@ class TestWebSocketIntegration:
         team1_data = team1_response_data["data"]
 
         team2_response = client.post(
-            "/auth/register",
+            "/game/teams/register",
             json={"team_name": "Team2", "role": "market_maker"},
         )
         team2_response_data = team2_response.json()
@@ -150,7 +150,7 @@ class TestWebSocketIntegration:
 
         # When - Each team submits an order
         resp1 = client.post(
-            "/orders",
+            "/exchange/orders",
             headers={"X-API-Key": team1_data["api_key"]},
             json={
                 "instrument_id": "SPX_4500_CALL",
@@ -163,7 +163,7 @@ class TestWebSocketIntegration:
         )
 
         resp2 = client.post(
-            "/orders",
+            "/exchange/orders",
             headers={"X-API-Key": team2_data["api_key"]},
             json={
                 "instrument_id": "SPX_4500_PUT",
@@ -227,7 +227,7 @@ class TestWebSocketIntegration:
         """
         # Given - Register market maker
         reg_response = client.post(
-            "/auth/register",
+            "/game/teams/register",
             json={"team_name": "TestMMFees", "role": "market_maker"},
         )
         response_data = reg_response.json()
@@ -250,7 +250,7 @@ class TestWebSocketIntegration:
                 time.sleep(0.1)
                 # Submit order that provides liquidity
                 order_response = client.post(
-                    "/orders",
+                    "/exchange/orders",
                     headers={"X-API-Key": api_key},
                     json={
                         "instrument_id": "SPX_4500_CALL",
@@ -294,7 +294,7 @@ class TestWebSocketIntegration:
         """
         # Given - Register team and create positions
         reg_response = client.post(
-            "/auth/register",
+            "/game/teams/register",
             json={"team_name": "TestSnapshot", "role": "market_maker"},
         )
         team_data = reg_response.json()
@@ -302,7 +302,7 @@ class TestWebSocketIntegration:
 
         # Submit order to create position
         client.post(
-            "/orders",
+            "/exchange/orders",
             headers={"X-API-Key": api_key},
             json={
                 "instrument_id": "SPX_4500_CALL",

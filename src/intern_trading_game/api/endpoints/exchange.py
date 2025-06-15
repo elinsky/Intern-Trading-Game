@@ -15,7 +15,7 @@ from ...domain.exchange.core.order import Order, OrderSide, OrderType
 from ...infrastructure.api.auth import TeamInfo, get_current_team
 from ...infrastructure.api.models import ApiError, ApiResponse, OrderRequest
 
-router = APIRouter(prefix="/orders", tags=["exchange"])
+router = APIRouter(prefix="/exchange", tags=["exchange"])
 
 
 def get_order_queue():
@@ -60,7 +60,7 @@ def get_exchange():
     return exchange
 
 
-@router.post("", response_model=ApiResponse)
+@router.post("/orders", response_model=ApiResponse)
 async def submit_order(
     request: OrderRequest,
     team: TeamInfo = Depends(get_current_team),
@@ -162,7 +162,7 @@ async def submit_order(
         raise HTTPException(status_code=504, detail="Order processing timeout")
 
 
-@router.delete("/{order_id}", response_model=ApiResponse)
+@router.delete("/orders/{order_id}", response_model=ApiResponse)
 async def cancel_order(
     order_id: str,
     team: TeamInfo = Depends(get_current_team),
@@ -217,7 +217,7 @@ async def cancel_order(
         raise HTTPException(status_code=504, detail="Cancel request timeout")
 
 
-@router.get("", response_model=ApiResponse)
+@router.get("/orders", response_model=ApiResponse)
 async def get_open_orders(
     team: TeamInfo = Depends(get_current_team),
     exchange=Depends(get_exchange),
@@ -268,6 +268,65 @@ async def get_open_orders(
             "team_id": team.team_id,
             "orders": team_orders,
             "count": len(team_orders),
+        },
+        timestamp=datetime.now(),
+    )
+
+
+@router.get("/orderbook/{instrument_id}", response_model=ApiResponse)
+async def get_order_book(
+    instrument_id: str,
+    team: TeamInfo = Depends(get_current_team),
+    exchange=Depends(get_exchange),
+):
+    """Get the order book for a specific instrument.
+
+    Parameters
+    ----------
+    instrument_id : str
+        The instrument to query
+    team : TeamInfo
+        Authenticated team information from API key
+
+    Returns
+    -------
+    ApiResponse
+        Success response with order book depth
+    """
+    # Generate request ID
+    request_id = f"req_{datetime.now().timestamp()}"
+
+    # Get order book from exchange
+    order_book = exchange.get_order_book(instrument_id)
+
+    if order_book is None:
+        return ApiResponse(
+            success=False,
+            request_id=request_id,
+            error=ApiError(
+                code="INVALID_INSTRUMENT",
+                message=f"Instrument {instrument_id} not found",
+            ),
+            timestamp=datetime.now(),
+        )
+
+    # Get order book depth (top 5 levels)
+    depth = order_book.depth_snapshot(levels=5)
+
+    return ApiResponse(
+        success=True,
+        request_id=request_id,
+        data={
+            "instrument_id": instrument_id,
+            "bids": [
+                {"price": price, "quantity": qty}
+                for price, qty in depth["bids"]
+            ],
+            "asks": [
+                {"price": price, "quantity": qty}
+                for price, qty in depth["asks"]
+            ],
+            "timestamp": datetime.now().isoformat(),
         },
         timestamp=datetime.now(),
     )
