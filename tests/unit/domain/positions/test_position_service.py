@@ -5,7 +5,7 @@ from unittest.mock import MagicMock
 
 import pytest
 
-from intern_trading_game.services.position_management import (
+from intern_trading_game.domain.positions import (
     PositionManagementService,
 )
 

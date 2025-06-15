@@ -4,7 +4,9 @@ This module provides fee calculation logic for the trading system,
 handling role-specific fees and liquidity-based pricing.
 """
 
-from ..infrastructure.config.fee_config import FeeConfig, FeeSchedule
+from typing import Dict
+
+from .models import FeeSchedule
 
 
 class TradingFeeService:
@@ -21,13 +23,13 @@ class TradingFeeService:
 
     Parameters
     ----------
-    fee_config : FeeConfig
-        Configuration object containing fee schedules for all roles
+    role_fees : Dict[str, FeeSchedule]
+        Mapping from role name to fee schedule for all roles
 
     Attributes
     ----------
-    fee_config : FeeConfig
-        The fee configuration used for calculations
+    role_fees : Dict[str, FeeSchedule]
+        The fee schedules used for calculations
 
     Notes
     -----
@@ -55,14 +57,12 @@ class TradingFeeService:
 
     Examples
     --------
-    >>> # Create service with configuration
-    >>> config = FeeConfig(
-    ...     role_fees={
-    ...         "market_maker": FeeSchedule(0.02, -0.01),
-    ...         "retail": FeeSchedule(-0.01, -0.03)
-    ...     }
-    ... )
-    >>> fee_service = TradingFeeService(config)
+    >>> # Create service with fee schedules
+    >>> role_fees = {
+    ...     "market_maker": FeeSchedule(0.02, -0.01),
+    ...     "retail": FeeSchedule(-0.01, -0.03)
+    ... }
+    >>> fee_service = TradingFeeService(role_fees)
     >>>
     >>> # Calculate fees for a market maker
     >>> fee = fee_service.calculate_fee(10, "market_maker", "maker")
@@ -73,15 +73,15 @@ class TradingFeeService:
     >>> print(f"Fee: ${fee:.2f}")  # -$0.15 (negative = fee)
     """
 
-    def __init__(self, fee_config: FeeConfig):
-        """Initialize the fee service with configuration.
+    def __init__(self, role_fees: Dict[str, FeeSchedule]):
+        """Initialize the fee service with fee schedules.
 
         Parameters
         ----------
-        fee_config : FeeConfig
-            Fee configuration containing schedules for all roles
+        role_fees : Dict[str, FeeSchedule]
+            Mapping from role name to fee schedule
         """
-        self.fee_config = fee_config
+        self.role_fees = role_fees
 
     def calculate_fee(
         self, quantity: int, role: str, liquidity_type: str
@@ -150,7 +150,12 @@ class TradingFeeService:
         >>> # If maker_rebate = 0.01, fee = 75 * 0.01 = $0.75 rebate
         """
         # Get fee schedule for the role
-        schedule = self.fee_config.get_schedule(role)
+        if role not in self.role_fees:
+            raise KeyError(
+                f"Unknown role: {role}. "
+                f"Available roles: {list(self.role_fees.keys())}"
+            )
+        schedule = self.role_fees[role]
 
         # Get rate based on liquidity type
         rate = schedule.get_fee_for_liquidity_type(liquidity_type)
@@ -251,4 +256,9 @@ class TradingFeeService:
         >>> print(f"Maker: {schedule.maker_rebate}")   # 0.02
         >>> print(f"Taker: {schedule.taker_fee}")      # -0.01
         """
-        return self.fee_config.get_schedule(role)
+        if role not in self.role_fees:
+            raise KeyError(
+                f"Unknown role: {role}. "
+                f"Available roles: {list(self.role_fees.keys())}"
+            )
+        return self.role_fees[role]

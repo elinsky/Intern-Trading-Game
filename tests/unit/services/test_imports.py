@@ -91,13 +91,6 @@ class TestPackageImports:
             # Concrete implementations
             "OrderValidationService",
             "OrderMatchingService",
-            "TradeProcessingService",
-            # Supporting services
-            "TradingFeeService",
-            "PositionManagementService",
-            # Configuration models
-            "FeeConfig",
-            "FeeSchedule",
             # Re-exported types
             "OrderResult",
             "OrderResponse",

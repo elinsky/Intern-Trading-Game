@@ -18,17 +18,19 @@ from ..domain.exchange.validation.order_validator import (
     ConstraintType,
 )
 from ..domain.exchange.venue import ExchangeVenue
+from ..domain.positions import (
+    PositionManagementService,
+    TradeProcessingService,
+    TradingFeeService,
+)
 from ..infrastructure.api.auth import team_registry
 from ..infrastructure.api.websocket import ws_manager
-from ..infrastructure.config.fee_config import FeeConfig
+from ..infrastructure.config.fee_config import get_hardcoded_fee_schedules
 from ..infrastructure.threads.validator import (
     validator_thread as validator_thread_impl,
 )
 from ..services import OrderValidationService
 from ..services.order_matching import OrderMatchingService
-from ..services.position_management import PositionManagementService
-from ..services.trade_processing import TradeProcessingService
-from ..services.trading_fees import TradingFeeService
 from .endpoints import auth, orders
 from .endpoints import positions as positions_endpoints
 
@@ -47,34 +49,6 @@ validator = ConstraintBasedOrderValidator()
 # Service instances
 validation_service: Optional[OrderValidationService] = None
 
-# Hardcoded fee configuration matching current behavior
-# TODO: Load from YAML config file
-HARDCODED_FEE_CONFIG = {
-    "market_maker": {
-        "fees": {
-            "maker_rebate": 0.02,  # Positive = rebate (receive money)
-            "taker_fee": -0.05,  # Negative = fee (pay money)
-        }
-    },
-    "hedge_fund": {
-        "fees": {
-            "maker_rebate": 0.0,  # No rebate
-            "taker_fee": -0.05,  # Standard taker fee
-        }
-    },
-    "arbitrage": {
-        "fees": {
-            "maker_rebate": 0.0,  # No rebate
-            "taker_fee": -0.05,  # Standard taker fee
-        }
-    },
-    "retail": {
-        "fees": {
-            "maker_rebate": 0.0,  # No rebate
-            "taker_fee": -0.05,  # Standard taker fee
-        }
-    },
-}
 
 # Position tracking (thread-safe)
 positions: Dict[str, Dict[str, int]] = {}
@@ -191,9 +165,8 @@ def trade_publisher_thread():
     print("Trade publisher thread started")
 
     # Initialize services once at thread startup
-    # Wrap HARDCODED_FEE_CONFIG in "roles" key for from_config_dict
-    fee_config = FeeConfig.from_config_dict({"roles": HARDCODED_FEE_CONFIG})
-    fee_service = TradingFeeService(fee_config)
+    role_fees = get_hardcoded_fee_schedules()
+    fee_service = TradingFeeService(role_fees)
     position_service = PositionManagementService(positions, positions_lock)
     trade_service = TradeProcessingService(
         fee_service, position_service, websocket_queue

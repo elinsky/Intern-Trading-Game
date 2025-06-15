@@ -9,13 +9,13 @@ from datetime import datetime
 from queue import Queue
 from typing import Dict, List, Optional, Tuple
 
-from ..domain.exchange.core.order import Order
-from ..domain.exchange.core.trade import Trade
-from ..domain.exchange.order_result import OrderResult
-from ..infrastructure.api.models import OrderResponse, TeamInfo
-from .interfaces import TradeProcessingServiceInterface
-from .position_management import PositionManagementService
-from .trading_fees import TradingFeeService
+from ...infrastructure.api.models import OrderResponse, TeamInfo
+from ...services.interfaces import TradeProcessingServiceInterface
+from ..exchange.core.order import Order
+from ..exchange.core.trade import Trade
+from ..exchange.order_result import OrderResult
+from .fee_service import TradingFeeService
+from .position_service import PositionManagementService
 
 
 class TradeProcessingService(TradeProcessingServiceInterface):

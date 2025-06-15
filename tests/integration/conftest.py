@@ -23,42 +23,38 @@ from intern_trading_game.domain.exchange.validation.order_validator import (
     ConstraintType,
 )
 from intern_trading_game.domain.exchange.venue import ExchangeVenue
+from intern_trading_game.domain.positions import (
+    FeeSchedule,
+    PositionManagementService,
+    TradeProcessingService,
+    TradingFeeService,
+)
 from intern_trading_game.infrastructure.api.auth import TeamInfo, team_registry
 from intern_trading_game.services import (
     OrderMatchingService,
     OrderValidationService,
-    PositionManagementService,
-    TradeProcessingService,
-    TradingFeeService,
 )
 
 # Service-level fixtures (no threads, minimal dependencies)
 
 
 @pytest.fixture
-def fee_config():
-    """Provide test fee configuration."""
-    from intern_trading_game.infrastructure.config.fee_config import (
-        FeeConfig,
-        FeeSchedule,
-    )
-
-    return FeeConfig(
-        role_fees={
-            "market_maker": FeeSchedule(
-                maker_rebate=0.02,
-                taker_fee=-0.05,
-            ),
-            "hedge_fund": FeeSchedule(
-                maker_rebate=0.0,
-                taker_fee=-0.05,
-            ),
-            "retail": FeeSchedule(
-                maker_rebate=0.0,
-                taker_fee=-0.05,
-            ),
-        }
-    )
+def role_fees():
+    """Provide test fee schedules."""
+    return {
+        "market_maker": FeeSchedule(
+            maker_rebate=0.02,
+            taker_fee=-0.05,
+        ),
+        "hedge_fund": FeeSchedule(
+            maker_rebate=0.0,
+            taker_fee=-0.05,
+        ),
+        "retail": FeeSchedule(
+            maker_rebate=0.0,
+            taker_fee=-0.05,
+        ),
+    }
 
 
 @pytest.fixture
@@ -121,7 +117,7 @@ def test_order_counts():
 
 @pytest.fixture
 def service_context(
-    fee_config, exchange, validator, test_positions, test_order_counts
+    role_fees, exchange, validator, test_positions, test_order_counts
 ):
     """Minimal context for service integration tests.
 
@@ -143,7 +139,7 @@ def service_context(
         get_order_count_func=get_order_count,
     )
 
-    fee_service = TradingFeeService(fee_config)
+    fee_service = TradingFeeService(role_fees)
 
     # For single-threaded tests, we can use a regular Lock or None
     import threading

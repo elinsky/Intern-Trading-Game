@@ -47,8 +47,7 @@ from ..domain.exchange.order_result import OrderResult
 from ..infrastructure.api.models import OrderResponse
 
 # Import supporting services and configs
-from ..infrastructure.config.fee_config import FeeConfig, FeeSchedule
-
+# (fee configuration is now handled directly in infrastructure layer)
 # Import interfaces
 from .interfaces import (
     OrderMatchingServiceInterface,
@@ -60,9 +59,6 @@ from .interfaces import (
 # Import concrete implementations
 from .order_matching import OrderMatchingService
 from .order_validation import OrderValidationService
-from .position_management import PositionManagementService
-from .trade_processing import TradeProcessingService
-from .trading_fees import TradingFeeService
 
 __all__ = [
     # Interfaces
@@ -73,13 +69,6 @@ __all__ = [
     # Concrete implementations
     "OrderValidationService",
     "OrderMatchingService",
-    "TradeProcessingService",
-    # Supporting services
-    "TradingFeeService",
-    "PositionManagementService",
-    # Configuration models
-    "FeeConfig",
-    "FeeSchedule",
     # Re-exported existing types
     "OrderResult",  # From exchange.order_result
     "OrderResponse",  # From api.models

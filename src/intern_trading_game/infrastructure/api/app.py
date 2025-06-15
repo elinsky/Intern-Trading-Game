@@ -21,7 +21,9 @@ from ...domain.exchange.validation.order_validator import (
     ConstraintType,
 )
 from ...domain.exchange.venue import ExchangeVenue
-from ...infrastructure.config.fee_config import HARDCODED_FEE_CONFIG
+from ...infrastructure.config.fee_config import (
+    get_hardcoded_fee_schedules,
+)
 from ...infrastructure.threads.matcher import matching_thread
 from ...infrastructure.threads.publisher import trade_publisher_thread
 from ...infrastructure.threads.validator import validator_thread
@@ -111,7 +113,17 @@ def create_app() -> FastAPI:
             args=(
                 queues["trade_queue"],
                 queues["websocket_queue"],
-                HARDCODED_FEE_CONFIG,
+                {
+                    "roles": {
+                        name: {
+                            "fees": {
+                                "maker_rebate": schedule.maker_rebate,
+                                "taker_fee": schedule.taker_fee,
+                            }
+                        }
+                        for name, schedule in get_hardcoded_fee_schedules().items()
+                    }
+                },
                 state["positions"],
                 state["positions_lock"],
                 state["pending_orders"],

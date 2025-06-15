@@ -4,11 +4,13 @@ import threading
 from queue import Queue
 from typing import Dict
 
+from ...domain.positions import (
+    PositionManagementService,
+    TradeProcessingService,
+    TradingFeeService,
+)
 from ...infrastructure.api.models import OrderResponse
-from ...infrastructure.config.fee_config import FeeConfig
-from ...services.position_management import PositionManagementService
-from ...services.trade_processing import TradeProcessingService
-from ...services.trading_fees import TradingFeeService
+from ...infrastructure.config.fee_config import load_fee_schedules_from_config
 
 
 def trade_publisher_thread(
@@ -24,8 +26,8 @@ def trade_publisher_thread(
     print("Trade publisher thread started")
 
     # Initialize services once at thread startup
-    fee_config = FeeConfig.from_config_dict(fee_config_dict)
-    fee_service = TradingFeeService(fee_config)
+    role_fees = load_fee_schedules_from_config(fee_config_dict)
+    fee_service = TradingFeeService(role_fees)
     position_service = PositionManagementService(positions, positions_lock)
     trade_service = TradeProcessingService(
         fee_service, position_service, websocket_queue

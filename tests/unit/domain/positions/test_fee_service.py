@@ -2,11 +2,8 @@
 
 import pytest
 
-from intern_trading_game.infrastructure.config.fee_config import (
-    FeeConfig,
+from intern_trading_game.domain.positions import (
     FeeSchedule,
-)
-from intern_trading_game.services.trading_fees import (
     TradingFeeService,
 )
 
@@ -15,25 +12,23 @@ class TestTradingFeeService:
     """Test suite for TradingFeeService."""
 
     @pytest.fixture
-    def fee_config(self):
-        """Create a test fee configuration."""
-        return FeeConfig(
-            role_fees={
-                "market_maker": FeeSchedule(0.02, -0.01),
-                "hedge_fund": FeeSchedule(0.01, -0.02),
-                "retail": FeeSchedule(-0.01, -0.03),
-                "arbitrage_desk": FeeSchedule(0.01, -0.02),
-            }
-        )
+    def role_fees(self):
+        """Create test fee schedules."""
+        return {
+            "market_maker": FeeSchedule(0.02, -0.01),
+            "hedge_fund": FeeSchedule(0.01, -0.02),
+            "retail": FeeSchedule(-0.01, -0.03),
+            "arbitrage_desk": FeeSchedule(0.01, -0.02),
+        }
 
     @pytest.fixture
-    def fee_service(self, fee_config):
+    def fee_service(self, role_fees):
         """Create a TradingFeeService instance."""
-        return TradingFeeService(fee_config)
+        return TradingFeeService(role_fees)
 
-    def test_service_initialization(self, fee_service, fee_config):
-        """Test service initializes with configuration."""
-        assert fee_service.fee_config is fee_config
+    def test_service_initialization(self, fee_service, role_fees):
+        """Test service initializes with fee schedules."""
+        assert fee_service.role_fees == role_fees
 
     def test_calculate_fee_market_maker_maker(self, fee_service):
         """Test market maker receives rebate as maker.
@@ -161,8 +156,8 @@ class TestTradingFeeService:
 
     def test_service_with_empty_config(self):
         """Test service handles empty configuration gracefully."""
-        empty_config = FeeConfig(role_fees={})
-        service = TradingFeeService(empty_config)
+        empty_role_fees = {}
+        service = TradingFeeService(empty_role_fees)
 
         with pytest.raises(KeyError):
             service.calculate_fee(10, "any_role", "maker")

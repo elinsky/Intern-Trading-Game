@@ -13,16 +13,12 @@ from intern_trading_game.domain.exchange.core.order import (
 )
 from intern_trading_game.domain.exchange.core.trade import Trade
 from intern_trading_game.domain.exchange.order_result import OrderResult
-from intern_trading_game.infrastructure.api.models import TeamInfo
-from intern_trading_game.services.position_management import (
+from intern_trading_game.domain.positions import (
     PositionManagementService,
-)
-from intern_trading_game.services.trade_processing import (
     TradeProcessingService,
-)
-from intern_trading_game.services.trading_fees import (
     TradingFeeService,
 )
+from intern_trading_game.infrastructure.api.models import TeamInfo
 
 
 class TestTradeProcessingService:

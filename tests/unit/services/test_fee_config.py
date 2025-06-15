@@ -2,9 +2,9 @@
 
 import pytest
 
+from intern_trading_game.domain.positions import FeeSchedule
 from intern_trading_game.infrastructure.config.fee_config import (
-    FeeConfig,
-    FeeSchedule,
+    load_fee_schedules_from_config,
 )
 
 
@@ -57,37 +57,34 @@ class TestFeeSchedule:
         assert schedule.get_fee_for_liquidity_type(liquidity_type) == expected
 
 
-class TestFeeConfig:
-    """Test suite for FeeConfig."""
+class TestLoadFeeSchedules:
+    """Test suite for load_fee_schedules_from_config."""
 
     @pytest.fixture
-    def sample_fee_config(self):
-        """Create a sample fee configuration."""
-        return FeeConfig(
-            role_fees={
-                "market_maker": FeeSchedule(0.02, -0.01),
-                "hedge_fund": FeeSchedule(0.01, -0.02),
-                "retail": FeeSchedule(-0.01, -0.03),
-            }
-        )
+    def sample_role_fees(self):
+        """Create sample fee schedules."""
+        return {
+            "market_maker": FeeSchedule(0.02, -0.01),
+            "hedge_fund": FeeSchedule(0.01, -0.02),
+            "retail": FeeSchedule(-0.01, -0.03),
+        }
 
-    def test_fee_config_creation(self, sample_fee_config):
-        """Test creating fee configuration."""
-        assert len(sample_fee_config.role_fees) == 3
-        assert "market_maker" in sample_fee_config.role_fees
-        assert "hedge_fund" in sample_fee_config.role_fees
-        assert "retail" in sample_fee_config.role_fees
+    def test_role_fees_dict_structure(self, sample_role_fees):
+        """Test fee schedules dictionary structure."""
+        assert len(sample_role_fees) == 3
+        assert "market_maker" in sample_role_fees
+        assert "hedge_fund" in sample_role_fees
+        assert "retail" in sample_role_fees
 
-    def test_get_schedule_for_role(self, sample_fee_config):
+    def test_get_schedule_for_role(self, sample_role_fees):
         """Test retrieving schedule for specific role."""
-        mm_schedule = sample_fee_config.get_schedule("market_maker")
+        mm_schedule = sample_role_fees["market_maker"]
         assert mm_schedule.maker_rebate == 0.02
         assert mm_schedule.taker_fee == -0.01
 
-    def test_get_schedule_unknown_role(self, sample_fee_config):
+    def test_get_schedule_unknown_role(self, sample_role_fees):
         """Test error handling for unknown role."""
-        with pytest.raises(KeyError, match="Unknown role: unknown"):
-            sample_fee_config.get_schedule("unknown")
+        assert "unknown" not in sample_role_fees
 
     def test_from_config_dict_full(self):
         """Test loading from complete configuration dictionary."""
@@ -108,23 +105,23 @@ class TestFeeConfig:
             }
         }
 
-        fee_config = FeeConfig.from_config_dict(config_dict)
+        role_fees = load_fee_schedules_from_config(config_dict)
 
         # Verify all roles loaded
-        assert len(fee_config.role_fees) == 3
+        assert len(role_fees) == 3
 
         # Check market maker fees
-        mm_schedule = fee_config.get_schedule("market_maker")
+        mm_schedule = role_fees["market_maker"]
         assert mm_schedule.maker_rebate == 0.02
         assert mm_schedule.taker_fee == -0.01
 
         # Check hedge fund fees
-        hf_schedule = fee_config.get_schedule("hedge_fund")
+        hf_schedule = role_fees["hedge_fund"]
         assert hf_schedule.maker_rebate == 0.01
         assert hf_schedule.taker_fee == -0.02
 
         # Check retail fees
-        retail_schedule = fee_config.get_schedule("retail")
+        retail_schedule = role_fees["retail"]
         assert retail_schedule.maker_rebate == -0.01
         assert retail_schedule.taker_fee == -0.03
 
@@ -142,17 +139,17 @@ class TestFeeConfig:
             }
         }
 
-        fee_config = FeeConfig.from_config_dict(config_dict)
+        role_fees = load_fee_schedules_from_config(config_dict)
 
         # Only market_maker should be loaded
-        assert len(fee_config.role_fees) == 1
-        assert "market_maker" in fee_config.role_fees
-        assert "arbitrage_desk" not in fee_config.role_fees
+        assert len(role_fees) == 1
+        assert "market_maker" in role_fees
+        assert "arbitrage_desk" not in role_fees
 
     def test_from_config_dict_empty(self):
         """Test loading from empty configuration."""
-        fee_config = FeeConfig.from_config_dict({})
-        assert len(fee_config.role_fees) == 0
+        role_fees = load_fee_schedules_from_config({})
+        assert len(role_fees) == 0
 
     def test_from_config_dict_defaults(self):
         """Test default values when fees partially specified."""
@@ -164,8 +161,8 @@ class TestFeeConfig:
             }
         }
 
-        fee_config = FeeConfig.from_config_dict(config_dict)
-        schedule = fee_config.get_schedule("test_role")
+        role_fees = load_fee_schedules_from_config(config_dict)
+        schedule = role_fees["test_role"]
 
         assert schedule.maker_rebate == 0.05
         assert schedule.taker_fee == 0.0  # Default
