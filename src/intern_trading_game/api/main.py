@@ -12,6 +12,7 @@ from fastapi.middleware.cors import CORSMiddleware
 
 from ..domain.exchange.book.matching_engine import ContinuousMatchingEngine
 from ..domain.exchange.core.instrument import Instrument
+from ..domain.exchange.threads import matching_thread, validator_thread
 from ..domain.exchange.validation.order_validator import (
     ConstraintBasedOrderValidator,
     ConstraintConfig,
@@ -26,11 +27,7 @@ from ..domain.positions.threads import position_tracker_thread
 from ..infrastructure.api.auth import team_registry
 from ..infrastructure.api.websocket import ws_manager
 from ..infrastructure.config.fee_config import get_hardcoded_fee_schedules
-from ..infrastructure.threads.validator import (
-    validator_thread as validator_thread_impl,
-)
 from ..services import OrderValidationService
-from ..services.order_matching import OrderMatchingService
 from .endpoints import exchange as exchange_endpoints
 from .endpoints import game as game_endpoints
 from .endpoints import positions as positions_endpoints
@@ -94,12 +91,12 @@ def get_team_order_count(team_id: str) -> int:
         return orders_this_second.get(team_id, 0)
 
 
-def validator_thread():
-    """Wrapper for validator thread implementation.
+def validator_thread_wrapper():
+    """Wrapper for Exchange Service validator thread.
 
-    Calls the imported validator thread with all required parameters.
+    Calls the Exchange domain validator thread with all required parameters.
     """
-    validator_thread_impl(
+    validator_thread(
         order_queue=order_queue,
         match_queue=match_queue,
         websocket_queue=websocket_queue,
@@ -111,55 +108,19 @@ def validator_thread():
     )
 
 
-def matching_thread():
-    """Thread 3: Matching Engine - processes validated orders."""
-    print("Matching engine thread started")
+def matching_thread_wrapper():
+    """Wrapper for Exchange Service matching thread.
 
-    # Initialize service once at thread startup
-    matching_service = OrderMatchingService(exchange)
-
-    while True:
-        try:
-            # Get validated order
-            order_data = match_queue.get()
-            if order_data is None:  # Shutdown signal
-                break
-
-            order, team_info = order_data
-
-            # Submit to exchange using service
-            try:
-                result = matching_service.submit_order_to_exchange(order)
-
-                # Send ACK if order accepted by exchange
-                if result.status in ["new", "partially_filled", "filled"]:
-                    websocket_queue.put(
-                        (
-                            "new_order_ack",
-                            team_info.team_id,
-                            {
-                                "order_id": order.order_id,
-                                "client_order_id": order.client_order_id,
-                                "instrument_id": order.instrument_id,
-                                "side": order.side,
-                                "quantity": order.quantity,
-                                "order_type": order.order_type,
-                                "price": order.price,
-                            },
-                        )
-                    )
-
-                # Send to trade publisher
-                trade_queue.put((result, order, team_info))
-
-            except Exception as e:
-                # Log exchange errors - validator already sent response
-                print(f"Exchange error for order {order.order_id}: {e}")
-                # Note: The validator has already responded to the API
-                # so we just log the error here
-
-        except Exception as e:
-            print(f"Matching thread error: {e}")
+    Calls the Exchange domain matching thread with all required parameters.
+    """
+    matching_thread(
+        match_queue=match_queue,
+        trade_queue=trade_queue,
+        websocket_queue=websocket_queue,
+        exchange=exchange,
+        pending_orders=pending_orders,
+        order_responses=order_responses,
+    )
 
 
 def trade_publisher_thread():
@@ -350,8 +311,8 @@ async def websocket_async_loop():
 
 
 # Create threads but don't start them yet
-validator_t = threading.Thread(target=validator_thread, daemon=True)
-matching_t = threading.Thread(target=matching_thread, daemon=True)
+validator_t = threading.Thread(target=validator_thread_wrapper, daemon=True)
+matching_t = threading.Thread(target=matching_thread_wrapper, daemon=True)
 publisher_t = threading.Thread(target=trade_publisher_thread, daemon=True)
 position_t = threading.Thread(
     target=position_tracker_thread_wrapper, daemon=True

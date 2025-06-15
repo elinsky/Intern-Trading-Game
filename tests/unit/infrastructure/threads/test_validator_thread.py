@@ -20,11 +20,11 @@ import pytest
 
 from intern_trading_game.domain.exchange.core.order import Order
 from intern_trading_game.domain.exchange.order_result import OrderResult
-from intern_trading_game.infrastructure.api.auth import TeamInfo
-from intern_trading_game.infrastructure.api.models import ApiResponse
-from intern_trading_game.infrastructure.threads.validator import (
+from intern_trading_game.domain.exchange.threads import (
     validator_thread,
 )
+from intern_trading_game.infrastructure.api.auth import TeamInfo
+from intern_trading_game.infrastructure.api.models import ApiResponse
 from intern_trading_game.services.order_validation import (
     OrderValidationService,
 )

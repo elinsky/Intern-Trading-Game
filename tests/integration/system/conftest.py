@@ -43,16 +43,20 @@ def system_context():
     import threading
 
     from intern_trading_game.api.main import (
-        matching_thread,
+        matching_thread_wrapper,
         position_tracker_thread_wrapper,
         trade_publisher_thread,
-        validator_thread,
+        validator_thread_wrapper,
         websocket_thread,
     )
 
     # Create fresh threads for this test
-    fresh_validator_t = threading.Thread(target=validator_thread, daemon=True)
-    fresh_matching_t = threading.Thread(target=matching_thread, daemon=True)
+    fresh_validator_t = threading.Thread(
+        target=validator_thread_wrapper, daemon=True
+    )
+    fresh_matching_t = threading.Thread(
+        target=matching_thread_wrapper, daemon=True
+    )
     fresh_publisher_t = threading.Thread(
         target=trade_publisher_thread, daemon=True
     )

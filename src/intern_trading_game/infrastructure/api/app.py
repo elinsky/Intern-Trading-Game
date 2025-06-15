@@ -15,6 +15,7 @@ from ...data.state.managers import (
 )
 from ...domain.exchange.book.matching_engine import ContinuousMatchingEngine
 from ...domain.exchange.core.instrument import Instrument
+from ...domain.exchange.threads import matching_thread, validator_thread
 from ...domain.exchange.validation.order_validator import (
     ConstraintBasedOrderValidator,
     ConstraintConfig,
@@ -24,9 +25,7 @@ from ...domain.exchange.venue import ExchangeVenue
 from ...infrastructure.config.fee_config import (
     get_hardcoded_fee_schedules,
 )
-from ...infrastructure.threads.matcher import matching_thread
 from ...infrastructure.threads.publisher import trade_publisher_thread
-from ...infrastructure.threads.validator import validator_thread
 from ...infrastructure.threads.websocket import websocket_thread
 from ...services.order_validation import OrderValidationService
 from .endpoints import create_endpoints

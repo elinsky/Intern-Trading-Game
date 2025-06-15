@@ -1,4 +1,8 @@
-"""Thread 2: Order Validator - validates orders from queue."""
+"""Exchange service thread implementations.
+
+This module contains thread functions that are owned by the Exchange Service,
+following the service-oriented architecture principle of thread ownership.
+"""
 
 import threading
 from datetime import datetime
@@ -6,8 +10,9 @@ from queue import Queue
 from typing import Dict
 
 from ...constants.errors import ErrorCodes, ErrorMessages
-from ...infrastructure.api.models import ApiError, ApiResponse
+from ...infrastructure.api.models import ApiError, ApiResponse, OrderResponse
 from ...infrastructure.api.websocket_messages import MessageType
+from ...services.order_matching import OrderMatchingService
 from ...services.order_validation import OrderValidationService
 
 
@@ -32,6 +37,25 @@ def validator_thread(
     that only orders meeting all constraints (position limits, order
     size, etc.) proceed to execution. For cancellations, it verifies
     ownership before forwarding to the exchange.
+
+    Parameters
+    ----------
+    order_queue : Queue
+        Queue containing order validation requests
+    match_queue : Queue
+        Queue for sending validated orders to matching engine
+    websocket_queue : Queue
+        Queue for sending WebSocket messages to clients
+    validation_service : OrderValidationService
+        Service for order validation logic
+    orders_this_second : Dict[str, int]
+        Tracking dictionary for order rate limits per team
+    orders_lock : threading.RLock
+        Lock for thread-safe access to orders_this_second
+    pending_orders : Dict[str, threading.Event]
+        Events for coordinating order responses
+    order_responses : Dict[str, ApiResponse]
+        Response storage for order submissions
 
     Notes
     -----
@@ -254,3 +278,117 @@ def validator_thread(
 
         except Exception as e:
             print(f"Validator thread error: {e}")
+
+
+def matching_thread(
+    match_queue: Queue,
+    trade_queue: Queue,
+    websocket_queue: Queue,
+    exchange,
+    pending_orders: Dict[str, threading.Event],
+    order_responses: Dict[str, OrderResponse],
+):
+    """Thread 3: Matching Engine - processes validated orders.
+
+    This thread owns the order matching logic for the Exchange Service.
+    It receives validated orders from the validator thread and submits
+    them to the exchange venue for matching.
+
+    Parameters
+    ----------
+    match_queue : Queue
+        Queue containing validated orders ready for matching
+    trade_queue : Queue
+        Queue for sending trade results to the publisher
+    websocket_queue : Queue
+        Queue for sending WebSocket acknowledgments
+    exchange : ExchangeVenue
+        The exchange venue for order matching
+    pending_orders : Dict[str, threading.Event]
+        Events for coordinating order responses
+    order_responses : Dict[str, OrderResponse]
+        Response storage for order submissions
+
+    Notes
+    -----
+    This thread handles the core matching logic for the exchange,
+    converting validated orders into trade executions. It also
+    sends order acknowledgments via WebSocket when orders are
+    successfully accepted by the exchange.
+
+    The thread forwards all trade results to the trade publisher
+    for position updates and execution reporting.
+
+    TradingContext
+    --------------
+    The matching engine implements price-time priority matching,
+    where orders with better prices are matched first, and for
+    orders at the same price, earlier orders have priority.
+
+    Examples
+    --------
+    Order processing flow:
+    1. Receive (order, team_info) from match_queue
+    2. Submit order to exchange venue
+    3. Send WebSocket ACK if order accepted
+    4. Forward (result, order, team_info) to trade_queue
+    """
+    print("Matching engine thread started")
+
+    # Initialize service once at thread startup
+    matching_service = OrderMatchingService(exchange)
+
+    while True:
+        try:
+            # Get validated order
+            order_data = match_queue.get()
+            if order_data is None:  # Shutdown signal
+                break
+
+            order, team_info = order_data
+
+            # Submit to exchange using service
+            try:
+                result = matching_service.submit_order_to_exchange(order)
+
+                # Send ACK if order accepted by exchange
+                if result.status in ["new", "partially_filled", "filled"]:
+                    websocket_queue.put(
+                        (
+                            "new_order_ack",
+                            team_info.team_id,
+                            {
+                                "order_id": order.order_id,
+                                "client_order_id": order.client_order_id,
+                                "instrument_id": order.instrument_id,
+                                "side": order.side,
+                                "quantity": order.quantity,
+                                "price": order.price,
+                                "status": result.status,
+                            },
+                        )
+                    )
+
+                # Send to trade publisher
+                trade_queue.put((result, order, team_info))
+
+            except Exception as e:
+                # Handle exchange errors using service
+                result = matching_service.handle_exchange_error(e, order)
+
+                # Create response from error result
+                response = OrderResponse(
+                    order_id=result.order_id,
+                    status=result.status,
+                    timestamp=datetime.now(),
+                    error_code=result.error_code,
+                    error_message=result.error_message,
+                )
+
+                # Find the response event
+                if order.order_id in pending_orders:
+                    order_responses[order.order_id] = response
+                    pending_orders[order.order_id].set()
+
+        except Exception as e:
+            print(f"Matching thread error: {e}")
