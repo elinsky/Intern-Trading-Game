@@ -43,9 +43,9 @@ def api_context():
     from intern_trading_game.api.main import (
         matching_thread_wrapper,
         position_tracker_thread_wrapper,
-        trade_publisher_thread,
+        trade_publisher_thread_wrapper,
         validator_thread_wrapper,
-        websocket_thread,
+        websocket_thread_wrapper,
     )
 
     # Create fresh threads for this test
@@ -56,12 +56,14 @@ def api_context():
         target=matching_thread_wrapper, daemon=True
     )
     fresh_publisher_t = threading.Thread(
-        target=trade_publisher_thread, daemon=True
+        target=trade_publisher_thread_wrapper, daemon=True
     )
     fresh_position_t = threading.Thread(
         target=position_tracker_thread_wrapper, daemon=True
     )
-    fresh_websocket_t = threading.Thread(target=websocket_thread, daemon=True)
+    fresh_websocket_t = threading.Thread(
+        target=websocket_thread_wrapper, daemon=True
+    )
 
     # Temporarily replace the global thread references
     import intern_trading_game.api.main as main_module

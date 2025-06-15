@@ -22,11 +22,13 @@ from ...domain.exchange.validation.order_validator import (
     ConstraintType,
 )
 from ...domain.exchange.venue import ExchangeVenue
+from ...infrastructure.communication.threads import (
+    trade_publisher_thread,
+    websocket_thread,
+)
 from ...infrastructure.config.fee_config import (
     get_hardcoded_fee_schedules,
 )
-from ...infrastructure.threads.publisher import trade_publisher_thread
-from ...infrastructure.threads.websocket import websocket_thread
 from ...services.order_validation import OrderValidationService
 from .endpoints import create_endpoints
 

@@ -588,15 +588,25 @@ GET    /game/teams/{team_id}
 - Updated all endpoint paths to service-oriented structure
 - Updated REST API documentation with new paths and endpoints
 
-#### 5. Thread Ownership
+#### 5. Thread Ownership ✅ **COMPLETE**
 **Goal**: Assign threads to specific services
 
 **Tasks**:
 
-- [ ] Create PositionTrackerThread in positions domain
-- [ ] Move position update logic from PublisherThread
-- [ ] Create service-specific thread modules
-- [ ] Update thread initialization
+- [x] Create PositionTrackerThread in positions domain
+- [x] Move position update logic from PublisherThread
+- [x] Create service-specific thread modules
+- [x] Update thread initialization
+
+**Completed**:
+
+- Created `domain/exchange/threads.py` with Exchange Service threads (validator, matching)
+- Created `domain/positions/threads.py` with Position Service threads (position tracker)
+- Created `infrastructure/communication/threads.py` with cross-domain communication threads (trade publisher, websocket)
+- Updated all imports and test fixtures to use new thread locations
+- Removed old `infrastructure/threads/` directory entirely
+- Implemented wrapper pattern for dependency injection to avoid circular imports
+- Established proper service-oriented thread ownership where each service owns its threading concerns
 
 ### Medium-term Actions (Next Month)
 
