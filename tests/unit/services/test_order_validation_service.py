@@ -45,16 +45,19 @@ class TestOrderValidationService:
         return create_autospec(ExchangeVenue, instance=True)
 
     @pytest.fixture
-    def mock_get_positions(self):
-        """Create a mock position retrieval function."""
-        return Mock(return_value={"SPX-20240315-4500C": 25})
+    def mock_position_service(self):
+        """Create a mock position management service."""
+        mock_service = Mock()
+        # Mock get_positions to return some positions
+        mock_service.get_positions.return_value = {"SPX-20240315-4500C": 25}
+        return mock_service
 
     @pytest.fixture
     def service(
         self,
         mock_validator,
         mock_exchange,
-        mock_get_positions,
+        mock_position_service,
     ):
         """Create an OrderValidationService instance with mocks.
 
@@ -63,7 +66,7 @@ class TestOrderValidationService:
         return OrderValidationService(
             validator=mock_validator,
             exchange=mock_exchange,
-            get_positions_func=mock_get_positions,
+            position_service=mock_position_service,
         )
 
     @pytest.fixture
@@ -101,7 +104,7 @@ class TestOrderValidationService:
         sample_order,
         sample_team,
         mock_validator,
-        mock_get_positions,
+        mock_position_service,
     ):
         """Test successful order validation.
 
@@ -124,7 +127,7 @@ class TestOrderValidationService:
         assert result.error_message is None
 
         # Verify correct state retrieval
-        mock_get_positions.assert_called_once_with("TEAM001")
+        mock_position_service.get_positions.assert_called_once_with("TEAM001")
         # Order count now managed internally by service
 
         # Verify validator called with correct context
@@ -143,7 +146,7 @@ class TestOrderValidationService:
         sample_order,
         sample_team,
         mock_validator,
-        mock_get_positions,
+        mock_position_service,
     ):
         """Test order rejection due to position limit.
 
@@ -152,7 +155,9 @@ class TestOrderValidationService:
         Then - Validation fails with position limit error
         """
         # Given - Configure positions at limit
-        mock_get_positions.return_value = {"SPX-20240315-4500C": 45}
+        mock_position_service.get_positions.return_value = {
+            "SPX-20240315-4500C": 45
+        }
         mock_validator.validate_order.return_value = OrderResult(
             order_id=sample_order.order_id,
             status="rejected",
@@ -277,7 +282,7 @@ class TestOrderValidationService:
         Then - Correct state is passed to validator
         """
         # Given - Configure state
-        service._get_positions = Mock(return_value=positions)
+        service.position_service.get_positions = Mock(return_value=positions)
         # Mock order count retrieval
         service.get_order_count = Mock(return_value=order_count)
         mock_validator.validate_order.return_value = OrderResult(
@@ -313,7 +318,7 @@ class TestOrderValidationService:
             "SPX-20240315-4500P": -15,
             "SPY-20240315-450C": 30,
         }
-        service._get_positions = Mock(return_value=positions)
+        service.position_service.get_positions = Mock(return_value=positions)
         mock_validator.validate_order.return_value = OrderResult(
             order_id=sample_order.order_id,
             status="accepted",
@@ -334,14 +339,14 @@ class TestOrderValidationService:
         validator = Mock(spec=ConstraintBasedOrderValidator)
         exchange = Mock(spec=ExchangeVenue)
 
-        def get_pos(team_id):
-            return {}
+        position_service = Mock()
+        position_service.get_positions.return_value = {}
 
         # When - Create service (rate limiting handled internally)
         service = OrderValidationService(
             validator=validator,
             exchange=exchange,
-            get_positions_func=get_pos,
+            position_service=position_service,
         )
 
         # Then - Service is properly initialized
@@ -349,4 +354,4 @@ class TestOrderValidationService:
         assert service.exchange is exchange
         assert service.rate_limit_windows == {}
         assert service.orders_lock is not None
-        assert service._get_positions is get_pos
+        assert service.position_service is position_service

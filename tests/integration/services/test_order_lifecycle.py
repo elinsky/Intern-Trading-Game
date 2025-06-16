@@ -104,8 +104,9 @@ class TestOrderLifecycleIntegration:
         )
 
         # Set up existing position near limit
-        positions = service_context["positions"]
-        positions[team.team_id] = {"SPX_4500_CALL": 45}
+        service_context["position_service"].update_position(
+            team.team_id, "SPX_4500_CALL", 45
+        )
 
         # Create order that would exceed limit
         order = Order(
@@ -160,9 +161,8 @@ class TestOrderLifecycleIntegration:
         )
 
         # Initialize positions for both counterparties
-        positions = service_context["positions"]
-        positions[mm_buyer.team_id] = {}
-        positions["MM_SELLER"] = {}  # Initialize seller position
+        service_context["position_service"].initialize_team(mm_buyer.team_id)
+        service_context["position_service"].initialize_team("MM_SELLER")
 
         # Create order for testing
         buy_order = Order(
@@ -209,13 +209,19 @@ class TestOrderLifecycleIntegration:
         assert response.average_price == 128.50
 
         # Verify positions updated correctly for both counterparties
-        assert positions[mm_buyer.team_id]["SPX_4500_CALL"] == 5  # Buyer: +5
-        assert positions["MM_SELLER"]["SPX_4500_CALL"] == -5  # Seller: -5
+        buyer_positions = service_context["position_service"].get_positions(
+            mm_buyer.team_id
+        )
+        seller_positions = service_context["position_service"].get_positions(
+            "MM_SELLER"
+        )
+        assert buyer_positions["SPX_4500_CALL"] == 5  # Buyer: +5
+        assert seller_positions["SPX_4500_CALL"] == -5  # Seller: -5
 
         # Verify position conservation (no contracts created/destroyed)
         total_position = (
-            positions[mm_buyer.team_id]["SPX_4500_CALL"]
-            + positions["MM_SELLER"]["SPX_4500_CALL"]
+            buyer_positions["SPX_4500_CALL"]
+            + seller_positions["SPX_4500_CALL"]
         )
         assert total_position == 0
 

@@ -59,14 +59,17 @@ class TestRateConstraintWithRealService:
         return validator
 
     @pytest.fixture
-    def service(
-        self, validator_with_rate_limit, mock_exchange, mock_positions
-    ):
+    def service(self, validator_with_rate_limit, mock_exchange):
         """Create validation service with rate limiting."""
+        from intern_trading_game.domain.positions import (
+            PositionManagementService,
+        )
+
+        position_service = PositionManagementService()
         return OrderValidationService(
             validator=validator_with_rate_limit,
             exchange=mock_exchange,
-            get_positions_func=mock_positions,
+            position_service=position_service,
         )
 
     @pytest.fixture

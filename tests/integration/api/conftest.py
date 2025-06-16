@@ -10,9 +10,9 @@ from fastapi.testclient import TestClient
 from intern_trading_game.api.main import (
     app,
     exchange,
-    positions,
-    team_registry,
+    position_service,
 )
+from intern_trading_game.infrastructure.api.auth import team_registry
 
 
 @pytest.fixture
@@ -30,7 +30,7 @@ def api_context():
     exchange.order_books.clear()
     exchange.instruments.clear()
     exchange.all_order_ids.clear()
-    positions.clear()
+    position_service._positions.clear()
     # Rate limiting state now owned by OrderValidationService
     team_registry.teams.clear()
     team_registry.api_key_to_team.clear()
@@ -121,7 +121,7 @@ def api_context():
             yield {
                 "client": client,
                 "exchange": exchange,
-                "positions": positions,
+                "positions": position_service._positions,
                 "team_registry": team_registry,
                 "threads": threads,
             }

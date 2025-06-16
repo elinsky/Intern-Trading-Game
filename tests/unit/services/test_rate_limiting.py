@@ -36,12 +36,17 @@ class TestRateLimitingBehavior:
         return Mock(return_value={})
 
     @pytest.fixture
-    def service(self, mock_validator, mock_exchange, mock_positions):
+    def service(self, mock_validator, mock_exchange):
         """Create service for testing."""
+        from intern_trading_game.domain.positions import (
+            PositionManagementService,
+        )
+
+        position_service = PositionManagementService()
         return OrderValidationService(
             validator=mock_validator,
             exchange=mock_exchange,
-            get_positions_func=mock_positions,
+            position_service=position_service,
         )
 
     def test_fresh_team_starts_with_zero_count(self, service):
@@ -199,10 +204,15 @@ class TestRateLimitingEdgeCases:
     @pytest.fixture
     def service(self):
         """Create service for edge case testing."""
+        from intern_trading_game.domain.positions import (
+            PositionManagementService,
+        )
+
+        position_service = PositionManagementService()
         return OrderValidationService(
             validator=Mock(),
             exchange=Mock(),
-            get_positions_func=Mock(return_value={}),
+            position_service=position_service,
         )
 
     def test_exact_second_boundary(self, service):
@@ -300,10 +310,15 @@ class TestThreadSafety:
     @pytest.fixture
     def service(self):
         """Create service for thread safety testing."""
+        from intern_trading_game.domain.positions import (
+            PositionManagementService,
+        )
+
+        position_service = PositionManagementService()
         return OrderValidationService(
             validator=Mock(),
             exchange=Mock(),
-            get_positions_func=Mock(return_value={}),
+            position_service=position_service,
         )
 
     def test_concurrent_increments_same_team(self, service):

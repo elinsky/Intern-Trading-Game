@@ -424,7 +424,10 @@ class TestFeeCalculationIntegration:
         )
 
         # Verify first trade
-        assert positions[mm.team_id]["SPX_4500_CALL"] == -10  # Sold 10
+        mm_positions = service_context["position_service"].get_positions(
+            mm.team_id
+        )
+        assert mm_positions["SPX_4500_CALL"] == -10  # Sold 10
         assert response1.fees == 0.02 * 10  # Maker rebate
         assert response1.liquidity_type == "maker"
 
@@ -458,9 +461,10 @@ class TestFeeCalculationIntegration:
         )
 
         # Then - Verify final state
-        assert (
-            positions[mm.team_id]["SPX_4500_CALL"] == -5
-        )  # Net: -10 + 5 = -5
+        mm_positions_final = service_context["position_service"].get_positions(
+            mm.team_id
+        )
+        assert mm_positions_final["SPX_4500_CALL"] == -5  # Net: -10 + 5 = -5
         assert response2.fees == -0.05 * 5  # Taker fee
         assert response2.liquidity_type == "taker"
 

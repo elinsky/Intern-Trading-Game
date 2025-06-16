@@ -4,12 +4,11 @@ This module provides REST API endpoints for game operations including
 team registration and management.
 """
 
-import threading
 from datetime import datetime
-from typing import Dict
 
 from fastapi import APIRouter, Depends
 
+from ...domain.positions import PositionManagementService
 from ...infrastructure.api.auth import team_registry
 from ...infrastructure.api.models import (
     ApiError,
@@ -20,18 +19,11 @@ from ...infrastructure.api.models import (
 router = APIRouter(prefix="/game", tags=["game"])
 
 
-def get_positions():
-    """Get the positions dict dependency."""
-    from ..main import positions
+def get_position_service():
+    """Get the position service dependency."""
+    from ..main import position_service
 
-    return positions
-
-
-def get_positions_lock():
-    """Get the positions lock dependency."""
-    from ..main import positions_lock
-
-    return positions_lock
+    return position_service
 
 
 # Rate limiting dependencies removed - now handled by OrderValidationService
@@ -40,8 +32,9 @@ def get_positions_lock():
 @router.post("/teams/register", response_model=ApiResponse)
 async def register_team(
     registration: TeamRegistration,
-    positions: Dict = Depends(get_positions),
-    positions_lock: threading.RLock = Depends(get_positions_lock),
+    position_service: PositionManagementService = Depends(
+        get_position_service
+    ),
 ):
     """Register a new team for the trading game.
 
@@ -102,9 +95,8 @@ async def register_team(
         team_name=registration.team_name, role=registration.role
     )
 
-    # Initialize team positions with thread safety
-    with positions_lock:
-        positions[team_info.team_id] = {}
+    # Initialize team positions
+    position_service.initialize_team(team_info.team_id)
 
     # Rate limiting automatically handled by OrderValidationService
 

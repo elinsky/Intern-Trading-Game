@@ -124,27 +124,21 @@ def service_context(
     Provides initialized services without threads or queues.
     """
 
-    # Position getter functions
-    def get_positions(team_id: str) -> Dict[str, int]:
-        return test_positions.get(team_id, {}).copy()
+    # Initialize position service with internal state
+    position_service = PositionManagementService()
+
+    # Copy test positions into the service
+    for team_id, instruments in test_positions.items():
+        position_service._positions[team_id] = instruments.copy()
 
     # Initialize services (rate limiting now handled internally)
     validation_service = OrderValidationService(
         validator=validator,
         exchange=exchange,
-        get_positions_func=get_positions,
+        position_service=position_service,
     )
 
     fee_service = TradingFeeService(role_fees)
-
-    # For single-threaded tests, we can use a regular Lock or None
-    import threading
-
-    lock = threading.RLock()
-    position_service = PositionManagementService(
-        positions_dict=test_positions,
-        positions_lock=lock,
-    )
 
     matching_service = OrderMatchingService(exchange)
 
@@ -164,7 +158,7 @@ def service_context(
         "validator": validator,
         "positions": test_positions,
         "order_counts": test_order_counts,
-        "get_positions": get_positions,
+        # get_positions removed - handled internally by PositionManagementService
         # get_order_count removed - handled internally by OrderValidationService
     }
 

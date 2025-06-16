@@ -1,8 +1,6 @@
 """Position and open orders query endpoints."""
 
-import threading
 from datetime import datetime
-from typing import Dict
 
 from fastapi import APIRouter, Depends
 
@@ -12,25 +10,17 @@ from ...infrastructure.api.models import ApiResponse
 router = APIRouter(tags=["positions"])
 
 
-def get_positions_dict():
-    """Get the positions dict dependency."""
-    from ..main import positions
+def get_position_service():
+    """Get the position service dependency."""
+    from ..main import position_service
 
-    return positions
-
-
-def get_positions_lock():
-    """Get the positions lock dependency."""
-    from ..main import positions_lock
-
-    return positions_lock
+    return position_service
 
 
 @router.get("/positions", response_model=ApiResponse)
 async def get_positions(
     team: TeamInfo = Depends(get_current_team),
-    positions: Dict = Depends(get_positions_dict),
-    positions_lock: threading.RLock = Depends(get_positions_lock),
+    position_service=Depends(get_position_service),
 ):
     """Get current positions for the authenticated team.
 
@@ -47,8 +37,8 @@ async def get_positions(
     # Generate request ID
     request_id = f"req_{datetime.now().timestamp()}"
 
-    with positions_lock:
-        team_positions = positions.get(team.team_id, {}).copy()
+    # Get positions from service
+    team_positions = position_service.get_positions(team.team_id)
 
     return ApiResponse(
         success=True,

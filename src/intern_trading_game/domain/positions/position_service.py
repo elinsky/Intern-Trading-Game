@@ -13,31 +13,25 @@ class PositionManagementService:
 
     This service provides thread-safe position tracking and updates,
     ensuring data consistency across multiple threads in the trading
-    system. It encapsulates all position-related operations with
-    proper locking mechanisms.
+    system. It owns and encapsulates all position state internally
+    with proper locking mechanisms.
 
     The service maintains positions as a nested dictionary structure
     where positions[team_id][instrument_id] = position_quantity.
 
-    Parameters
-    ----------
-    positions_dict : Dict[str, Dict[str, int]]
-        Shared positions dictionary (team_id -> instrument -> quantity)
-    positions_lock : threading.RLock
-        Reentrant lock for thread-safe access
-
     Attributes
     ----------
-    positions : Dict[str, Dict[str, int]]
-        Reference to the shared positions dictionary
-    lock : threading.RLock
-        Lock for synchronizing access
+    _positions : Dict[str, Dict[str, int]]
+        Internal positions dictionary (team_id -> instrument -> quantity)
+    _lock : threading.RLock
+        Internal lock for thread-safe access
 
     Notes
     -----
-    This service provides a thread-safe abstraction over the global
-    positions dictionary. All operations acquire the lock to ensure
-    consistency when multiple threads read or update positions.
+    This service owns position state internally, following the same
+    pattern as OrderValidationService with rate limiting. All operations
+    acquire the lock to ensure consistency when multiple threads read
+    or update positions.
 
     The service uses an RLock (reentrant lock) which allows the same
     thread to acquire the lock multiple times, preventing deadlocks
@@ -56,10 +50,8 @@ class PositionManagementService:
 
     Examples
     --------
-    >>> # Initialize service with shared state
-    >>> positions = {}
-    >>> lock = threading.RLock()
-    >>> position_service = PositionManagementService(positions, lock)
+    >>> # Initialize service (state managed internally)
+    >>> position_service = PositionManagementService()
     >>>
     >>> # Update position after a trade
     >>> position_service.update_position("TEAM001", "SPX-CALL-4500", 10)
@@ -69,22 +61,14 @@ class PositionManagementService:
     >>> print(team_positions)  # {"SPX-CALL-4500": 10}
     """
 
-    def __init__(
-        self,
-        positions_dict: Dict[str, Dict[str, int]],
-        positions_lock: threading.RLock,
-    ):
+    def __init__(self):
         """Initialize the position management service.
 
-        Parameters
-        ----------
-        positions_dict : Dict[str, Dict[str, int]]
-            Shared positions dictionary to manage
-        positions_lock : threading.RLock
-            Lock for thread-safe operations
+        Creates internal state for position tracking with thread-safe
+        access. No external dependencies required.
         """
-        self.positions = positions_dict
-        self.lock = positions_lock
+        self._positions: Dict[str, Dict[str, int]] = {}
+        self._lock = threading.RLock()
 
     def update_position(
         self, team_id: str, instrument_id: str, delta: int
@@ -130,17 +114,17 @@ class PositionManagementService:
         >>>
         >>> # Net position is now 5
         """
-        with self.lock:
+        with self._lock:
             # Initialize team positions if needed
-            if team_id not in self.positions:
-                self.positions[team_id] = {}
+            if team_id not in self._positions:
+                self._positions[team_id] = {}
 
             # Initialize instrument position if needed
-            if instrument_id not in self.positions[team_id]:
-                self.positions[team_id][instrument_id] = 0
+            if instrument_id not in self._positions[team_id]:
+                self._positions[team_id][instrument_id] = 0
 
             # Update position
-            self.positions[team_id][instrument_id] += delta
+            self._positions[team_id][instrument_id] += delta
 
     def get_positions(self, team_id: str) -> Dict[str, int]:
         """Get all positions for a team.
@@ -176,8 +160,8 @@ class PositionManagementService:
         >>> positions = position_service.get_positions("TEAM001")
         >>> total_risk = sum(abs(pos) for pos in positions.values())
         """
-        with self.lock:
-            return self.positions.get(team_id, {}).copy()
+        with self._lock:
+            return self._positions.get(team_id, {}).copy()
 
     def get_position_for_instrument(
         self, team_id: str, instrument_id: str
@@ -220,9 +204,9 @@ class PositionManagementService:
         ... )
         >>> remaining_capacity = position_limit - abs(pos)
         """
-        with self.lock:
-            if team_id in self.positions:
-                return self.positions[team_id].get(instrument_id, 0)
+        with self._lock:
+            if team_id in self._positions:
+                return self._positions[team_id].get(instrument_id, 0)
             return 0
 
     def initialize_team(self, team_id: str) -> None:
@@ -251,9 +235,9 @@ class PositionManagementService:
         >>> # During team registration
         >>> position_service.initialize_team("TEAM001")
         """
-        with self.lock:
-            if team_id not in self.positions:
-                self.positions[team_id] = {}
+        with self._lock:
+            if team_id not in self._positions:
+                self._positions[team_id] = {}
 
     def get_total_absolute_position(self, team_id: str) -> int:
         """Calculate total absolute position across all instruments.
@@ -293,6 +277,6 @@ class PositionManagementService:
         >>> total = position_service.get_total_absolute_position("TEAM001")
         >>> assert total == 60  # |30| + |-20| + |10|
         """
-        with self.lock:
-            team_positions = self.positions.get(team_id, {})
+        with self._lock:
+            team_positions = self._positions.get(team_id, {})
             return sum(abs(pos) for pos in team_positions.values())

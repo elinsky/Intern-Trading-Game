@@ -150,23 +150,23 @@ class TestGameEndpoints:
 
         Given - New team registration
         When - Team is created
-        Then - Positions are properly initialized
+        Then - Positions are properly initialized through PositionManagementService
 
-        Note: Rate limiting is now handled internally by OrderValidationService
+        Note: Both positions and rate limiting are now handled internally by services
         """
-        # Mock the dependencies
-        from intern_trading_game.api.endpoints.game import (
-            get_positions,
-            get_positions_lock,
-        )
+        # Mock the position service
+        from intern_trading_game.api.endpoints.game import get_position_service
         from intern_trading_game.api.main import app
+        from intern_trading_game.domain.positions import (
+            PositionManagementService,
+        )
 
-        positions_dict = {}
-        mock_lock = MagicMock()
+        mock_position_service = MagicMock(spec=PositionManagementService)
 
-        # Override dependencies
-        app.dependency_overrides[get_positions] = lambda: positions_dict
-        app.dependency_overrides[get_positions_lock] = lambda: mock_lock
+        # Override dependency
+        app.dependency_overrides[get_position_service] = (
+            lambda: mock_position_service
+        )
 
         try:
             # Register team
@@ -177,15 +177,16 @@ class TestGameEndpoints:
             response = client.post(
                 "/game/teams/register", json=registration_data
             )
+            assert response.status_code == 200
             data = response.json()
+            assert data["success"] is True
             team_id = data["data"]["team_id"]
 
-            # Verify initialization
-            assert team_id in positions_dict
-            assert positions_dict[team_id] == {}
-            # Rate limiting now handled internally by OrderValidationService
+            # Verify position service was called to initialize team
+            mock_position_service.initialize_team.assert_called_once_with(
+                team_id
+            )
 
         finally:
             # Clean up
-            del app.dependency_overrides[get_positions]
-            del app.dependency_overrides[get_positions_lock]
+            del app.dependency_overrides[get_position_service]

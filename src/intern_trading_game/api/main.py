@@ -48,29 +48,16 @@ validator = ConstraintBasedOrderValidator()
 
 # Service instances
 validation_service: Optional[OrderValidationService] = None
-
-
-# Position tracking (thread-safe)
-positions: Dict[str, Dict[str, int]] = {}
-positions_lock = threading.RLock()
+position_service = PositionManagementService()
 
 # Global order tracking removed - now owned by OrderValidationService
+# Global position tracking removed - now owned by PositionManagementService
 
 # Pending orders waiting for response
 pending_orders: Dict[str, threading.Event] = {}
 order_responses: Dict[
     str, Dict
 ] = {}  # Now stores ApiResponse objects with order_id:request_id keys
-
-
-# Helper functions for service dependency injection
-def get_team_positions(team_id: str) -> Dict[str, int]:
-    """Thread-safe retrieval of team positions."""
-    with positions_lock:
-        return positions.get(team_id, {}).copy()
-
-
-# get_team_order_count() function removed - now handled by OrderValidationService
 
 
 def validator_thread_wrapper():
@@ -121,10 +108,7 @@ def position_tracker_thread_wrapper():
     tracking logic. It consumes trades from the position queue and updates
     the position state accordingly.
     """
-    # Initialize position service
-    position_service = PositionManagementService(positions, positions_lock)
-
-    # Run the position tracker thread
+    # Run the position tracker thread with the global service instance
     position_tracker_thread(position_queue, position_service)
 
 
@@ -167,7 +151,7 @@ async def startup():
     validation_service = OrderValidationService(
         validator=validator,
         exchange=exchange,
-        get_positions_func=get_team_positions,
+        position_service=position_service,
     )
 
     # Start processing threads
@@ -359,8 +343,7 @@ async def websocket_endpoint(websocket: WebSocket, api_key: str):
     await ws_manager.connect(websocket, team)
 
     # Send position snapshot via queue
-    with positions_lock:
-        team_positions = positions.get(team.team_id, {}).copy()
+    team_positions = position_service.get_positions(team.team_id)
 
     websocket_queue.put(
         ("position_snapshot", team.team_id, {"positions": team_positions})

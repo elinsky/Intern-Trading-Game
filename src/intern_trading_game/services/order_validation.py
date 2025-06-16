@@ -169,7 +169,7 @@ class OrderValidationService(OrderValidationServiceInterface):
         self,
         validator: ConstraintBasedOrderValidator,
         exchange: ExchangeVenue,
-        get_positions_func,
+        position_service,
     ):
         """Initialize the order validation service.
 
@@ -179,12 +179,12 @@ class OrderValidationService(OrderValidationServiceInterface):
             Configured validator with role-specific constraints
         exchange : ExchangeVenue
             Exchange venue for cancellation operations
-        get_positions_func : callable
-            Thread-safe function to get team positions
+        position_service : PositionManagementService
+            Service for managing position state
         """
         self.validator = validator
         self.exchange = exchange
-        self._get_positions = get_positions_func
+        self.position_service = position_service
 
         # Initialize internal rate limiting state
         self.rate_limit_windows: Dict[str, RateLimitWindow] = {}
@@ -324,8 +324,8 @@ class OrderValidationService(OrderValidationServiceInterface):
         The validation result includes detailed error messages to
         help trading algorithms adjust their behavior appropriately.
         """
-        # Get current state using injected functions and internal state
-        team_positions = self._get_positions(team.team_id)
+        # Get current state using services
+        team_positions = self.position_service.get_positions(team.team_id)
         team_orders = self.get_order_count(team.team_id)
 
         # Build validation context with complete state
