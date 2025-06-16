@@ -1,0 +1,30 @@
+# Test configuration with different constraints
+exchange:
+  matching_mode: continuous
+
+roles:
+  market_maker:
+    constraints:
+      - type: position_limit
+        parameters:
+          max_position: 25  # Lower limit for testing
+          symmetric: true
+        error_code: MM_POS_LIMIT
+        error_message: "Test position limit ±25"
+      - type: instrument_allowed
+        parameters:
+          allowed_instruments:
+            - TEST_100_CALL
+            - TEST_100_PUT
+        error_code: INVALID_INSTRUMENT
+        error_message: "Test instrument not allowed"
+
+instruments:
+  - symbol: TEST_100_CALL
+    strike: 100.0
+    option_type: call
+    underlying: TEST
+  - symbol: TEST_100_PUT
+    strike: 100.0
+    option_type: put
+    underlying: TEST

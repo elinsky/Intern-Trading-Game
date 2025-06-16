@@ -3,3 +3,30 @@
 
 exchange:
   matching_mode: continuous  # Options: continuous, batch
+
+roles:
+  market_maker:
+    constraints:
+      - type: position_limit
+        parameters:
+          max_position: 50
+          symmetric: true
+        error_code: MM_POS_LIMIT
+        error_message: "Position exceeds ±50"
+      - type: instrument_allowed
+        parameters:
+          allowed_instruments:
+            - SPX_4500_CALL
+            - SPX_4500_PUT
+        error_code: INVALID_INSTRUMENT
+        error_message: "Instrument not found"
+
+instruments:
+  - symbol: SPX_4500_CALL
+    strike: 4500.0
+    option_type: call
+    underlying: SPX
+  - symbol: SPX_4500_PUT
+    strike: 4500.0
+    option_type: put
+    underlying: SPX

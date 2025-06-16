@@ -9,12 +9,9 @@ import uvicorn
 from fastapi import FastAPI, WebSocket, WebSocketDisconnect
 from fastapi.middleware.cors import CORSMiddleware
 
-from ..domain.exchange.models.instrument import Instrument
 from ..domain.exchange.threads import matching_thread, validator_thread
 from ..domain.exchange.validation.order_validator import (
     ConstraintBasedOrderValidator,
-    ConstraintConfig,
-    ConstraintType,
 )
 from ..domain.exchange.venue import ExchangeVenue
 from ..domain.positions import (
@@ -41,12 +38,11 @@ response_queue: Queue = Queue()  # For order responses back to API
 websocket_queue: Queue = Queue()  # Threads -> WebSocket
 position_queue: Queue = Queue()  # Publisher -> Position Tracker
 
-# Game components
-# exchange removed - now created in startup() from config
-validator = ConstraintBasedOrderValidator()
-
 # Exchange instance - set during startup from config
 _exchange: Optional[ExchangeVenue] = None
+
+# Validator instance - set during startup from config
+_validator: Optional[ConstraintBasedOrderValidator] = None
 
 # Service instances
 validation_service: Optional[OrderValidationService] = None
@@ -142,26 +138,33 @@ async def startup():
     This function handles all startup logic including:
     - Loading configuration
     - Creating exchange from config
+    - Creating validator from config
     - Initializing services
     - Starting processing threads
-    - Configuring market maker constraints
-    - Listing trading instruments
+    - Loading instruments from config
 
     Follows Single Responsibility Principle by focusing only on startup tasks.
     """
-    global validation_service, _exchange
+    global validation_service, _exchange, _validator
 
-    # Load configuration and create exchange
+    # Load configuration
     from ..infrastructure.config import ConfigLoader
     from ..infrastructure.factories.exchange_factory import ExchangeFactory
+    from ..infrastructure.factories.validator_factory import ValidatorFactory
 
     config_loader = ConfigLoader()
+
+    # Create exchange from config
     exchange_config = config_loader.get_exchange_config()
     exchange = ExchangeFactory.create_from_config(exchange_config)
 
     # Store exchange for thread access and dependency injection
     _exchange = exchange
     app.state.exchange = exchange
+
+    # Create validator from config
+    validator = ValidatorFactory.create_from_config(config_loader)
+    _validator = validator
 
     # Initialize services
     validation_service = OrderValidationService(
@@ -177,41 +180,8 @@ async def startup():
     position_t.start()
     websocket_t.start()
 
-    # Setup market maker constraints
-    mm_position_constraint = ConstraintConfig(
-        constraint_type=ConstraintType.POSITION_LIMIT,
-        parameters={"max_position": 50, "symmetric": True},
-        error_code="MM_POS_LIMIT",
-        error_message="Position exceeds ±50",
-    )
-
-    mm_instrument_constraint = ConstraintConfig(
-        constraint_type=ConstraintType.INSTRUMENT_ALLOWED,
-        parameters={"allowed_instruments": ["SPX_4500_CALL", "SPX_4500_PUT"]},
-        error_code="INVALID_INSTRUMENT",
-        error_message="Instrument not found",
-    )
-
-    validator.load_constraints(
-        "market_maker", [mm_position_constraint, mm_instrument_constraint]
-    )
-
-    # List instruments
-    instruments = [
-        Instrument(
-            symbol="SPX_4500_CALL",
-            strike=4500.0,
-            option_type="call",
-            underlying="SPX",
-        ),
-        Instrument(
-            symbol="SPX_4500_PUT",
-            strike=4500.0,
-            option_type="put",
-            underlying="SPX",
-        ),
-    ]
-
+    # Load instruments from config
+    instruments = config_loader.get_instruments()
     for instrument in instruments:
         exchange.list_instrument(instrument)
 

@@ -79,30 +79,7 @@ def api_context():
     main_module.position_t = fresh_position_t
     main_module.websocket_t = fresh_websocket_t
 
-    # Test instruments will be added by the app startup
-
-    # Load constraints for validator
-    from intern_trading_game.api.main import validator
-    from intern_trading_game.domain.exchange.validation.order_validator import (
-        ConstraintConfig,
-        ConstraintType,
-    )
-
-    mm_position_constraint = ConstraintConfig(
-        constraint_type=ConstraintType.POSITION_LIMIT,
-        parameters={"max_position": 50, "symmetric": True},
-        error_code="MM_POS_LIMIT",
-        error_message="Market maker position limit",
-    )
-    mm_instrument_constraint = ConstraintConfig(
-        constraint_type=ConstraintType.INSTRUMENT_ALLOWED,
-        parameters={"allowed_instruments": ["SPX_4500_CALL", "SPX_4500_PUT"]},
-        error_code="INVALID_INSTRUMENT",
-        error_message="Instrument not found",
-    )
-    validator.load_constraints(
-        "market_maker", [mm_position_constraint, mm_instrument_constraint]
-    )
+    # Test instruments and constraints will be loaded from config by app startup
 
     try:
         # TestClient will handle startup/shutdown events with fresh threads
