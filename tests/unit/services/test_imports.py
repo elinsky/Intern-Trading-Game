@@ -155,7 +155,7 @@ class TestPackageImports:
 
         if TYPE_CHECKING:
             # This tests that the imports work for type checking
-            from intern_trading_game.domain.exchange.core.order import Order
+            from intern_trading_game.domain.exchange.models.order import Order
             from intern_trading_game.infrastructure.api.models import TeamInfo
             from intern_trading_game.services import (
                 OrderResult,

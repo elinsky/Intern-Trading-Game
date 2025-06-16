@@ -11,8 +11,8 @@ import pytest
 from intern_trading_game.domain.exchange.book.matching_engine import (
     BatchMatchingEngine,
 )
-from intern_trading_game.domain.exchange.core.instrument import Instrument
-from intern_trading_game.domain.exchange.core.order import Order
+from intern_trading_game.domain.exchange.models.instrument import Instrument
+from intern_trading_game.domain.exchange.models.order import Order
 from intern_trading_game.domain.exchange.venue import ExchangeVenue
 from tests.fixtures import (
     create_matched_orders,

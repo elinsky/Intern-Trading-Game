@@ -6,7 +6,7 @@ enforces trading rules without any hardcoded role-specific logic.
 
 import pytest
 
-from intern_trading_game.domain.exchange.core.order import Order, OrderSide
+from intern_trading_game.domain.exchange.models.order import Order, OrderSide
 from intern_trading_game.domain.exchange.validation.interfaces import (
     ValidationContext,
 )

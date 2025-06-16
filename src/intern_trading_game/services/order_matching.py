@@ -7,7 +7,7 @@ and error processing.
 
 import logging
 
-from ..domain.exchange.core.order import Order
+from ..domain.exchange.models.order import Order
 from ..domain.exchange.order_result import OrderResult
 from ..domain.exchange.venue import ExchangeVenue
 from .interfaces import OrderMatchingServiceInterface

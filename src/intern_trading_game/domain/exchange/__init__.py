@@ -11,8 +11,8 @@ from .book.matching_engine import (
     MatchingEngine,
 )
 from .book.order_book import OrderBook
-from .core.order import Order
-from .core.trade import Trade
+from .models.order import Order
+from .models.trade import Trade
 from .order_result import OrderResult
 from .venue import ExchangeVenue
 

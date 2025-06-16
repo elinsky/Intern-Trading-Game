@@ -21,7 +21,7 @@ will satisfy the protocol without explicit inheritance.
 from typing import Dict, Optional, Protocol
 
 from .book.order_book import OrderBook
-from .core.order import Order
+from .models.order import Order
 from .order_result import OrderResult
 
 

@@ -10,7 +10,7 @@ from fastapi import FastAPI, WebSocket, WebSocketDisconnect
 from fastapi.middleware.cors import CORSMiddleware
 
 from ..domain.exchange.book.matching_engine import ContinuousMatchingEngine
-from ..domain.exchange.core.instrument import Instrument
+from ..domain.exchange.models.instrument import Instrument
 from ..domain.exchange.threads import matching_thread, validator_thread
 from ..domain.exchange.validation.order_validator import (
     ConstraintBasedOrderValidator,

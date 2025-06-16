@@ -29,8 +29,8 @@ from collections import defaultdict
 from dataclasses import dataclass, field
 from typing import Dict, List
 
-from ..core.order import Order
-from ..core.trade import Trade
+from ..models.order import Order
+from ..models.trade import Trade
 from ..order_result import OrderResult
 from .order_book import OrderBook
 

@@ -18,7 +18,7 @@ from unittest.mock import MagicMock
 
 import pytest
 
-from intern_trading_game.domain.exchange.core.order import Order
+from intern_trading_game.domain.exchange.models.order import Order
 from intern_trading_game.domain.exchange.order_result import OrderResult
 from intern_trading_game.domain.exchange.threads import (
     validator_thread,

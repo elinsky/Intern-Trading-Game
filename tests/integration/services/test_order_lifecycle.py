@@ -6,7 +6,7 @@ Focuses on the core business flow: validation -> matching -> position updates.
 
 from datetime import datetime
 
-from intern_trading_game.domain.exchange.core.order import (
+from intern_trading_game.domain.exchange.models.order import (
     Order,
     OrderSide,
     OrderType,
@@ -175,7 +175,7 @@ class TestOrderLifecycleIntegration:
 
         # When - Simulate a filled order result (would come from exchange)
         # Create a Trade object to simulate a fill
-        from intern_trading_game.domain.exchange.core.trade import Trade
+        from intern_trading_game.domain.exchange.models.trade import Trade
         from intern_trading_game.domain.exchange.order_result import (
             OrderResult,
         )
@@ -270,7 +270,7 @@ class TestOrderLifecycleIntegration:
         )
 
         # Create a filled result with trade
-        from intern_trading_game.domain.exchange.core.trade import Trade
+        from intern_trading_game.domain.exchange.models.trade import Trade
         from intern_trading_game.domain.exchange.order_result import (
             OrderResult,
         )

@@ -11,8 +11,8 @@ from typing import Dict, List, Optional, Tuple
 
 from ...infrastructure.api.models import OrderResponse, TeamInfo
 from ...services.interfaces import TradeProcessingServiceInterface
-from ..exchange.core.order import Order
-from ..exchange.core.trade import Trade
+from ..exchange.models.order import Order
+from ..exchange.models.trade import Trade
 from ..exchange.order_result import OrderResult
 from .fee_service import TradingFeeService
 from .position_service import PositionManagementService

@@ -9,7 +9,7 @@ from unittest.mock import Mock, create_autospec
 
 import pytest
 
-from intern_trading_game.domain.exchange.core.order import (
+from intern_trading_game.domain.exchange.models.order import (
     Order,
     OrderSide,
     OrderType,

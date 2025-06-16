@@ -610,16 +610,27 @@ GET    /game/teams/{team_id}
 
 ### Medium-term Actions (Next Month)
 
-#### 6. State Isolation
+#### ✅ 6. State Isolation (Partially Complete)
 **Goal**: Move shared state into services
 
 **Tasks**:
 
-- [ ] Move positions dict into PositionService
-- [ ] Move team_registry into GameService
-- [ ] Create service-level state management
-- [ ] Add service query methods
-- [ ] Remove direct state access
+- [x] 6.1 Move rate limiting state into OrderValidationService (Completed)
+- [x] 6.2 Move game state into GameService (Completed by user)
+- [x] 6.3 Move positions dict into PositionService (Completed)
+- [ ] 6.4 Move team_registry into GameService (TODO)
+- [ ] 6.5 Remove remaining direct state access
+
+**Completed**:
+
+- Phase 6.1: Implemented proper per-second rate limiting with window-based approach
+  - Added RateLimitWindow dataclass for tracking orders per second
+  - Fixed broken rate limiter that never reset counts
+  - Used TDD approach with comprehensive functional tests
+- Phase 6.3: Refactored PositionManagementService to own state internally
+  - Moved from external state parameters to internal _positions dict and _lock
+  - Updated OrderValidationService to use position_service instead of callback
+  - Fixed all tests to use service methods instead of direct dict access
 
 #### 7. Event Bus Implementation
 **Goal**: Replace direct queue usage with event bus

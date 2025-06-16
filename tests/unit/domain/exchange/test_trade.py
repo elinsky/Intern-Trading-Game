@@ -7,7 +7,7 @@ from datetime import datetime
 
 import pytest
 
-from intern_trading_game.domain.exchange.core.trade import Trade
+from intern_trading_game.domain.exchange.models.trade import Trade
 from tests.fixtures import TEST_PRICES, create_test_trade
 
 

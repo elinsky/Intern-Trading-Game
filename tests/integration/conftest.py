@@ -16,7 +16,7 @@ import pytest
 from intern_trading_game.domain.exchange.book.matching_engine import (
     ContinuousMatchingEngine,
 )
-from intern_trading_game.domain.exchange.core.instrument import Instrument
+from intern_trading_game.domain.exchange.models.instrument import Instrument
 from intern_trading_game.domain.exchange.validation.order_validator import (
     ConstraintBasedOrderValidator,
     ConstraintConfig,
