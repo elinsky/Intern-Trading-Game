@@ -34,8 +34,8 @@ jobs:
       run: |
         # Run tests with coverage using the same pytest settings from pre-commit
         coverage run -m pytest --exitfirst --maxfail=1
-        # Generate coverage report and fail if below 83%
-        coverage report --fail-under=83
+        # Generate coverage report and fail if below 88%
+        coverage report --fail-under=88
 
     - name: Check for dead code
       run: |
