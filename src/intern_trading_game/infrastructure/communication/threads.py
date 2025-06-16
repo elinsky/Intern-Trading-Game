@@ -7,7 +7,7 @@ and technical infrastructure concerns like message routing and protocol bridging
 import asyncio
 
 from ...domain.positions import TradingFeeService
-from ...infrastructure.config.fee_config import get_hardcoded_fee_schedules
+from ...domain.positions.fee_config import get_hardcoded_fee_schedules
 from ..messaging.websocket_manager import ws_manager
 
 

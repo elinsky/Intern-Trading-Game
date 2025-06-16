@@ -3,7 +3,7 @@
 import pytest
 
 from intern_trading_game.domain.positions import FeeSchedule
-from intern_trading_game.infrastructure.config.fee_config import (
+from intern_trading_game.domain.positions.fee_config import (
     load_fee_schedules_from_config,
 )
 
