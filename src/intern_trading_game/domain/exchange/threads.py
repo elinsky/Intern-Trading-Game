@@ -12,7 +12,7 @@ from typing import Dict
 
 from ...constants.errors import ErrorCodes, ErrorMessages
 from ...infrastructure.api.models import ApiError, ApiResponse, OrderResponse
-from ...infrastructure.api.websocket_messages import MessageType
+from ...infrastructure.messaging.websocket_messages import MessageType
 from ...services.order_matching import OrderMatchingService
 from ...services.order_validation import OrderValidationService
 

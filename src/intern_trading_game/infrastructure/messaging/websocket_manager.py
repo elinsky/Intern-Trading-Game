@@ -56,7 +56,7 @@ from typing import Dict, Optional, Set
 from fastapi import WebSocket
 
 from ...domain.exchange.types import LiquidityType
-from .models import TeamInfo
+from ..api.models import TeamInfo
 from .websocket_messages import (
     MessageType,
     build_cancel_ack,

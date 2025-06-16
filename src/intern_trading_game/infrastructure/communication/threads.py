@@ -8,7 +8,7 @@ import asyncio
 
 from ...domain.positions import TradingFeeService
 from ...infrastructure.config.fee_config import get_hardcoded_fee_schedules
-from ..api.websocket import ws_manager
+from ..messaging.websocket_manager import ws_manager
 
 
 def trade_publisher_thread():

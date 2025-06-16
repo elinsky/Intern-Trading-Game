@@ -14,8 +14,10 @@ from intern_trading_game.domain.exchange.types import (
     LiquidityType as CoreLiquidityType,
 )
 from intern_trading_game.infrastructure.api.models import TeamInfo
-from intern_trading_game.infrastructure.api.websocket import ws_manager
-from intern_trading_game.infrastructure.api.websocket_messages import (
+from intern_trading_game.infrastructure.messaging.websocket_manager import (
+    ws_manager,
+)
+from intern_trading_game.infrastructure.messaging.websocket_messages import (
     build_cancel_ack,
     build_cancel_reject,
     build_execution_report,

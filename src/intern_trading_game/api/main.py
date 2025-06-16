@@ -23,11 +23,11 @@ from ..domain.positions import (
 )
 from ..domain.positions.threads import position_tracker_thread
 from ..infrastructure.api.auth import team_registry
-from ..infrastructure.api.websocket import ws_manager
 from ..infrastructure.communication.threads import (
     trade_publisher_thread,
     websocket_thread,
 )
+from ..infrastructure.messaging.websocket_manager import ws_manager
 from ..services import OrderValidationService
 from .endpoints import exchange as exchange_endpoints
 from .endpoints import game as game_endpoints
