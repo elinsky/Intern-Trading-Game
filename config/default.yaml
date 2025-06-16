@@ -1,0 +1,5 @@
+# Default configuration for Intern Trading Game
+# This file contains the baseline configuration that can be overridden
+
+exchange:
+  matching_mode: continuous  # Options: continuous, batch

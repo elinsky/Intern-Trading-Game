@@ -16,7 +16,6 @@ from datetime import datetime
 
 import pytest
 
-from intern_trading_game.api.main import exchange
 from intern_trading_game.domain.exchange.models.instrument import Instrument
 from intern_trading_game.domain.exchange.models.order import (
     Order,
@@ -226,7 +225,7 @@ def test_cancel_order_fifo_processing(
 
 
 def test_cannot_cancel_others_orders(
-    client, test_instrument, market_maker_team, second_team
+    api_context, test_instrument, market_maker_team, second_team
 ):
     """Test that traders cannot cancel orders they don't own.
 
@@ -244,6 +243,9 @@ def test_cannot_cancel_others_orders(
     Exchange maintains market integrity and fair play.
     The error clearly indicates unauthorized access.
     """
+    client = api_context["client"]
+    exchange = api_context["exchange"]
+
     # MM1 places an order
     order = Order(
         trader_id=market_maker_team.team_id,
@@ -276,7 +278,7 @@ def test_cannot_cancel_others_orders(
 
 
 def test_cancel_already_filled_order(
-    client, test_instrument, market_maker_team, second_team
+    api_context, test_instrument, market_maker_team, second_team
 ):
     """Test cancel attempt on fully filled order.
 
@@ -295,6 +297,9 @@ def test_cancel_already_filled_order(
     No confusion about whether cancel succeeded.
     Filled trades cannot be reversed via cancel.
     """
+    client = api_context["client"]
+    exchange = api_context["exchange"]
+
     # MM1 places sell order
     sell_order = Order(
         trader_id=market_maker_team.team_id,
@@ -332,7 +337,7 @@ def test_cancel_already_filled_order(
 
 
 def test_cancel_partially_filled_order(
-    client, test_instrument, market_maker_team, second_team
+    api_context, test_instrument, market_maker_team, second_team
 ):
     """Test cancellation of order with partial fills.
 
@@ -350,6 +355,9 @@ def test_cancel_partially_filled_order(
     The 5 unfilled contracts are removed from book.
     Position shows -5 (the filled amount only).
     """
+    client = api_context["client"]
+    exchange = api_context["exchange"]
+
     # MM1 places large sell order
     sell_order = Order(
         trader_id=market_maker_team.team_id,
@@ -427,7 +435,9 @@ def test_cancel_non_existent_order(client, market_maker_team):
     assert "order not found" in data["error"]["message"].lower()
 
 
-def test_double_cancel_same_order(client, test_instrument, market_maker_team):
+def test_double_cancel_same_order(
+    api_context, test_instrument, market_maker_team
+):
     """Test multiple cancel attempts on same order.
 
     Given - Order already cancelled
@@ -442,6 +452,9 @@ def test_double_cancel_same_order(client, test_instrument, market_maker_team):
     Should either succeed (idempotent) or clear error.
     No system errors or undefined behavior.
     """
+    client = api_context["client"]
+    exchange = api_context["exchange"]
+
     # Place and cancel an order
     order = Order(
         trader_id=market_maker_team.team_id,
@@ -477,7 +490,7 @@ def test_double_cancel_same_order(client, test_instrument, market_maker_team):
 
 
 def test_race_condition_fill_vs_cancel(
-    client, test_instrument, market_maker_team, second_team
+    api_context, test_instrument, market_maker_team, second_team
 ):
     """Test simultaneous fill and cancel.
 
@@ -494,6 +507,9 @@ def test_race_condition_fill_vs_cancel(
     System maintains consistency and FIFO ordering.
     No partial states or undefined behavior.
     """
+    client = api_context["client"]
+    exchange = api_context["exchange"]
+
     # This test verifies queue ordering under concurrent load
     # Place MM1's order
     sell_order = Order(
@@ -560,7 +576,7 @@ def test_race_condition_fill_vs_cancel(
 
 
 def test_cancel_preserves_fifo_fairness(
-    client, test_instrument, market_maker_team, second_team
+    api_context, test_instrument, market_maker_team, second_team
 ):
     """Test that cancels don't jump ahead of orders.
 
@@ -576,6 +592,8 @@ def test_cancel_preserves_fifo_fairness(
     No priority given to cancels over new orders.
     Fair market access for all participants.
     """
+    exchange = api_context["exchange"]
+
     # Place initial order to cancel
     cancel_target = Order(
         trader_id=market_maker_team.team_id,
@@ -618,7 +636,7 @@ def test_api_timeout_handling(client, test_instrument, market_maker_team):
 
 
 def test_position_update_after_partial_cancel(
-    client, test_instrument, market_maker_team, second_team
+    api_context, test_instrument, market_maker_team, second_team
 ):
     """Test position tracking with partial fills.
 
@@ -633,6 +651,9 @@ def test_position_update_after_partial_cancel(
     Cancelled quantity doesn't affect position.
     Only executed trades update positions.
     """
+    client = api_context["client"]
+    exchange = api_context["exchange"]
+
     # Place buy order
     buy_order = Order(
         trader_id=market_maker_team.team_id,

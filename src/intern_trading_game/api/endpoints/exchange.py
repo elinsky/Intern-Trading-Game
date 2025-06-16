@@ -14,6 +14,7 @@ from ...constants.errors import ErrorCodes
 from ...domain.exchange.models.order import Order, OrderSide, OrderType
 from ...infrastructure.api.auth import TeamInfo, get_current_team
 from ...infrastructure.api.models import ApiError, ApiResponse, OrderRequest
+from ..dependencies import get_exchange
 
 router = APIRouter(prefix="/exchange", tags=["exchange"])
 
@@ -40,13 +41,6 @@ def get_order_responses():
 
 
 # Rate limiting dependencies removed - now handled by OrderValidationService
-
-
-def get_exchange():
-    """Get the exchange dependency."""
-    from ..main import exchange
-
-    return exchange
 
 
 @router.post("/orders", response_model=ApiResponse)

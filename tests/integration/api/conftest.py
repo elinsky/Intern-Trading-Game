@@ -9,7 +9,6 @@ from fastapi.testclient import TestClient
 
 from intern_trading_game.api.main import (
     app,
-    exchange,
     position_service,
 )
 from intern_trading_game.infrastructure.api.auth import team_registry
@@ -27,9 +26,7 @@ def api_context():
     Note: This fixture manages thread lifecycle and cleanup.
     """
     # Reset state before test
-    exchange.order_books.clear()
-    exchange.instruments.clear()
-    exchange.all_order_ids.clear()
+    # Exchange will be created fresh during startup
     position_service._positions.clear()
     # Rate limiting state now owned by OrderValidationService
     team_registry.teams.clear()
@@ -117,6 +114,9 @@ def api_context():
                 "position": fresh_position_t,
                 "websocket": fresh_websocket_t,
             }
+
+            # Get exchange from app state after startup
+            exchange = client.app.state.exchange
 
             yield {
                 "client": client,

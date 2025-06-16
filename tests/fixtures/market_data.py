@@ -126,13 +126,17 @@ def create_spx_option(
     >>> # OTM put expiring in 7 days
     >>> spx_put = create_spx_option(strike=4400, expiry_days=7, option_type="put")
     """
-    expiry = (datetime.now() + timedelta(days=expiry_days)).strftime("%Y%m%d")
-    symbol = f"SPX_{option_type.upper()}_{int(strike)}_{expiry}{symbol_suffix}"
+    expiry_date = datetime.now() + timedelta(days=expiry_days)
+    expiry_iso = expiry_date.strftime("%Y-%m-%d")  # ISO format for Instrument
+    expiry_compact = expiry_date.strftime(
+        "%Y%m%d"
+    )  # Compact format for symbol
+    symbol = f"SPX_{option_type.upper()}_{int(strike)}_{expiry_compact}{symbol_suffix}"
 
     return Instrument(
         symbol=symbol,
         strike=strike,
-        expiry=expiry,
+        expiry=expiry_iso,
         option_type=option_type,
         underlying="SPX",
     )
@@ -170,13 +174,17 @@ def create_spy_option(
     >>> # ITM put expiring in 14 days
     >>> spy_put = create_spy_option(strike=455, expiry_days=14, option_type="put")
     """
-    expiry = (datetime.now() + timedelta(days=expiry_days)).strftime("%Y%m%d")
-    symbol = f"SPY_{option_type.upper()}_{int(strike)}_{expiry}{symbol_suffix}"
+    expiry_date = datetime.now() + timedelta(days=expiry_days)
+    expiry_iso = expiry_date.strftime("%Y-%m-%d")  # ISO format for Instrument
+    expiry_compact = expiry_date.strftime(
+        "%Y%m%d"
+    )  # Compact format for symbol
+    symbol = f"SPY_{option_type.upper()}_{int(strike)}_{expiry_compact}{symbol_suffix}"
 
     return Instrument(
         symbol=symbol,
         strike=strike,
-        expiry=expiry,
+        expiry=expiry_iso,
         option_type=option_type,
         underlying="SPY",
     )

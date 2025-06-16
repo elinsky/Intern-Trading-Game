@@ -9,7 +9,6 @@ import uvicorn
 from fastapi import FastAPI, WebSocket, WebSocketDisconnect
 from fastapi.middleware.cors import CORSMiddleware
 
-from ..domain.exchange.book.matching_engine import ContinuousMatchingEngine
 from ..domain.exchange.models.instrument import Instrument
 from ..domain.exchange.threads import matching_thread, validator_thread
 from ..domain.exchange.validation.order_validator import (
@@ -43,8 +42,11 @@ websocket_queue: Queue = Queue()  # Threads -> WebSocket
 position_queue: Queue = Queue()  # Publisher -> Position Tracker
 
 # Game components
-exchange = ExchangeVenue(ContinuousMatchingEngine())
+# exchange removed - now created in startup() from config
 validator = ConstraintBasedOrderValidator()
+
+# Exchange instance - set during startup from config
+_exchange: Optional[ExchangeVenue] = None
 
 # Service instances
 validation_service: Optional[OrderValidationService] = None
@@ -85,7 +87,7 @@ def matching_thread_wrapper():
         match_queue=match_queue,
         trade_queue=trade_queue,
         websocket_queue=websocket_queue,
-        exchange=exchange,
+        exchange=_exchange,
         pending_orders=pending_orders,
         order_responses=order_responses,
     )
@@ -138,6 +140,8 @@ async def startup():
     """Initialize the game components on startup.
 
     This function handles all startup logic including:
+    - Loading configuration
+    - Creating exchange from config
     - Initializing services
     - Starting processing threads
     - Configuring market maker constraints
@@ -145,7 +149,19 @@ async def startup():
 
     Follows Single Responsibility Principle by focusing only on startup tasks.
     """
-    global validation_service
+    global validation_service, _exchange
+
+    # Load configuration and create exchange
+    from ..infrastructure.config import ConfigLoader
+    from ..infrastructure.factories.exchange_factory import ExchangeFactory
+
+    config_loader = ConfigLoader()
+    exchange_config = config_loader.get_exchange_config()
+    exchange = ExchangeFactory.create_from_config(exchange_config)
+
+    # Store exchange for thread access and dependency injection
+    _exchange = exchange
+    app.state.exchange = exchange
 
     # Initialize services
     validation_service = OrderValidationService(
@@ -200,7 +216,7 @@ async def startup():
         exchange.list_instrument(instrument)
 
     print(
-        f"✓ API started with {len(instruments)} instruments and 5 processing threads"
+        f"API started with {len(instruments)} instruments and 5 processing threads"
     )
 
 
