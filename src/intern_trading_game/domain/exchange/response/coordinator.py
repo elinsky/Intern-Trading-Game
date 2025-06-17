@@ -60,8 +60,8 @@ class OrderResponseCoordinator(OrderResponseCoordinatorInterface):
         Reentrant lock protecting internal state modifications
     _pending_requests : Dict[str, PendingRequest]
         Active requests awaiting completion, keyed by request_id
-    _response_cache : Dict[str, ResponseResult]
-        Completed responses awaiting retrieval by API threads
+    _completion_results : Dict[str, ResponseResult]
+        Temporary storage for completion results until retrieved by API thread
     _request_counter : int
         Atomic counter for generating unique request IDs
     _cleanup_thread : Optional[threading.Thread]
@@ -113,7 +113,7 @@ class OrderResponseCoordinator(OrderResponseCoordinatorInterface):
         self.config = config or CoordinationConfig()
         self._lock = threading.RLock()
         self._pending_requests: Dict[str, PendingRequest] = {}
-        self._response_cache: Dict[str, ResponseResult] = {}
+        self._completion_results: Dict[str, ResponseResult] = {}
         self._request_counter = 0
         self._shutdown = False
         self._cleanup_thread: Optional[threading.Thread] = None
@@ -260,17 +260,7 @@ class OrderResponseCoordinator(OrderResponseCoordinatorInterface):
         with self._lock:
             pending_request = self._pending_requests.get(request_id)
             if not pending_request:
-                # Check if already completed and in cache
-                cached_result = self._response_cache.get(request_id)
-                if cached_result:
-                    return cached_result
                 raise ValueError(f"Request {request_id} not found")
-
-            # Check if already completed
-            if pending_request.status == ResponseStatus.COMPLETED:
-                cached_result = self._response_cache.get(request_id)
-                if cached_result:
-                    return cached_result
 
         # Calculate timeout
         if timeout_seconds is None:
@@ -287,11 +277,12 @@ class OrderResponseCoordinator(OrderResponseCoordinatorInterface):
         if pending_request.completion_event.wait(timeout=timeout_seconds):
             # Event was set, get the result
             with self._lock:
-                result = self._response_cache.get(request_id)
+                # Get the completion result
+                result = self._completion_results.get(request_id)
                 if result:
-                    # Clean up if configured for immediate cleanup
-                    if request_id in self._pending_requests:
-                        del self._pending_requests[request_id]
+                    # Clean up completed request
+                    del self._pending_requests[request_id]
+                    del self._completion_results[request_id]
                     return result
                 else:
                     # This shouldn't happen - event set but no result
@@ -330,8 +321,8 @@ class OrderResponseCoordinator(OrderResponseCoordinatorInterface):
                 self._pending_requests[
                     request_id
                 ].status = ResponseStatus.TIMEOUT
-                # Cache timeout result
-                self._response_cache[request_id] = timeout_result
+                # Clean up timed out request
+                del self._pending_requests[request_id]
 
         return timeout_result
 
@@ -411,8 +402,8 @@ class OrderResponseCoordinator(OrderResponseCoordinatorInterface):
             pending_request.status = result.final_status
             pending_request.order_id = order_id
 
-            # Cache result for retrieval
-            self._response_cache[request_id] = result
+            # Store result for retrieval
+            self._completion_results[request_id] = result
 
             # Signal waiting thread
             pending_request.completion_event.set()
@@ -556,11 +547,10 @@ class OrderResponseCoordinator(OrderResponseCoordinatorInterface):
                     # Ensure timeout status is set
                     if pending_request.status != ResponseStatus.TIMEOUT:
                         pending_request.status = ResponseStatus.TIMEOUT
-                        # Create timeout response in cache if not exists
-                        if request_id not in self._response_cache:
-                            self._response_cache[request_id] = (
-                                self._create_timeout_response(pending_request)
-                            )
+                        # Create and store timeout response
+                        self._completion_results[request_id] = (
+                            self._create_timeout_response(pending_request)
+                        )
                         # Signal any waiting threads
                         pending_request.completion_event.set()
                     continue
@@ -576,20 +566,13 @@ class OrderResponseCoordinator(OrderResponseCoordinatorInterface):
                     ):
                         to_remove.append(request_id)
 
-            # Remove identified requests
+            # Remove identified requests and their results
             for request_id in to_remove:
                 del self._pending_requests[request_id]
+                # Also clean up any completion results
+                if request_id in self._completion_results:
+                    del self._completion_results[request_id]
                 cleaned_count += 1
-
-            # Clean old cached responses
-            cache_to_remove = []
-            for request_id in list(self._response_cache.keys()):
-                if request_id not in self._pending_requests:
-                    # Request no longer tracked, safe to remove cache
-                    cache_to_remove.append(request_id)
-
-            for request_id in cache_to_remove:
-                del self._response_cache[request_id]
 
         if cleaned_count > 0:
             logger.info(
@@ -692,10 +675,31 @@ class OrderResponseCoordinator(OrderResponseCoordinatorInterface):
         with self._lock:
             self._shutdown = True
 
-            # Signal all waiting threads
+            # Signal all waiting threads with error responses
             for pending_request in self._pending_requests.values():
                 if not pending_request.status.is_terminal():
                     pending_request.status = ResponseStatus.ERROR
+                    # Create error response for shutdown
+                    shutdown_result = ResponseResult(
+                        request_id=pending_request.request_id,
+                        success=False,
+                        api_response=ApiResponse(
+                            success=False,
+                            request_id=pending_request.request_id,
+                            error=ApiError(
+                                code="SERVICE_SHUTDOWN",
+                                message="Service shutting down",
+                            ),
+                        ),
+                        processing_time_ms=(
+                            datetime.now() - pending_request.registered_at
+                        ).total_seconds()
+                        * 1000,
+                        final_status=ResponseStatus.ERROR,
+                    )
+                    self._completion_results[pending_request.request_id] = (
+                        shutdown_result
+                    )
                     pending_request.completion_event.set()
 
         # Signal cleanup thread to stop immediately
@@ -708,6 +712,6 @@ class OrderResponseCoordinator(OrderResponseCoordinatorInterface):
         # Final cleanup
         with self._lock:
             self._pending_requests.clear()
-            self._response_cache.clear()
+            self._completion_results.clear()
 
         logger.info("OrderResponseCoordinator shutdown complete")

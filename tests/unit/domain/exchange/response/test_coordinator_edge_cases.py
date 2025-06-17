@@ -362,11 +362,11 @@ class TestErrorHandling:
             with coordinator._lock:
                 pending_request = coordinator._pending_requests.get(request_id)
                 if pending_request:
-                    # Simulate event being set without result in cache
+                    # Simulate event being set without result stored
                     pending_request.completion_event.set()
-                    # Ensure no result in cache
-                    if request_id in coordinator._response_cache:
-                        del coordinator._response_cache[request_id]
+                    # Ensure no result in completion results
+                    if request_id in coordinator._completion_results:
+                        del coordinator._completion_results[request_id]
 
             # When - Wait for completion finds event set but no result
             with pytest.raises(RuntimeError) as exc_info:
@@ -441,13 +441,13 @@ class TestErrorHandling:
             thread.join(timeout=3.0)
             assert not thread.is_alive(), "Wait thread still running"
 
-        # All requests should have timed out
+        # All requests should have received shutdown responses
         assert len(results) == 3
         for request_id, result in results.items():
             if isinstance(result, str):
                 # Got an error during shutdown
                 assert "Error:" in result
             else:
-                # Got timeout result
+                # Got shutdown result
                 assert result.success is False
-                assert result.api_response.error.code == "PROCESSING_TIMEOUT"
+                assert result.api_response.error.code == "SERVICE_SHUTDOWN"
