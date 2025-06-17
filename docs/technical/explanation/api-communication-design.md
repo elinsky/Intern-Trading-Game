@@ -27,6 +27,8 @@ This separation provides several benefits:
 - Clear ownership of each communication type
 - Simplified debugging and monitoring
 
+The [OrderResponseCoordinator](order-response-coordination.md) service manages the synchronization between these layers without introducing shared global state. See [Internal Response Coordination](internal-response-coordination.md) for implementation details.
+
 ### 2. Immediate Feedback
 
 Bots need to know immediately if their request was valid:

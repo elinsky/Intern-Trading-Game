@@ -1,315 +1,347 @@
-"""Exchange service endpoints.
+"""Exchange API endpoints with response coordinator.
 
-This module provides REST API endpoints for exchange operations including
-order submission, cancellation, and order book queries.
+This module contains updated exchange endpoints that use the OrderResponseCoordinator
+instead of global dictionaries for managing order responses.
 """
 
-import threading
+import asyncio
 from datetime import datetime
-from typing import Dict
 
-from fastapi import APIRouter, Depends, HTTPException
+from fastapi import APIRouter, Depends, HTTPException, status
 
 from ...constants.errors import ErrorCodes
-from ...domain.exchange.models.order import Order, OrderSide, OrderType
+from ...domain.exchange.response.interfaces import (
+    OrderResponseCoordinatorInterface,
+)
 from ...infrastructure.api.auth import TeamInfo, get_current_team
-from ...infrastructure.api.models import ApiError, ApiResponse, OrderRequest
+from ...infrastructure.api.models import (
+    ApiError,
+    ApiResponse,
+    OrderRequest,
+)
 from ..dependencies import get_exchange
 
 router = APIRouter(prefix="/exchange", tags=["exchange"])
 
 
 def get_order_queue():
-    """Get the order queue dependency."""
+    """Get the global order queue."""
     from ..main import order_queue
 
     return order_queue
 
 
-def get_pending_orders():
-    """Get the pending orders dict dependency."""
-    from ..main import pending_orders
+def get_response_coordinator() -> OrderResponseCoordinatorInterface:
+    """Get the response coordinator from app state."""
+    from ..main import app
 
-    return pending_orders
-
-
-def get_order_responses():
-    """Get the order responses dict dependency."""
-    from ..main import order_responses
-
-    return order_responses
-
-
-# Rate limiting dependencies removed - now handled by OrderValidationService
+    coordinator = getattr(app.state, "response_coordinator", None)
+    if not coordinator:
+        raise HTTPException(
+            status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
+            detail="Response coordinator not initialized",
+        )
+    return coordinator
 
 
 @router.post("/orders", response_model=ApiResponse)
 async def submit_order(
-    request: OrderRequest,
-    team: TeamInfo = Depends(get_current_team),
+    order_request: OrderRequest,
+    team_info: TeamInfo = Depends(get_current_team),
     order_queue=Depends(get_order_queue),
-    pending_orders: Dict = Depends(get_pending_orders),
-    order_responses: Dict = Depends(get_order_responses),
-):
-    """Submit a new order.
+    coordinator: OrderResponseCoordinatorInterface = Depends(
+        get_response_coordinator
+    ),
+) -> ApiResponse:
+    """Submit a new order to the exchange.
+
+    This endpoint validates the order request and submits it to the
+    order processing pipeline. It uses the OrderResponseCoordinator
+    to manage the asynchronous response flow.
 
     Parameters
     ----------
-    request : OrderRequest
-        Order details including instrument, type, side, quantity, and price
-    team : TeamInfo
-        Authenticated team information from API key
+    order_request : OrderRequest
+        The order details from the client
+    team_info : TeamInfo
+        Authenticated team information
+    order_queue : Queue
+        The order processing queue
+    coordinator : OrderResponseCoordinatorInterface
+        The response coordinator for managing async responses
 
     Returns
     -------
     ApiResponse
-        Unified response with success status and order_id if accepted
+        The order submission response
 
     Raises
     ------
     HTTPException
-        400 Bad Request for invalid order parameters
-        504 Gateway Timeout if processing exceeds 5 seconds
+        If order submission fails or times out
     """
-    # Generate request ID for tracking
-    request_id = f"req_{datetime.now().timestamp()}"
-
-    # Convert request to Order
     try:
-        order_type = OrderType[request.order_type.upper()]
-    except KeyError:
+        # Convert request to domain order
+        from ...domain.exchange.models.order import Order, OrderSide, OrderType
+
+        # Convert order type
+        try:
+            order_type = OrderType[order_request.order_type.upper()]
+        except KeyError:
+            return ApiResponse(
+                success=False,
+                request_id="",  # Empty string for errors before registration
+                error=ApiError(
+                    code=ErrorCodes.INVALID_ORDER_TYPE,
+                    message=f"Invalid order type: {order_request.order_type}",
+                ),
+                timestamp=datetime.now(),
+            )
+
+        # Convert side
+        try:
+            side = OrderSide(order_request.side)
+        except ValueError:
+            return ApiResponse(
+                success=False,
+                request_id="",  # Empty string for errors before registration
+                error=ApiError(
+                    code=ErrorCodes.INVALID_SIDE,
+                    message=f"Invalid side: {order_request.side}. Must be 'buy' or 'sell'",
+                ),
+                timestamp=datetime.now(),
+            )
+
+        # Validate price for limit orders
+        if order_type == OrderType.LIMIT and order_request.price is None:
+            return ApiResponse(
+                success=False,
+                request_id="",  # Empty string for errors before registration
+                error=ApiError(
+                    code=ErrorCodes.MISSING_PRICE,
+                    message="Price required for limit orders",
+                ),
+                timestamp=datetime.now(),
+            )
+
+        # Create order
+        order = Order(
+            trader_id=team_info.team_id,
+            instrument_id=order_request.instrument_id,
+            order_type=order_type,
+            side=side,
+            quantity=order_request.quantity,
+            price=order_request.price,
+            client_order_id=order_request.client_order_id,
+        )
+
+        # Register request with coordinator
+        registration = coordinator.register_request(
+            team_id=team_info.team_id,
+            timeout_seconds=5.0,  # Could come from config
+        )
+        request_id = registration.request_id
+
+        # Create event for backward compatibility with current thread design
+        response_event = asyncio.Event()
+
+        # Submit to order queue with request_id
+        order_queue.put(
+            (
+                "new_order",
+                order,
+                team_info,
+                response_event,  # Not used by v2 threads
+                request_id,
+            )
+        )
+
+        # Wait for response using coordinator (async)
+        def wait_for_completion():
+            return coordinator.wait_for_completion(request_id)
+
+        # Run synchronous wait in thread pool
+        result = await asyncio.to_thread(wait_for_completion)
+
+        if result is None or result.api_response is None:
+            # Timeout occurred
+            raise HTTPException(
+                status_code=status.HTTP_408_REQUEST_TIMEOUT,
+                detail="Order processing timeout",
+            )
+
+        return result.api_response
+
+    except HTTPException:
+        raise
+    except Exception as e:
         return ApiResponse(
             success=False,
-            request_id=request_id,
+            request_id=request_id if "request_id" in locals() else "",
+            order_id=None,
+            data=None,
             error=ApiError(
-                code=ErrorCodes.INVALID_ORDER_TYPE,
-                message=f"Invalid order type: {request.order_type}",
+                code=ErrorCodes.INTERNAL_ERROR,
+                message=f"Failed to submit order: {str(e)}",
+                details=None,
             ),
             timestamp=datetime.now(),
         )
-
-    # Validate price for limit orders
-    if order_type == OrderType.LIMIT and request.price is None:
-        return ApiResponse(
-            success=False,
-            request_id=request_id,
-            error=ApiError(
-                code=ErrorCodes.MISSING_PRICE,
-                message="Price required for limit orders",
-            ),
-            timestamp=datetime.now(),
-        )
-
-    # Convert side to enum
-    try:
-        side = OrderSide(request.side)
-    except ValueError:
-        return ApiResponse(
-            success=False,
-            request_id=request_id,
-            error=ApiError(
-                code=ErrorCodes.INVALID_SIDE,
-                message=f"Invalid side: {request.side}. Must be 'buy' or 'sell'",
-            ),
-            timestamp=datetime.now(),
-        )
-
-    # Create order
-    order = Order(
-        trader_id=team.team_id,
-        instrument_id=request.instrument_id,
-        order_type=order_type,
-        side=side,
-        quantity=request.quantity,
-        price=request.price,
-        client_order_id=request.client_order_id,
-    )
-
-    # Create response event
-    response_event = threading.Event()
-    response_key = f"{order.order_id}:{request_id}"
-    pending_orders[response_key] = response_event
-
-    # Submit to queue with 5-tuple format
-    order_queue.put(("new_order", order, team, response_event, request_id))
-
-    # Wait for response (with timeout)
-    if response_event.wait(timeout=5.0):
-        # Get response
-        response = order_responses.pop(response_key)
-        pending_orders.pop(response_key)
-        return response
-    else:
-        # Timeout
-        pending_orders.pop(response_key, None)
-        raise HTTPException(status_code=504, detail="Order processing timeout")
 
 
 @router.delete("/orders/{order_id}", response_model=ApiResponse)
 async def cancel_order(
     order_id: str,
-    team: TeamInfo = Depends(get_current_team),
+    team_info: TeamInfo = Depends(get_current_team),
     order_queue=Depends(get_order_queue),
-    pending_orders: Dict = Depends(get_pending_orders),
-    order_responses: Dict = Depends(get_order_responses),
-):
+    coordinator: OrderResponseCoordinatorInterface = Depends(
+        get_response_coordinator
+    ),
+) -> ApiResponse:
     """Cancel an existing order.
 
-    Cancels are processed in FIFO order with all other order messages
-    to ensure temporal fairness in the market.
+    This endpoint attempts to cancel an order that has been previously
+    submitted. It uses the OrderResponseCoordinator to manage the
+    asynchronous cancellation response.
 
     Parameters
     ----------
     order_id : str
-        The exchange-assigned order ID to cancel
-    team : TeamInfo
-        Authenticated team information from API key
+        The ID of the order to cancel
+    team_info : TeamInfo
+        Authenticated team information
+    order_queue : Queue
+        The order processing queue
+    coordinator : OrderResponseCoordinatorInterface
+        The response coordinator for managing async responses
 
     Returns
     -------
     ApiResponse
-        Unified response with success status
+        The cancellation response
 
     Raises
     ------
     HTTPException
-        504 Gateway Timeout if processing exceeds 5 seconds
+        If cancellation fails or times out
     """
-    # Generate request ID
-    request_id = f"req_{datetime.now().timestamp()}"
+    try:
+        # Register cancellation request with coordinator
+        registration = coordinator.register_request(
+            team_id=team_info.team_id,
+            timeout_seconds=3.0,  # Shorter timeout for cancellations
+        )
+        request_id = registration.request_id
 
-    # Create response event for async processing
-    response_event = threading.Event()
-    response_key = f"{order_id}:{request_id}"
-    pending_orders[response_key] = response_event
+        # Create event for backward compatibility
+        response_event = asyncio.Event()
 
-    # Submit cancel request to queue
-    order_queue.put(
-        ("cancel_order", order_id, team, response_event, request_id)
-    )
+        # Submit cancellation to order queue
+        order_queue.put(
+            (
+                "cancel_order",
+                order_id,
+                team_info,
+                response_event,  # Not used by v2 threads
+                request_id,
+            )
+        )
 
-    # Wait for response with timeout
-    if response_event.wait(timeout=5.0):
-        # Get response
-        response = order_responses.pop(response_key)
-        pending_orders.pop(response_key)
-        return response
-    else:
-        # Timeout
-        pending_orders.pop(response_key, None)
-        raise HTTPException(status_code=504, detail="Cancel request timeout")
+        # Wait for response using coordinator
+        def wait_for_completion():
+            return coordinator.wait_for_completion(request_id)
 
+        # Run synchronous wait in thread pool
+        result = await asyncio.to_thread(wait_for_completion)
 
-@router.get("/orders", response_model=ApiResponse)
-async def get_open_orders(
-    team: TeamInfo = Depends(get_current_team),
-    exchange=Depends(get_exchange),
-):
-    """Get all open (resting) orders for the authenticated team.
+        if result is None or result.api_response is None:
+            # Timeout occurred
+            raise HTTPException(
+                status_code=status.HTTP_408_REQUEST_TIMEOUT,
+                detail="Order cancellation timeout",
+            )
 
-    Parameters
-    ----------
-    team : TeamInfo
-        Authenticated team information from API key
+        return result.api_response
 
-    Returns
-    -------
-    ApiResponse
-        Success response with list of open orders
-    """
-    # Generate request ID
-    request_id = f"req_{datetime.now().timestamp()}"
-
-    # Get all resting orders from exchange
-    all_orders = exchange.get_all_resting_orders()
-
-    # Filter for team's orders
-    team_orders = []
-    for instrument_orders in all_orders.values():
-        for order in instrument_orders:
-            if order.trader_id == team.team_id:
-                team_orders.append(
-                    {
-                        "order_id": order.order_id,
-                        "client_order_id": order.client_order_id,
-                        "instrument_id": order.instrument_id,
-                        "side": order.side.value,
-                        "order_type": order.order_type.value.lower(),
-                        "quantity": order.quantity,
-                        "filled_quantity": order.filled_quantity,
-                        "remaining_quantity": order.quantity
-                        - order.filled_quantity,
-                        "price": order.price,
-                        "timestamp": order.timestamp.isoformat(),
-                    }
-                )
-
-    return ApiResponse(
-        success=True,
-        request_id=request_id,
-        data={
-            "team_id": team.team_id,
-            "orders": team_orders,
-            "count": len(team_orders),
-        },
-        timestamp=datetime.now(),
-    )
-
-
-@router.get("/orderbook/{instrument_id}", response_model=ApiResponse)
-async def get_order_book(
-    instrument_id: str,
-    team: TeamInfo = Depends(get_current_team),
-    exchange=Depends(get_exchange),
-):
-    """Get the order book for a specific instrument.
-
-    Parameters
-    ----------
-    instrument_id : str
-        The instrument to query
-    team : TeamInfo
-        Authenticated team information from API key
-
-    Returns
-    -------
-    ApiResponse
-        Success response with order book depth
-    """
-    # Generate request ID
-    request_id = f"req_{datetime.now().timestamp()}"
-
-    # Get order book from exchange
-    order_book = exchange.get_order_book(instrument_id)
-
-    if order_book is None:
+    except HTTPException:
+        raise
+    except Exception as e:
         return ApiResponse(
             success=False,
-            request_id=request_id,
+            request_id=request_id if "request_id" in locals() else "",
+            order_id=order_id,
+            data=None,
             error=ApiError(
-                code="INVALID_INSTRUMENT",
-                message=f"Instrument {instrument_id} not found",
+                code=ErrorCodes.INTERNAL_ERROR,
+                message=f"Failed to cancel order: {str(e)}",
+                details=None,
             ),
             timestamp=datetime.now(),
         )
 
-    # Get order book depth (top 5 levels)
-    depth = order_book.depth_snapshot(levels=5)
 
-    return ApiResponse(
-        success=True,
-        request_id=request_id,
-        data={
-            "instrument_id": instrument_id,
-            "bids": [
-                {"price": price, "quantity": qty}
-                for price, qty in depth["bids"]
-            ],
-            "asks": [
-                {"price": price, "quantity": qty}
-                for price, qty in depth["asks"]
-            ],
-            "timestamp": datetime.now().isoformat(),
-        },
-        timestamp=datetime.now(),
-    )
+@router.get("/orders", response_model=ApiResponse)
+async def get_orders(
+    team_info: TeamInfo = Depends(get_current_team),
+    exchange=Depends(get_exchange),
+) -> ApiResponse:
+    """Get all orders for the authenticated team.
+
+    This endpoint retrieves all orders (open and filled) for the
+    current team from the exchange.
+
+    Parameters
+    ----------
+    team_info : TeamInfo
+        Authenticated team information
+    exchange : ExchangeVenue
+        The exchange instance
+
+    Returns
+    -------
+    ApiResponse
+        Response containing list of orders
+    """
+    try:
+        # Get orders from exchange
+        orders = exchange.get_orders_by_trader(team_info.team_id)
+
+        # Convert to API format
+        order_data = [
+            {
+                "order_id": order.order_id,
+                "client_order_id": order.client_order_id,
+                "instrument_id": order.instrument_id,
+                "side": order.side.value,
+                "order_type": order.order_type.value,
+                "quantity": order.quantity,
+                "filled_quantity": order.filled_quantity,
+                "price": order.price,
+                "status": order.status.value,
+                "timestamp": order.timestamp.isoformat(),
+            }
+            for order in orders
+        ]
+
+        return ApiResponse(
+            success=True,
+            request_id="",
+            order_id=None,
+            data={"orders": order_data},
+            error=None,
+            timestamp=datetime.now(),
+        )
+
+    except Exception as e:
+        return ApiResponse(
+            success=False,
+            request_id="",
+            order_id=None,
+            data=None,
+            error=ApiError(
+                code=ErrorCodes.INTERNAL_ERROR,
+                message=f"Failed to get orders: {str(e)}",
+                details=None,
+            ),
+            timestamp=datetime.now(),
+        )

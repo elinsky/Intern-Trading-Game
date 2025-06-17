@@ -116,6 +116,10 @@ class TestOrderSubmission:
         assert response.status_code == 200
         data = response.json()
 
+        # Debug: print the response if it failed
+        if not data.get("success"):
+            print(f"Order submission failed: {data}")
+
         # API should return success with order_id
         assert data["success"] is True
         assert data["order_id"] is not None

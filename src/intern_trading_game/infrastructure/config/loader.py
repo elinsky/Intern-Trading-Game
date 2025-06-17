@@ -10,6 +10,7 @@ from typing import Dict, List, Optional
 import yaml
 
 from ...domain.exchange.models.instrument import Instrument
+from ...domain.exchange.response.models import CoordinationConfig
 from ...domain.exchange.validation.order_validator import (
     ConstraintConfig,
     ConstraintType,
@@ -251,3 +252,109 @@ class ConfigLoader:
             )
 
         return fee_schedules
+
+    def get_response_coordinator_config(self) -> CoordinationConfig:
+        """Get response coordinator configuration.
+
+        Extracts the response coordinator section from the configuration
+        and validates that all required fields are present. This method
+        enforces explicit configuration to prevent accidental use of
+        defaults in production.
+
+        Returns
+        -------
+        CoordinationConfig
+            The response coordination configuration
+
+        Raises
+        ------
+        ValueError
+            If the response_coordinator section is missing or incomplete
+
+        Notes
+        -----
+        The response coordinator manages the synchronization between
+        REST API requests and asynchronous order processing. Configuration
+        parameters affect system performance and resource usage:
+
+        - timeout_seconds: Maximum time API clients wait for responses
+        - max_pending_requests: Memory limit and overload protection
+        - cleanup_interval: Balance between memory usage and CPU overhead
+        - enable_metrics: Performance tracking vs overhead tradeoff
+
+        All configuration values must be explicitly set to ensure
+        intentional configuration for production deployments.
+
+        Examples
+        --------
+        >>> loader = ConfigLoader()
+        >>> coord_config = loader.get_response_coordinator_config()
+        >>> print(coord_config.default_timeout_seconds)
+        5.0
+        """
+        data = self.load()
+
+        # Require response_coordinator section
+        if "response_coordinator" not in data:
+            raise ValueError(
+                "Missing required 'response_coordinator' section in configuration. "
+                "All response coordination parameters must be explicitly configured."
+            )
+
+        coord_data = data["response_coordinator"]
+
+        # Validate all required fields are present
+        required_fields = [
+            "default_timeout_seconds",
+            "max_pending_requests",
+            "cleanup_interval_seconds",
+            "enable_metrics",
+            "enable_detailed_logging",
+            "request_id_prefix",
+        ]
+
+        missing_fields = [
+            field for field in required_fields if field not in coord_data
+        ]
+        if missing_fields:
+            raise ValueError(
+                f"Missing required response_coordinator fields: {missing_fields}. "
+                "All configuration parameters must be explicitly set."
+            )
+
+        # Validate field values
+        timeout = coord_data["default_timeout_seconds"]
+        if not isinstance(timeout, (int, float)) or timeout <= 0:
+            raise ValueError(
+                f"Invalid default_timeout_seconds: {timeout}. "
+                "Must be a positive number."
+            )
+
+        max_requests = coord_data["max_pending_requests"]
+        if not isinstance(max_requests, int) or max_requests <= 0:
+            raise ValueError(
+                f"Invalid max_pending_requests: {max_requests}. "
+                "Must be a positive integer."
+            )
+
+        cleanup_interval = coord_data["cleanup_interval_seconds"]
+        if (
+            not isinstance(cleanup_interval, (int, float))
+            or cleanup_interval <= 0
+        ):
+            raise ValueError(
+                f"Invalid cleanup_interval_seconds: {cleanup_interval}. "
+                "Must be a positive number."
+            )
+
+        # Create config with validated values
+        return CoordinationConfig(
+            default_timeout_seconds=timeout,
+            max_pending_requests=max_requests,
+            cleanup_interval_seconds=int(cleanup_interval),
+            enable_metrics=bool(coord_data["enable_metrics"]),
+            enable_detailed_logging=bool(
+                coord_data["enable_detailed_logging"]
+            ),
+            request_id_prefix=str(coord_data["request_id_prefix"]),
+        )

@@ -7,10 +7,7 @@ threads running but using in-memory components.
 import pytest
 from fastapi.testclient import TestClient
 
-from intern_trading_game.api.main import (
-    app,
-    position_service,
-)
+from intern_trading_game.api.main import app
 
 
 @pytest.fixture
@@ -26,7 +23,7 @@ def api_context():
     """
     # Reset state before test
     # Exchange will be created fresh during startup
-    position_service._positions.clear()
+    # Position service state will be created fresh during app startup
     # Rate limiting state now owned by OrderValidationService
     # GameService state will be created fresh during app startup
 
@@ -96,7 +93,7 @@ def api_context():
             yield {
                 "client": client,
                 "exchange": exchange,
-                "positions": position_service._positions,
+                # Position service is now internal to the app
                 "game_service": game_service,
                 "threads": threads,
             }

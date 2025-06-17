@@ -3,13 +3,17 @@
 import threading
 from contextlib import asynccontextmanager
 from queue import Queue
-from typing import Dict, Optional
+from typing import Optional
 
 import uvicorn
 from fastapi import FastAPI, WebSocket, WebSocketDisconnect
 from fastapi.middleware.cors import CORSMiddleware
 
-from ..domain.exchange.threads import matching_thread, validator_thread
+from ..domain.exchange.response.coordinator import OrderResponseCoordinator
+from ..domain.exchange.threads_v2 import (
+    matching_thread_v2,
+    validator_thread_v2,
+)
 from ..domain.exchange.validation.order_validator import (
     ConstraintBasedOrderValidator,
 )
@@ -51,29 +55,22 @@ position_service = PositionManagementService()
 fee_service: Optional[TradingFeeService] = None
 game_service: Optional[GameService] = None
 
-# Global order tracking removed - now owned by OrderValidationService
-# Global position tracking removed - now owned by PositionManagementService
-
-# Pending orders waiting for response
-pending_orders: Dict[str, threading.Event] = {}
-order_responses: Dict[
-    str, Dict
-] = {}  # Now stores ApiResponse objects with order_id:request_id keys
+# Response coordinator - replaces global dictionaries
+response_coordinator: Optional[OrderResponseCoordinator] = None
 
 
 def validator_thread_wrapper():
     """Wrapper for Exchange Service validator thread.
 
     Calls the Exchange domain validator thread with all required parameters.
-    Rate limiting state is now owned by the validation service.
+    Now uses the OrderResponseCoordinator instead of global dictionaries.
     """
-    validator_thread(
+    validator_thread_v2(
         order_queue=order_queue,
         match_queue=match_queue,
         websocket_queue=websocket_queue,
         validation_service=validation_service,
-        pending_orders=pending_orders,
-        order_responses=order_responses,
+        response_coordinator=response_coordinator,
     )
 
 
@@ -81,14 +78,14 @@ def matching_thread_wrapper():
     """Wrapper for Exchange Service matching thread.
 
     Calls the Exchange domain matching thread with all required parameters.
+    Now optionally uses the OrderResponseCoordinator for error cases.
     """
-    matching_thread(
+    matching_thread_v2(
         match_queue=match_queue,
         trade_queue=trade_queue,
         websocket_queue=websocket_queue,
         exchange=_exchange,
-        pending_orders=pending_orders,
-        order_responses=order_responses,
+        response_coordinator=response_coordinator,
     )
 
 
@@ -185,6 +182,7 @@ async def startup():
     ...     return game_service.register_team(request.name, request.role)
     """
     global validation_service, _exchange, _validator, fee_service, game_service
+    global response_coordinator
 
     # Load configuration
     from ..infrastructure.config import ConfigLoader
@@ -195,6 +193,18 @@ async def startup():
     from ..infrastructure.factories.validator_factory import ValidatorFactory
 
     config_loader = ConfigLoader()
+
+    # Create response coordinator from config
+    try:
+        coord_config = config_loader.get_response_coordinator_config()
+        response_coordinator = OrderResponseCoordinator(coord_config)
+        print(f"Response coordinator started with config: {coord_config}")
+    except ValueError as e:
+        print(f"Failed to load response coordinator config: {e}")
+        raise
+
+    # Store coordinator in app state for endpoint access
+    app.state.response_coordinator = response_coordinator
 
     # Create exchange from config
     exchange_config = config_loader.get_exchange_config()
@@ -245,11 +255,17 @@ async def shutdown():
     """Cleanup resources on shutdown.
 
     This function handles all cleanup logic including:
+    - Stopping the response coordinator
     - Sending shutdown signals to threads
     - Waiting for threads to complete
 
     Follows Single Responsibility Principle by focusing only on cleanup tasks.
     """
+    # Stop response coordinator
+    if response_coordinator:
+        response_coordinator.shutdown()
+        print("Response coordinator stopped")
+
     # Send shutdown signals to threads
     order_queue.put(None)
     match_queue.put(None)
@@ -304,6 +320,7 @@ async def root():
     return {
         "status": "ok",
         "service": "Intern Trading Game API",
+        "version": "2.0.0",
         "threads": {
             "validator": validator_t.is_alive() if validator_t else False,
             "matching": matching_t.is_alive() if matching_t else False,
@@ -311,6 +328,7 @@ async def root():
             "position_tracker": position_t.is_alive() if position_t else False,
             "websocket": websocket_t.is_alive() if websocket_t else False,
         },
+        "coordinator_active": response_coordinator is not None,
     }
 
 

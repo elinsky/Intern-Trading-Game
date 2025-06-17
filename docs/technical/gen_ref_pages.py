@@ -11,6 +11,9 @@ modules = [
     "intern_trading_game.domain.exchange.models.trade",
     "intern_trading_game.domain.exchange.venue",
     "intern_trading_game.domain.exchange.models.instrument",
+    "intern_trading_game.domain.exchange.response.coordinator",
+    "intern_trading_game.domain.exchange.response.interfaces",
+    "intern_trading_game.domain.exchange.response.models",
 ]
 
 # Generate the API reference pages

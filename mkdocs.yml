@@ -138,6 +138,9 @@ nav:
           - Trade: reference/trade.md
           - Venue: reference/venue.md
           - Instrument: reference/instrument.md
+          - Response Coordinator: reference/coordinator.md
+          - Response Interfaces: reference/interfaces.md
+          - Response Models: reference/models.md
       - Explanation:
           - Overview: technical/explanation/index.md
           - Order Matching: technical/explanation/order-matching.md
@@ -146,6 +149,9 @@ nav:
           - Trading Phases: technical/explanation/trading-phases.md
           - Thread Layer Design: technical/explanation/thread-layer-design.md
           - API Communication Design: technical/explanation/api-communication-design.md
+          - Order Response Coordination: technical/explanation/order-response-coordination.md
+          - Internal Response Coordination: technical/explanation/internal-response-coordination.md
+          - Trading Bot Order Scenarios: technical/explanation/trading-bot-order-scenarios.md
       - Contributing:
           - Math in Docstrings: technical/contributing/docstring-math-guide.md
 

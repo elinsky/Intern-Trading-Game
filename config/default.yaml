@@ -4,6 +4,26 @@
 exchange:
   matching_mode: continuous  # Options: continuous, batch
 
+# Order response coordination configuration
+response_coordinator:
+  # Maximum time (seconds) to wait for order processing
+  default_timeout_seconds: 5.0
+
+  # Maximum number of concurrent pending requests
+  max_pending_requests: 1000
+
+  # How often (seconds) to clean up completed/expired requests
+  cleanup_interval_seconds: 30
+
+  # Whether to collect detailed metrics
+  enable_metrics: true
+
+  # Whether to enable detailed logging (can be verbose)
+  enable_detailed_logging: false
+
+  # Prefix for request ID generation
+  request_id_prefix: "req"
+
 roles:
   market_maker:
     fees:

@@ -90,6 +90,23 @@ class TestServiceInitialization:
         mock_config.get_exchange_config.return_value = Mock()
         mock_config.get_instruments.return_value = []
 
+        # Mock response coordinator config
+        from intern_trading_game.domain.exchange.response.models import (
+            CoordinationConfig,
+        )
+
+        mock_coord_config = CoordinationConfig(
+            default_timeout_seconds=5.0,
+            max_pending_requests=1000,
+            cleanup_interval_seconds=30,
+            enable_metrics=True,
+            enable_detailed_logging=False,
+            request_id_prefix="test",
+        )
+        mock_config.get_response_coordinator_config.return_value = (
+            mock_coord_config
+        )
+
         mock_exchange = Mock()
         mock_exchange_factory.create_from_config.return_value = mock_exchange
 

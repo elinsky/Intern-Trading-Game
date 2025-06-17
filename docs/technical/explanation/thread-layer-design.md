@@ -268,6 +268,18 @@ with orders_lock:
     orders_this_second[team_id] += 1
 ```
 
+### 5. Response Coordination
+
+Use proper coordination services instead of global state. See [Order Response Coordination](order-response-coordination.md) for the correct pattern:
+
+```python
+# Good: Coordination service
+coordinator = OrderResponseCoordinator(config)
+registration = coordinator.register_request(team_id)
+# ... in thread ...
+coordinator.notify_completion(request_id, api_response)
+```
+
 ## Anti-Patterns to Avoid
 
 ### 1. Business Logic in Threads

@@ -10,6 +10,12 @@ In-depth explanations of how the Intern Trading Game works under the hood. These
 - **[Batch Matching](batch-matching.md)** - The batch processing algorithm used during tick execution
 - **[Order Validator Design](order-validator-design.md)** - Architecture and patterns for order validation
 
+### Response Coordination
+
+- **[Order Response Coordination](order-response-coordination.md)** - Architecture for bridging sync API with async pipeline
+- **[Internal Response Coordination](internal-response-coordination.md)** - Implementation details and threading patterns
+- **[Trading Bot Order Scenarios](trading-bot-order-scenarios.md)** - Business scenarios and examples
+
 ### Game Mechanics
 
 - **[Trading Phases](trading-phases.md)** - Detailed explanation of the tick lifecycle and trading phases
@@ -39,11 +45,13 @@ Order validation ensures market integrity:
 
 - **[Thread Layer Design](thread-layer-design.md)** explains the concurrent processing architecture
 - Queue-based communication patterns and synchronization mechanisms
+- **[Order Response Coordination](order-response-coordination.md)** shows how to properly coordinate between threads without global state
 
 ### API Design
 
 - **[API Communication Design](api-communication-design.md)** explains the sync/async communication split
 - REST API for validation responses, WebSocket for execution events
+- **[Internal Response Coordination](internal-response-coordination.md)** details the implementation of sync/async bridging
 
 ## Related Resources
 

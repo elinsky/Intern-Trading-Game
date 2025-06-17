@@ -63,7 +63,9 @@ graph TB
             Q4[(websocket_queue)]
             Q5[(response_queue)]
 
-            STATE[(Shared State<br/>- positions: Dict<br/>- orders_this_second: Dict<br/>- team_registry: Dict<br/>- pending_orders: Dict<br/>- order_responses: Dict)]
+            STATE[(Shared State<br/>- positions: Dict<br/>- orders_this_second: Dict<br/>- team_registry: Dict)]
+
+            COORD[OrderResponseCoordinator<br/>- Request tracking<br/>- Timeout handling<br/>- Thread-safe signaling]
         end
     end
 
@@ -142,8 +144,8 @@ graph TB
 - **positions**: Team positions (Dict[str, Dict[str, int]])
 - **orders_this_second**: Order rate limiting (Dict[str, int])
 - **team_registry**: Registered teams (Dict[str, TeamInfo])
-- **pending_orders**: Threading events for sync responses
-- **order_responses**: Order response cache
+- ~~**pending_orders**: Threading events for sync responses~~ (Replaced by [OrderResponseCoordinator](explanation/order-response-coordination.md))
+- ~~**order_responses**: Order response cache~~ (Replaced by [OrderResponseCoordinator](explanation/order-response-coordination.md))
 
 ## Target Architecture (Future Vision)
 
