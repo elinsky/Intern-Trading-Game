@@ -6,6 +6,9 @@ exchange:
 
 roles:
   market_maker:
+    fees:
+      maker_rebate: 0.02   # +$0.02 per contract rebate
+      taker_fee: -0.01     # -$0.01 per contract fee
     constraints:
       - type: position_limit
         parameters:

@@ -16,6 +16,7 @@ from ..domain.exchange.validation.order_validator import (
 from ..domain.exchange.venue import ExchangeVenue
 from ..domain.positions import (
     PositionManagementService,
+    TradingFeeService,
 )
 from ..domain.positions.threads import position_tracker_thread
 from ..infrastructure.api.auth import team_registry
@@ -47,6 +48,7 @@ _validator: Optional[ConstraintBasedOrderValidator] = None
 # Service instances
 validation_service: Optional[OrderValidationService] = None
 position_service = PositionManagementService()
+fee_service: Optional[TradingFeeService] = None
 
 # Global order tracking removed - now owned by OrderValidationService
 # Global position tracking removed - now owned by PositionManagementService
@@ -96,7 +98,7 @@ def trade_publisher_thread_wrapper():
     The thread function accesses global queues via runtime imports
     to avoid circular dependencies.
     """
-    trade_publisher_thread()
+    trade_publisher_thread(fee_service)
 
 
 def position_tracker_thread_wrapper():
@@ -145,11 +147,14 @@ async def startup():
 
     Follows Single Responsibility Principle by focusing only on startup tasks.
     """
-    global validation_service, _exchange, _validator
+    global validation_service, _exchange, _validator, fee_service
 
     # Load configuration
     from ..infrastructure.config import ConfigLoader
     from ..infrastructure.factories.exchange_factory import ExchangeFactory
+    from ..infrastructure.factories.fee_service_factory import (
+        FeeServiceFactory,
+    )
     from ..infrastructure.factories.validator_factory import ValidatorFactory
 
     config_loader = ConfigLoader()
@@ -165,6 +170,9 @@ async def startup():
     # Create validator from config
     validator = ValidatorFactory.create_from_config(config_loader)
     _validator = validator
+
+    # Create fee service from config
+    fee_service = FeeServiceFactory.create_from_config(config_loader)
 
     # Initialize services
     validation_service = OrderValidationService(

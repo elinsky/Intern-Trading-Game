@@ -14,6 +14,7 @@ from ...domain.exchange.validation.order_validator import (
     ConstraintConfig,
     ConstraintType,
 )
+from ...domain.positions.models import FeeSchedule
 from .models import ExchangeConfig
 
 
@@ -185,3 +186,68 @@ class ConfigLoader:
             instruments.append(instrument)
 
         return instruments
+
+    def get_fee_schedules(self) -> Dict[str, FeeSchedule]:
+        """Get fee schedules for all roles from configuration.
+
+        Parses the roles section of the configuration to extract
+        fee schedules for each role. Validates that both maker_rebate
+        and taker_fee are present for each role with a fees section.
+
+        Returns
+        -------
+        Dict[str, FeeSchedule]
+            Mapping from role name to FeeSchedule object
+
+        Raises
+        ------
+        ValueError
+            If a role has incomplete fee configuration (missing
+            maker_rebate or taker_fee)
+
+        Notes
+        -----
+        Roles without a fees section are skipped entirely.
+        Only roles with complete fee configuration are included.
+
+        The fee structure is critical for P&L calculation, so
+        incomplete configurations are treated as errors.
+
+        Examples
+        --------
+        >>> loader = ConfigLoader()
+        >>> fee_schedules = loader.get_fee_schedules()
+        >>> print(fee_schedules["market_maker"].maker_rebate)
+        0.02
+        """
+        data = self.load()
+        roles_data = data.get("roles", {})
+        fee_schedules = {}
+
+        for role_name, role_data in roles_data.items():
+            fees_data = role_data.get("fees", {})
+
+            # Roles must have fees section
+            if not fees_data:
+                raise ValueError(
+                    f"Missing fees section for role: {role_name}. "
+                    "All trading roles must have fee configuration."
+                )
+
+            # Validate required fields
+            if "maker_rebate" not in fees_data:
+                raise ValueError(
+                    f"Missing required fee 'maker_rebate' for role: {role_name}"
+                )
+            if "taker_fee" not in fees_data:
+                raise ValueError(
+                    f"Missing required fee 'taker_fee' for role: {role_name}"
+                )
+
+            # Create fee schedule
+            fee_schedules[role_name] = FeeSchedule(
+                maker_rebate=fees_data["maker_rebate"],
+                taker_fee=fees_data["taker_fee"],
+            )
+
+        return fee_schedules

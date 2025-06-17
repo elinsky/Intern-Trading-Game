@@ -7,16 +7,20 @@ and technical infrastructure concerns like message routing and protocol bridging
 import asyncio
 
 from ...domain.positions import TradingFeeService
-from ...domain.positions.fee_config import get_hardcoded_fee_schedules
 from ..messaging.websocket_manager import ws_manager
 
 
-def trade_publisher_thread():
+def trade_publisher_thread(fee_service: TradingFeeService):
     """Thread 4: Trade Publisher - routes trades and sends WebSocket messages.
 
     This thread acts as a message router, forwarding trades to the position
     tracker thread and sending execution reports via WebSocket. It handles
     cross-domain communication rather than domain-specific business logic.
+
+    Parameters
+    ----------
+    fee_service : TradingFeeService
+        Configured fee service for calculating trade fees
 
     Infrastructure Role:
     - Routes messages between Exchange → Position → WebSocket domains
@@ -24,10 +28,6 @@ def trade_publisher_thread():
     - Serves as a message bus for trade-related events
     """
     print("Trade publisher thread started")
-
-    # Initialize only the services needed for WebSocket messaging
-    role_fees = get_hardcoded_fee_schedules()
-    fee_service = TradingFeeService(role_fees)
 
     while True:
         try:
@@ -53,7 +53,8 @@ def trade_publisher_thread():
                 for trade in result.fills:
                     # Calculate fee for this specific fill
                     liquidity_type = fee_service.determine_liquidity_type(
-                        order.order_id, trade
+                        aggressor_side=trade.aggressor_side,
+                        order_side=order.side.value,
                     )
                     fee = fee_service.calculate_fee(
                         quantity=trade.quantity,
