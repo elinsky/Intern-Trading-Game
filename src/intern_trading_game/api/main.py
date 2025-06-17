@@ -14,12 +14,12 @@ from ..domain.exchange.validation.order_validator import (
     ConstraintBasedOrderValidator,
 )
 from ..domain.exchange.venue import ExchangeVenue
+from ..domain.game.game_service import GameService
 from ..domain.positions import (
     PositionManagementService,
     TradingFeeService,
 )
 from ..domain.positions.threads import position_tracker_thread
-from ..infrastructure.api.auth import team_registry
 from ..infrastructure.communication.threads import (
     trade_publisher_thread,
     websocket_thread,
@@ -49,6 +49,7 @@ _validator: Optional[ConstraintBasedOrderValidator] = None
 validation_service: Optional[OrderValidationService] = None
 position_service = PositionManagementService()
 fee_service: Optional[TradingFeeService] = None
+game_service: Optional[GameService] = None
 
 # Global order tracking removed - now owned by OrderValidationService
 # Global position tracking removed - now owned by PositionManagementService
@@ -141,13 +142,49 @@ async def startup():
     - Loading configuration
     - Creating exchange from config
     - Creating validator from config
-    - Initializing services
+    - Initializing services (including GameService)
     - Starting processing threads
     - Loading instruments from config
 
-    Follows Single Responsibility Principle by focusing only on startup tasks.
+    The startup process establishes proper dependency injection by storing
+    service instances in app.state for access throughout the application
+    lifecycle. This eliminates global state access and enables testable
+    service interactions.
+
+    Notes
+    -----
+    Service initialization follows dependency injection patterns where
+    services receive their dependencies through constructor parameters
+    rather than accessing global state directly. The GameService is
+    created fresh for each application startup, ensuring clean state
+    for testing and production deployments.
+
+    All service instances are stored in app.state to enable FastAPI
+    dependency injection throughout the request/response cycle.
+
+    TradingContext
+    --------------
+    The startup process establishes the foundational services required
+    for trading operations:
+    - GameService: Team management and authentication
+    - ExchangeVenue: Order matching and trade execution
+    - PositionService: Position tracking and risk management
+    - ValidationService: Order constraint validation
+
+    Proper initialization order ensures that all service dependencies
+    are satisfied before processing begins.
+
+    Examples
+    --------
+    >>> # Services are accessible via dependency injection
+    >>> @app.post("/teams/register")
+    >>> async def register_team(
+    ...     request: TeamRegistration,
+    ...     game_service: GameService = Depends(get_game_service)
+    ... ) -> TeamInfo:
+    ...     return game_service.register_team(request.name, request.role)
     """
-    global validation_service, _exchange, _validator, fee_service
+    global validation_service, _exchange, _validator, fee_service, game_service
 
     # Load configuration
     from ..infrastructure.config import ConfigLoader
@@ -174,12 +211,18 @@ async def startup():
     # Create fee service from config
     fee_service = FeeServiceFactory.create_from_config(config_loader)
 
+    # Create game service for team management
+    game_service = GameService()
+
     # Initialize services
     validation_service = OrderValidationService(
         validator=validator,
         exchange=exchange,
         position_service=position_service,
     )
+
+    # Store services in app state for dependency injection
+    app.state.game_service = game_service
 
     # Start processing threads
     validator_t.start()
@@ -327,10 +370,14 @@ async def websocket_endpoint(websocket: WebSocket, api_key: str):
     ...         msg = json.loads(message)
     ...         print(f"Received {msg['type']}")
     """
-    # Validate API key
-    team = team_registry.get_team_by_api_key(api_key)
-    if not team:
-        await websocket.close(code=1008, reason="Invalid API key")
+    # Validate API key using game service
+    if game_service:
+        team = game_service.get_team_by_api_key(api_key)
+        if not team:
+            await websocket.close(code=1008, reason="Invalid API key")
+            return
+    else:
+        await websocket.close(code=1008, reason="Service not available")
         return
 
     # Connect

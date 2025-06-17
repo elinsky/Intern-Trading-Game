@@ -8,13 +8,14 @@ from datetime import datetime
 
 from fastapi import APIRouter, Depends
 
+from ...domain.game.game_service import GameService
 from ...domain.positions import PositionManagementService
-from ...infrastructure.api.auth import team_registry
 from ...infrastructure.api.models import (
     ApiError,
     ApiResponse,
     TeamRegistration,
 )
+from ..dependencies import get_game_service
 
 router = APIRouter(prefix="/game", tags=["game"])
 
@@ -32,6 +33,7 @@ def get_position_service():
 @router.post("/teams/register", response_model=ApiResponse)
 async def register_team(
     registration: TeamRegistration,
+    game_service: GameService = Depends(get_game_service),
     position_service: PositionManagementService = Depends(
         get_position_service
     ),
@@ -78,7 +80,7 @@ async def register_team(
         )
 
     # Check for duplicate team name
-    existing_team = team_registry.get_team_by_name(registration.team_name)
+    existing_team = game_service.get_team_by_name(registration.team_name)
     if existing_team is not None:
         return ApiResponse(
             success=False,
@@ -91,7 +93,7 @@ async def register_team(
         )
 
     # Register the team
-    team_info = team_registry.register_team(
+    team_info = game_service.register_team(
         team_name=registration.team_name, role=registration.role
     )
 
@@ -118,6 +120,7 @@ async def register_team(
 @router.get("/teams/{team_id}", response_model=ApiResponse)
 async def get_team_info(
     team_id: str,
+    game_service: GameService = Depends(get_game_service),
 ):
     """Get information about a specific team.
 
@@ -135,7 +138,7 @@ async def get_team_info(
     request_id = f"req_{datetime.now().timestamp()}"
 
     # Look up team
-    team_info = team_registry.get_team_by_id(team_id)
+    team_info = game_service.get_team_by_id(team_id)
 
     if team_info is None:
         return ApiResponse(

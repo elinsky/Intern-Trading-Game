@@ -11,7 +11,6 @@ from intern_trading_game.api.main import (
     app,
     position_service,
 )
-from intern_trading_game.infrastructure.api.auth import team_registry
 
 
 @pytest.fixture
@@ -29,9 +28,7 @@ def api_context():
     # Exchange will be created fresh during startup
     position_service._positions.clear()
     # Rate limiting state now owned by OrderValidationService
-    team_registry.teams.clear()
-    team_registry.api_key_to_team.clear()
-    team_registry._team_counter = 0
+    # GameService state will be created fresh during app startup
 
     # Import the threading functions to create fresh threads
     import threading
@@ -92,14 +89,15 @@ def api_context():
                 "websocket": fresh_websocket_t,
             }
 
-            # Get exchange from app state after startup
+            # Get services from app state after startup
             exchange = client.app.state.exchange
+            game_service = client.app.state.game_service
 
             yield {
                 "client": client,
                 "exchange": exchange,
                 "positions": position_service._positions,
-                "team_registry": team_registry,
+                "game_service": game_service,
                 "threads": threads,
             }
     finally:

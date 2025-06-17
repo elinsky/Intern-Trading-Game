@@ -7,7 +7,6 @@ This module provides fixtures for testing at various integration boundaries:
 - System-level: Complete system with persistence
 """
 
-from datetime import datetime
 from queue import Queue
 from typing import Dict
 
@@ -23,13 +22,13 @@ from intern_trading_game.domain.exchange.validation.order_validator import (
     ConstraintType,
 )
 from intern_trading_game.domain.exchange.venue import ExchangeVenue
+from intern_trading_game.domain.game.game_service import GameService
 from intern_trading_game.domain.positions import (
     FeeSchedule,
     PositionManagementService,
     TradeProcessingService,
     TradingFeeService,
 )
-from intern_trading_game.infrastructure.api.auth import TeamInfo, team_registry
 from intern_trading_game.services import (
     OrderMatchingService,
     OrderValidationService,
@@ -166,22 +165,12 @@ def service_context(
 @pytest.fixture
 def test_team():
     """Create a test team for integration tests."""
-    team = TeamInfo(
-        team_id="TEST_MM_001",
-        team_name="Test Market Maker",
-        role="market_maker",
-        api_key="test_api_key_123",
-        created_at=datetime.now(),
-    )
-    # Register with team registry
-    team_registry.teams[team.team_id] = team
-    team_registry.api_key_to_team[team.api_key] = team.team_id
+    game_service = GameService()
+    team = game_service.register_team("Test Market Maker", "market_maker")
 
     yield team
 
-    # Cleanup
-    del team_registry.teams[team.team_id]
-    del team_registry.api_key_to_team[team.api_key]
+    # GameService instance will be garbage collected after test
 
 
 # Pipeline-level fixtures (single thread with queues)

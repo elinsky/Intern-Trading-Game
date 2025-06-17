@@ -1,6 +1,5 @@
 """REST API module for the Intern Trading Game."""
 
-from ..infrastructure.api.auth import team_registry
 from ..infrastructure.api.models import (
     OrderRequest,
     OrderResponse,
@@ -15,5 +14,4 @@ __all__ = [
     "OrderResponse",
     "TeamInfo",
     "PositionResponse",
-    "team_registry",
 ]

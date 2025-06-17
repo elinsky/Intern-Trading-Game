@@ -12,7 +12,6 @@ infrastructure. Run these as integration tests with the full app running.
 
 import threading
 import time
-from datetime import datetime
 
 import pytest
 
@@ -22,7 +21,6 @@ from intern_trading_game.domain.exchange.models.order import (
     OrderSide,
     OrderType,
 )
-from intern_trading_game.infrastructure.api.models import TeamInfo
 
 # Tests enabled - use api_context fixture for threading support
 
@@ -51,34 +49,16 @@ def test_instrument(api_context):
 @pytest.fixture
 def market_maker_team(api_context):
     """Create a test market maker team."""
-    team_registry = api_context["team_registry"]
-    team = TeamInfo(
-        team_id="MM_TEST_001",
-        team_name="Test Market Maker",
-        role="market_maker",
-        api_key="test_mm_key_123",
-        created_at=datetime.now(),
-    )
-    # Register with team registry so auth works
-    team_registry.teams[team.team_id] = team
-    team_registry.api_key_to_team[team.api_key] = team.team_id
+    game_service = api_context["game_service"]
+    team = game_service.register_team("Test Market Maker", "market_maker")
     return team
 
 
 @pytest.fixture
 def second_team(api_context):
     """Create a second test team."""
-    team_registry = api_context["team_registry"]
-    team = TeamInfo(
-        team_id="MM_TEST_002",
-        team_name="Second Market Maker",
-        role="market_maker",
-        api_key="test_mm_key_456",
-        created_at=datetime.now(),
-    )
-    # Register with team registry so auth works
-    team_registry.teams[team.team_id] = team
-    team_registry.api_key_to_team[team.api_key] = team.team_id
+    game_service = api_context["game_service"]
+    team = game_service.register_team("Second Market Maker", "market_maker")
     return team
 
 
