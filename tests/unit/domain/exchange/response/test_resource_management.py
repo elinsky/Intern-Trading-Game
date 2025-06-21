@@ -193,6 +193,95 @@ def take_sustained_load_snapshot(
         memory_snapshots.append(snapshot)
 
 
+def create_tracked_registration(team_id, created_objects, weak_references):
+    """Create a registration with memory tracking."""
+    request_id = f"req_memory_{len(created_objects):05d}"
+
+    registration = ResponseRegistration(
+        request_id=request_id,
+        team_id=team_id,
+        timeout_at=datetime.now() + timedelta(seconds=1),
+        status=ResponseStatus.PENDING,
+    )
+
+    # Track for memory leak detection
+    created_objects.append(registration)
+    weak_references.append(weakref.ref(registration))
+
+    return registration
+
+
+def complete_tracked_request(request_id, request_storage, storage_lock):
+    """Complete a request in storage."""
+    with storage_lock:
+        if request_id in request_storage:
+            request_storage[request_id]["completed"] = True
+            request_storage[request_id]["completed_at"] = datetime.now()
+
+
+def cleanup_expired_tracked_requests(
+    request_storage, storage_lock, cleanup_counts
+):
+    """Clean up old completed requests."""
+    cleaned_count = 0
+    current_time = datetime.now()
+    cleanup_threshold = timedelta(milliseconds=100)
+
+    with storage_lock:
+        to_remove = [
+            rid
+            for rid, data in request_storage.items()
+            if data["completed"]
+            and current_time - data.get("completed_at", current_time)
+            > cleanup_threshold
+        ]
+
+        for request_id in to_remove:
+            del request_storage[request_id]
+            cleaned_count += 1
+
+    cleanup_counts.append(cleaned_count)
+    return cleaned_count
+
+
+def register_with_capacity_check(
+    team_id, pending_requests, max_pending, capacity_lock, rejection_count
+):
+    """Register request with capacity limit check."""
+    with capacity_lock:
+        current_pending = len(pending_requests)
+
+        if current_pending >= max_pending:
+            rejection_count[0] += 1
+            raise Exception(
+                f"Service overloaded: {current_pending}/{max_pending}"
+            )
+
+        # Generate unique request ID
+        request_counter = getattr(register_with_capacity_check, "counter", 0)
+        register_with_capacity_check.counter = request_counter + 1
+        request_id = f"req_capacity_{request_counter:03d}"
+
+        registration = ResponseRegistration(
+            request_id=request_id,
+            team_id=team_id,
+            timeout_at=datetime.now() + timedelta(seconds=5),
+            status=ResponseStatus.PENDING,
+        )
+
+        pending_requests[request_id] = registration
+        return registration
+
+
+def complete_capacity_tracked_request(
+    request_id, pending_requests, capacity_lock
+):
+    """Complete a request to free up capacity."""
+    with capacity_lock:
+        if request_id in pending_requests:
+            del pending_requests[request_id]
+
+
 class TestMemoryManagement:
     """Test memory usage and leak prevention mechanisms."""
 
@@ -210,145 +299,132 @@ class TestMemoryManagement:
         state over long-running sessions.
         """
         # Given - Setup for memory leak detection
-        request_storage = {}  # Simulates coordinator's internal storage
+        request_storage = {}
         cleanup_counts = []
         storage_lock = threading.Lock()
-
-        # Track object creation for memory leak detection
         created_objects = []
         weak_references = []
 
-        def mock_register_request_with_tracking(team_id, timeout_seconds=None):
-            request_id = f"req_memory_{len(created_objects):05d}"
+        # Setup mock coordinator
+        self._setup_memory_leak_tracking(
+            mock_coordinator,
+            request_storage,
+            storage_lock,
+            cleanup_counts,
+            created_objects,
+            weak_references,
+        )
 
-            # Create registration object
-            registration = ResponseRegistration(
-                request_id=request_id,
-                team_id=team_id,
-                timeout_at=datetime.now()
-                + timedelta(seconds=1),  # Short timeout for test
-                status=ResponseStatus.PENDING,
+        # When - Process requests with periodic cleanup
+        num_requests = 200
+        self._process_requests_with_cleanup(
+            mock_coordinator,
+            request_storage,
+            storage_lock,
+            num_requests,
+        )
+
+        # Clear strong references for GC test
+        created_objects.clear()
+        gc.collect()
+
+        # Then - Verify cleanup effectiveness
+        self._verify_cleanup_effectiveness(
+            request_storage,
+            storage_lock,
+            cleanup_counts,
+            weak_references,
+            num_requests,
+        )
+
+    def _setup_memory_leak_tracking(
+        self,
+        mock_coordinator,
+        request_storage,
+        storage_lock,
+        cleanup_counts,
+        created_objects,
+        weak_references,
+    ):
+        """Setup mock coordinator for memory leak tracking."""
+
+        def register_with_tracking(team_id, timeout_seconds=None):
+            registration = create_tracked_registration(
+                team_id, created_objects, weak_references
             )
-
-            # Track for memory leak detection
-            created_objects.append(registration)
-            weak_references.append(weakref.ref(registration))
-
-            # Store in mock internal storage
             with storage_lock:
-                request_storage[request_id] = {
+                request_storage[registration.request_id] = {
                     "registration": registration,
                     "created_at": datetime.now(),
                     "completed": False,
                 }
-
             return registration
 
-        def mock_complete_request(request_id):
-            """Simulate request completion."""
-            with storage_lock:
-                if request_id in request_storage:
-                    request_storage[request_id]["completed"] = True
-                    request_storage[request_id]["completed_at"] = (
-                        datetime.now()
-                    )
+        def cleanup_expired():
+            return cleanup_expired_tracked_requests(
+                request_storage, storage_lock, cleanup_counts
+            )
 
-        def mock_cleanup_expired_requests():
-            """Simulate cleanup of old completed requests."""
-            cleaned_count = 0
-            current_time = datetime.now()
-            cleanup_threshold = timedelta(
-                milliseconds=100
-            )  # Very short for test
-
-            with storage_lock:
-                to_remove = []
-                for request_id, data in request_storage.items():
-                    if data["completed"]:
-                        completed_at = data.get("completed_at", current_time)
-                        if current_time - completed_at > cleanup_threshold:
-                            to_remove.append(request_id)
-
-                for request_id in to_remove:
-                    del request_storage[request_id]
-                    cleaned_count += 1
-
-            cleanup_counts.append(cleaned_count)
-            return cleaned_count
-
-        mock_coordinator.register_request.side_effect = (
-            mock_register_request_with_tracking
-        )
+        mock_coordinator.register_request.side_effect = register_with_tracking
         mock_coordinator.cleanup_completed_requests.side_effect = (
-            mock_cleanup_expired_requests
+            cleanup_expired
         )
 
-        # When - Many requests processed over time with periodic cleanup
-        num_requests = 200
-        cleanup_interval = 20  # Clean up every 20 requests
+    def _process_requests_with_cleanup(
+        self, mock_coordinator, request_storage, storage_lock, num_requests
+    ):
+        """Process requests with periodic cleanup."""
+        cleanup_interval = 20
 
         for i in range(num_requests):
+            # Register and complete request
             team_id = f"TEAM_MEMORY_{i:03d}"
-
-            # Register request
             registration = mock_coordinator.register_request(team_id)
+            complete_tracked_request(
+                registration.request_id, request_storage, storage_lock
+            )
 
-            # Simulate quick completion
-            mock_complete_request(registration.request_id)
-
-            # Periodic cleanup
+            # Periodic operations
             if i % cleanup_interval == 0:
                 mock_coordinator.cleanup_completed_requests()
 
-            # Small delay to allow cleanup timing to work
             if i % 10 == 0:
-                time.sleep(0.11)  # Ensure requests are old enough for cleanup
+                time.sleep(0.11)  # Allow cleanup timing
 
-        # Final cleanup
-        time.sleep(0.11)  # Ensure all requests are old enough
-        for _ in range(5):  # Multiple cleanup passes
+        # Final cleanup passes
+        time.sleep(0.11)
+        for _ in range(5):
             mock_coordinator.cleanup_completed_requests()
             time.sleep(0.01)
 
-        # Clear strong references to allow garbage collection
-        created_objects.clear()
-
-        # Force garbage collection to test weak references
-        gc.collect()
-
-        # Then - Memory usage is bounded and objects are properly released
-        # Verify cleanup occurred
+    def _verify_cleanup_effectiveness(
+        self,
+        request_storage,
+        storage_lock,
+        cleanup_counts,
+        weak_references,
+        num_requests,
+    ):
+        """Verify cleanup prevented memory leaks."""
         total_cleaned = sum(cleanup_counts)
         assert total_cleaned > 0, "No cleanup occurred"
         assert (
-            total_cleaned
-            >= num_requests * 0.5  # Lower threshold for timing variability
-        ), f"Too few requests cleaned: {total_cleaned}/{num_requests}"
+            total_cleaned >= num_requests * 0.5
+        ), f"Too few cleaned: {total_cleaned}/{num_requests}"
 
-        # Verify storage doesn't grow unbounded
+        # Check storage size
         with storage_lock:
             remaining_requests = len(request_storage)
-
-        # Should have far fewer than total requests stored
         assert (
             remaining_requests < num_requests * 0.5
-        ), f"Too many requests still stored: {remaining_requests}/{num_requests}"
+        ), f"Too many remaining: {remaining_requests}"
 
-        # Verify weak references show objects were garbage collected
-        gc.collect()  # Ensure GC runs
+        # Check weak references
+        gc.collect()
         dead_references = sum(1 for ref in weak_references if ref() is None)
-        alive_references = len(weak_references) - dead_references
-
-        # Most objects should be garbage collected after cleanup
         assert (
-            dead_references
-            >= num_requests * 0.5  # At least half should be collected
-        ), f"Memory leak detected: {alive_references} objects still alive, {dead_references} collected"
-
-        print(
-            f"Created: {num_requests}, Cleaned: {total_cleaned}, "
-            f"Remaining: {remaining_requests}, Dead refs: {dead_references}"
-        )
+            dead_references >= num_requests * 0.5
+        ), f"Memory leak: only {dead_references} collected"
 
     def test_memory_usage_under_sustained_load(
         self, mock_coordinator, coordination_config
@@ -648,130 +724,149 @@ class TestCapacityLimits:
         This test validates that the coordination system properly
         enforces capacity limits to prevent resource exhaustion.
         """
-        # Given - Coordination config with low capacity limit for testing
+        # Given - Setup test configuration
         test_config = coordination_config
-        test_config.max_pending_requests = 10  # Low limit for testing
+        test_config.max_pending_requests = 10
 
         pending_requests = {}
         rejection_count = [0]
         capacity_lock = threading.Lock()
 
-        def mock_register_with_capacity_limit(team_id, timeout_seconds=None):
-            with capacity_lock:
-                current_pending = len(pending_requests)
-
-                if current_pending >= test_config.max_pending_requests:
-                    # Reject due to capacity
-                    rejection_count[0] += 1
-                    raise Exception(
-                        f"Service overloaded: {current_pending}/{test_config.max_pending_requests}"
-                    )
-
-                # Accept request
-                # Use a counter to ensure unique IDs
-                request_counter = getattr(
-                    mock_register_with_capacity_limit, "counter", 0
-                )
-                mock_register_with_capacity_limit.counter = request_counter + 1
-                request_id = f"req_capacity_{request_counter:03d}"
-                registration = ResponseRegistration(
-                    request_id=request_id,
-                    team_id=team_id,
-                    timeout_at=datetime.now() + timedelta(seconds=5),
-                    status=ResponseStatus.PENDING,
-                )
-
-                pending_requests[request_id] = registration
-                return registration
-
-        def mock_complete_request_capacity(request_id):
-            """Complete a request to free up capacity."""
-            with capacity_lock:
-                if request_id in pending_requests:
-                    del pending_requests[request_id]
-
-        mock_coordinator.register_request.side_effect = (
-            mock_register_with_capacity_limit
+        # Setup mock coordinator
+        self._setup_capacity_limit_mocks(
+            mock_coordinator,
+            pending_requests,
+            capacity_lock,
+            test_config.max_pending_requests,
+            rejection_count,
         )
 
-        # When - Submit requests up to and beyond capacity limit
-        successful_registrations = []
-        failed_registrations = []
+        # When - Test capacity scenarios
+        successful = self._fill_to_capacity(
+            mock_coordinator, test_config.max_pending_requests
+        )
 
-        # Fill up to capacity
-        for i in range(test_config.max_pending_requests):
+        failed = self._test_capacity_overflow(mock_coordinator, 5)
+
+        recovered = self._test_capacity_recovery(
+            mock_coordinator, successful[:3], pending_requests, capacity_lock
+        )
+
+        # Then - Verify capacity enforcement
+        self._verify_capacity_enforcement(
+            successful,
+            failed,
+            recovered,
+            pending_requests,
+            capacity_lock,
+            test_config.max_pending_requests,
+        )
+
+    def _setup_capacity_limit_mocks(
+        self,
+        mock_coordinator,
+        pending_requests,
+        capacity_lock,
+        max_pending,
+        rejection_count,
+    ):
+        """Setup mock coordinator with capacity limits."""
+
+        def register_with_limit(team_id, timeout_seconds=None):
+            return register_with_capacity_check(
+                team_id,
+                pending_requests,
+                max_pending,
+                capacity_lock,
+                rejection_count,
+            )
+
+        mock_coordinator.register_request.side_effect = register_with_limit
+
+    def _fill_to_capacity(self, mock_coordinator, max_pending):
+        """Fill requests up to capacity limit."""
+        successful = []
+
+        for i in range(max_pending):
             try:
                 team_id = f"TEAM_CAPACITY_{i:03d}"
                 registration = mock_coordinator.register_request(team_id)
-                successful_registrations.append(registration)
-            except Exception as e:
-                failed_registrations.append(str(e))
+                successful.append(registration)
+            except Exception:
+                pass  # Shouldn't happen at capacity
 
-        # Attempt to exceed capacity
-        for i in range(5):  # Try 5 more requests
+        return successful
+
+    def _test_capacity_overflow(self, mock_coordinator, overflow_count):
+        """Test requests beyond capacity."""
+        failed = []
+
+        for i in range(overflow_count):
             try:
                 team_id = f"TEAM_OVERFLOW_{i:03d}"
-                registration = mock_coordinator.register_request(team_id)
-                successful_registrations.append(registration)
+                mock_coordinator.register_request(team_id)
             except Exception as e:
-                failed_registrations.append(str(e))
+                failed.append(str(e))
 
-        # Complete some requests to test capacity recovery
-        completed_requests = successful_registrations[:3]
-        for registration in completed_requests:
-            mock_complete_request_capacity(registration.request_id)
+        return failed
 
-        # Try more requests after freeing capacity
-        recovered_registrations = []
-        for i in range(3):
+    def _test_capacity_recovery(
+        self, mock_coordinator, to_complete, pending_requests, capacity_lock
+    ):
+        """Test capacity recovery after completions."""
+        # Complete some requests
+        for registration in to_complete:
+            complete_capacity_tracked_request(
+                registration.request_id, pending_requests, capacity_lock
+            )
+
+        # Try to fill recovered capacity
+        recovered = []
+        for i in range(len(to_complete)):
             try:
                 team_id = f"TEAM_RECOVERY_{i:03d}"
                 registration = mock_coordinator.register_request(team_id)
-                recovered_registrations.append(registration)
-            except Exception as e:
-                failed_registrations.append(str(e))
+                recovered.append(registration)
+            except Exception:
+                pass
 
-        # Then - Capacity limits are properly enforced
-        with capacity_lock:
-            # Initial registrations should fill capacity
-            initial_successful = len(
-                [
-                    r
-                    for r in successful_registrations
-                    if r.request_id.startswith("req_capacity_")
-                ]
-            )
-            assert (
-                initial_successful == test_config.max_pending_requests
-            ), f"Expected {test_config.max_pending_requests} initial successful, got {initial_successful}"
+        return recovered
 
-            assert (
-                len(failed_registrations) == 5
-            ), f"Expected 5 failures, got {len(failed_registrations)}"
-
-            assert (
-                len(recovered_registrations) == 3
-            ), f"Expected 3 recovered requests, got {len(recovered_registrations)}"
-
-            # Verify rejection messages mention capacity
-            for failure in failed_registrations:
-                assert (
-                    "overloaded" in failure.lower()
-                    or "capacity" in failure.lower()
-                )
-
-            # Verify final pending count is correct
-            final_pending = len(pending_requests)
-            # We had 10 initially, completed 3, added 3 more = still 10
-            expected_final = test_config.max_pending_requests
-            assert (
-                final_pending == expected_final
-            ), f"Final pending count wrong: {final_pending}, expected {expected_final}"
-
-        print(
-            f"Successful: {len(successful_registrations)}, Failed: {len(failed_registrations)}, "
-            f"Recovered: {len(recovered_registrations)}, Final pending: {final_pending}"
+    def _verify_capacity_enforcement(
+        self,
+        successful,
+        failed,
+        recovered,
+        pending_requests,
+        capacity_lock,
+        max_pending,
+    ):
+        """Verify capacity limits were enforced correctly."""
+        # Check initial fill
+        initial_count = len(
+            [r for r in successful if r.request_id.startswith("req_capacity_")]
         )
+        assert initial_count == max_pending, f"Expected {max_pending} initial"
+
+        # Check overflow rejections
+        assert len(failed) == 5, f"Expected 5 failures, got {len(failed)}"
+
+        # Check recovery
+        assert len(recovered) == 3, "Expected 3 recovered"
+
+        # Verify error messages
+        for failure in failed:
+            assert (
+                "overloaded" in failure.lower()
+                or "capacity" in failure.lower()
+            )
+
+        # Verify final state
+        with capacity_lock:
+            final_pending = len(pending_requests)
+        assert (
+            final_pending == max_pending
+        ), f"Wrong final count: {final_pending}"
 
     def test_request_id_uniqueness_after_capacity_recovery(
         self, mock_coordinator, coordination_config
