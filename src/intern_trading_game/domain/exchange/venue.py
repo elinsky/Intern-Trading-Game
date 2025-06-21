@@ -34,8 +34,40 @@ class ExchangeVenue:
     where orders are matched based on price first (best prices get priority)
     and then by time (earlier orders at the same price get priority).
 
+    Responsibilities
+    ---------------
+
+    - Maintain order books for all listed instruments
+    - Route orders to appropriate matching engines based on phase
+    - Enforce phase-based trading rules (via PhaseManager)
+    - Execute opening auctions and market close procedures
+    - Provide market data snapshots
+
+    NOT Responsible For
+    -------------------
+
+    - Determining market phases (delegated to PhaseManager)
+    - Order validation beyond basic checks (delegated to validators)
+    - Position tracking (handled by PositionService)
+    - Fee calculations (handled by separate fee services)
+
+    SOLID Compliance
+    ---------------
+
+    - Single Responsibility: Currently violates SRP by handling both order
+      management AND phase transition actions. Future refactoring will extract
+      phase transition logic to ExchangePhaseTransitionHandler.
+    - Open/Closed: Uses MatchingEngine protocol for extensibility
+    - Liskov Substitution: Accepts any PhaseManagerInterface implementation
+    - Interface Segregation: Implements focused ExchangeServiceProtocol
+    - Dependency Inversion: Depends on abstractions (PhaseManagerInterface,
+      MatchingEngine) not concrete implementations
+
     Parameters
     ----------
+    phase_manager : PhaseManagerInterface
+        The phase manager that determines market phases and rules.
+        Exchange depends on this abstraction, not concrete implementation.
     matching_engine : MatchingEngine, optional
         The matching engine to use for order processing. If not provided,
         defaults to ContinuousMatchingEngine for immediate order matching.
@@ -48,8 +80,12 @@ class ExchangeVenue:
         Map of instrument IDs to their instrument objects.
     all_order_ids : Set[str]
         Set of all order IDs across all books.
-    matching_engine : MatchingEngine
-        The engine responsible for order matching logic.
+    phase_manager : PhaseManagerInterface
+        Determines current market phase and operational rules.
+    _continuous_engine : ContinuousMatchingEngine
+        Engine for immediate order matching during continuous trading.
+    _batch_engine : BatchMatchingEngine
+        Engine for batch matching during auctions.
 
     Notes
     -----
@@ -68,18 +104,19 @@ class ExchangeVenue:
     TradingContext
     -------------
     This implementation assumes:
+
     - A central limit order book model
-    - Configurable matching mode (continuous or batch)
+    - Phase-aware matching (continuous vs batch based on market phase)
     - No circuit breakers or trading halts
-    - No fees or commissions
-    - No position limits or risk checks
+    - No fees or commissions at exchange level
+    - No position limits or risk checks at exchange level
     - No support for hidden orders, iceberg orders, or other advanced order types
     - All orders can be partially filled
     - No cross-instrument strategies or basket orders
 
-    The matching engine can be switched between continuous and batch modes
-    to support different trading scenarios. Batch mode is particularly useful
-    for fair order processing in game environments.
+    The exchange automatically selects the appropriate matching engine based
+    on the current market phase, supporting both continuous trading and
+    auction-based matching.
 
     Examples
     --------
@@ -125,6 +162,7 @@ class ExchangeVenue:
         Notes
         -----
         The choice of matching engine determines how orders are processed:
+
         - ContinuousMatchingEngine: Orders match immediately upon submission
         - BatchMatchingEngine: Orders are collected and matched in batches
 
@@ -370,6 +408,7 @@ class ExchangeVenue:
         on the configured matching engine.
 
         For batch mode:
+
         - All pending orders are processed simultaneously
         - Orders at the same price are randomized fairly
         - Results include the final status of each order

@@ -285,6 +285,31 @@ class ConstraintBasedOrderValidator(OrderValidatorInterface):
     on the trader's role. All role-specific logic is encoded in the
     constraint configuration, not in the validator itself.
 
+    Responsibilities
+    ---------------
+
+    - Apply business rule constraints to incoming orders
+    - Validate position limits, order rates, size limits, etc.
+    - Return clear rejection reasons for invalid orders
+    - Cache constraint configurations per role
+
+    NOT Responsible For
+    -------------------
+
+    - Order matching (handled by MatchingEngine)
+    - Phase determination (handled by PhaseManager)
+    - Position tracking (handled by PositionService)
+    - Fee calculation (handled by fee services)
+
+    SOLID Compliance
+    ---------------
+
+    - Single Responsibility: Only validates orders against constraints
+    - Open/Closed: New constraints can be added without modifying validator
+    - Liskov Substitution: All Constraint implementations are interchangeable
+    - Interface Segregation: Implements focused OrderValidatorInterface
+    - Dependency Inversion: Depends on Constraint abstraction
+
     Parameters
     ----------
     constraint_registry : Optional[Dict[ConstraintType, Constraint]]
@@ -296,12 +321,21 @@ class ConstraintBasedOrderValidator(OrderValidatorInterface):
     and applies them based on configuration. New constraint types can
     be added by extending the Constraint base class.
 
+    The constraint-based design allows for:
+
+    - Dynamic configuration without code changes
+    - Easy addition of new constraint types
+    - Clear separation of validation logic
+    - Testable constraint implementations
+
     TradingContext
     --------------
     The validator assumes:
+
     - Constraint configurations are loaded from external config
     - Position data is current as of order submission
     - Order counts are tracked externally per tick
+    - All constraints are fail-fast (first violation stops validation)
     """
 
     def __init__(

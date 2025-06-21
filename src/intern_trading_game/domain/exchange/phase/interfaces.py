@@ -19,13 +19,35 @@ class PhaseManagerInterface(Protocol):
     phase based on time and configuration.
 
     The phase manager is responsible for:
+
     - Evaluating the current time against the market schedule
     - Determining which phase the market is in
     - Providing the complete phase state with operational rules
 
+    The phase manager is NOT responsible for:
+
+    - Executing any actions when phases change
+    - Triggering order matching or cancellations
+    - Managing the exchange's internal state
+    - Having any side effects
+
+    Separation of Concerns
+    ----------------------
+    The PhaseManager handles time-based concerns (WHEN phases change
+    and WHAT rules apply), while phase transition actions (HOW the
+    exchange responds to changes) are handled by separate components
+    like the ExchangePhaseTransitionHandler.
+
+    This separation ensures:
+
+    - PhaseManager can be tested without side effects
+    - Exchange actions can be modified without changing schedules
+    - Future microservices can split time service from exchange
+
     Notes
     -----
     Implementations may use different strategies for phase evaluation:
+
     - Simple time-based checks against hardcoded schedule
     - Configuration-driven schedule with timezone support
     - External calendar integration for holidays
@@ -46,6 +68,12 @@ class PhaseManagerInterface(Protocol):
     >>> state = manager.get_current_phase_state()
     >>> if state.is_matching_enabled:
     ...     process_order_matching()
+    >>>
+    >>> # Phase manager only determines state, doesn't execute actions
+    >>> # At 9:30 AM:
+    >>> phase = manager.get_current_phase_type()  # Returns CONTINUOUS
+    >>> # But the manager doesn't trigger opening auction - that's
+    >>> # handled by the exchange's transition handler
     """
 
     def get_current_phase_type(
@@ -69,11 +97,13 @@ class PhaseManagerInterface(Protocol):
         Notes
         -----
         The time parameter supports:
+
         - Testing with specific times
         - Backtesting with historical dates
         - Preview of upcoming phase changes
 
         Implementations must handle:
+
         - Timezone conversions to market timezone
         - Weekend detection
         - Holiday calendars (if configured)
@@ -105,6 +135,7 @@ class PhaseManagerInterface(Protocol):
         -----
         This method is typically called by the exchange to get
         its operational configuration. The returned state includes:
+
         - Which operations are allowed
         - How order matching should behave
         - Execution style for the phase

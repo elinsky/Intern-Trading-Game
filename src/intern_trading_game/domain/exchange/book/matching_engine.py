@@ -46,6 +46,31 @@ class MatchingEngine(ABC):
     1. submit_order: Handle individual order submission
     2. execute_batch: Process any pending batch operations
 
+    Responsibilities
+    ---------------
+
+    - Execute order matching logic according to specific algorithm
+    - Generate trades when orders cross
+    - Update order book state after matching
+    - Return results of order processing
+
+    NOT Responsible For
+    -------------------
+
+    - Order validation (done before reaching engine)
+    - Phase determination (handled by PhaseManager)
+    - Fee calculation (handled by separate services)
+    - Position tracking (handled by PositionService)
+
+    SOLID Compliance
+    ---------------
+
+    - Single Responsibility: Each engine has one job - match orders
+    - Open/Closed: New matching algorithms can be added without modifying existing
+    - Liskov Substitution: All engines are interchangeable via this interface
+    - Interface Segregation: Minimal interface with only essential methods
+    - Dependency Inversion: ExchangeVenue depends on this abstraction
+
     Notes
     -----
     The execute_batch method is called even in continuous mode (where it's
