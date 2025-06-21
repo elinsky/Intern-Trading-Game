@@ -1274,6 +1274,86 @@ class TestErrorRecoveryScenarios:
         assert "support_reference" in result.api_response.error.details
         assert result.final_status == ResponseStatus.ERROR
 
+    def _create_capacity_error_result(
+        self, registration_count: int, capacity_limit: int
+    ) -> ResponseResult:
+        """Create a capacity error result for testing."""
+        return ResponseResult(
+            request_id=f"req_capacity_{registration_count}",
+            success=False,
+            api_response=ApiResponse(
+                success=False,
+                request_id=f"req_capacity_{registration_count}",
+                order_id=None,
+                data=None,
+                error=ApiError(
+                    code="SERVICE_OVERLOADED",
+                    message="Coordination service at capacity limit",
+                    details={
+                        "current_load": registration_count,
+                        "capacity_limit": capacity_limit,
+                        "retry_after_seconds": 1,
+                    },
+                ),
+            ),
+            processing_time_ms=5.0,
+            final_status=ResponseStatus.ERROR,
+            order_id=None,
+        )
+
+    def _create_normal_registration(
+        self, registration_count: int, team_id: str
+    ) -> ResponseRegistration:
+        """Create a normal registration for testing."""
+        return ResponseRegistration(
+            request_id=f"req_capacity_{registration_count}",
+            team_id=team_id,
+            timeout_at=datetime.now() + timedelta(seconds=5),
+            status=ResponseStatus.PENDING,
+        )
+
+    def _create_successful_result(self, request_id: str) -> ResponseResult:
+        """Create a successful completion result for testing."""
+        return ResponseResult(
+            request_id=request_id,
+            success=True,
+            api_response=ApiResponse(
+                success=True,
+                request_id=request_id,
+                order_id=f"ORD_{request_id[-1:]}",
+                data={"status": "new"},
+                error=None,
+            ),
+            processing_time_ms=30.0,
+            final_status=ResponseStatus.COMPLETED,
+            order_id=f"ORD_{request_id[-1:]}",
+        )
+
+    def _submit_requests_and_collect_results(
+        self, mock_coordinator, team_id: str, count: int
+    ) -> list:
+        """Submit multiple requests and collect results."""
+        results = []
+        for i in range(count):
+            try:
+                registration_or_result = mock_coordinator.register_request(
+                    team_id
+                )
+
+                if isinstance(registration_or_result, ResponseResult):
+                    # Service rejected at registration
+                    results.append(registration_or_result)
+                else:
+                    # Normal registration, wait for completion
+                    result = mock_coordinator.wait_for_completion(
+                        registration_or_result.request_id
+                    )
+                    results.append(result)
+
+            except Exception as e:
+                pytest.fail(f"Coordination should not raise exceptions: {e}")
+        return results
+
     def test_service_capacity_management(
         self, mock_coordinator, coordination_config
     ):
@@ -1302,60 +1382,21 @@ class TestErrorRecoveryScenarios:
             # Simulate hitting capacity after 3 requests
             if registration_count > 3:
                 capacity_reached = True
-                # Return error result instead of registration
-                return ResponseResult(
-                    request_id=f"req_capacity_{registration_count}",
-                    success=False,
-                    api_response=ApiResponse(
-                        success=False,
-                        request_id=f"req_capacity_{registration_count}",
-                        order_id=None,
-                        data=None,
-                        error=ApiError(
-                            code="SERVICE_OVERLOADED",
-                            message="Coordination service at capacity limit",
-                            details={
-                                "current_load": registration_count,
-                                "capacity_limit": capacity_limit,
-                                "retry_after_seconds": 1,
-                            },
-                        ),
-                    ),
-                    processing_time_ms=5.0,
-                    final_status=ResponseStatus.ERROR,
-                    order_id=None,
+                return self._create_capacity_error_result(
+                    registration_count, capacity_limit
                 )
             else:
-                # Normal registration
-                return ResponseRegistration(
-                    request_id=f"req_capacity_{registration_count}",
-                    team_id=team_id,
-                    timeout_at=datetime.now() + timedelta(seconds=5),
-                    status=ResponseStatus.PENDING,
+                return self._create_normal_registration(
+                    registration_count, team_id
                 )
 
         def mock_wait_with_capacity_check(request_id):
             if capacity_reached:
-                # Should not be called for rejected registrations
                 pytest.fail(
                     "wait_for_completion called after capacity rejection"
                 )
             else:
-                # Normal completion
-                return ResponseResult(
-                    request_id=request_id,
-                    success=True,
-                    api_response=ApiResponse(
-                        success=True,
-                        request_id=request_id,
-                        order_id=f"ORD_{request_id[-1:]}",
-                        data={"status": "new"},
-                        error=None,
-                    ),
-                    processing_time_ms=30.0,
-                    final_status=ResponseStatus.COMPLETED,
-                    order_id=f"ORD_{request_id[-1:]}",
-                )
+                return self._create_successful_result(request_id)
 
         mock_coordinator.register_request.side_effect = (
             mock_register_request_with_capacity
@@ -1365,26 +1406,9 @@ class TestErrorRecoveryScenarios:
         )
 
         # When - Multiple requests submitted to test capacity
-        results = []
-
-        for i in range(5):  # Submit more than capacity allows
-            try:
-                registration_or_result = mock_coordinator.register_request(
-                    team_id
-                )
-
-                if isinstance(registration_or_result, ResponseResult):
-                    # Service rejected at registration
-                    results.append(registration_or_result)
-                else:
-                    # Normal registration, wait for completion
-                    result = mock_coordinator.wait_for_completion(
-                        registration_or_result.request_id
-                    )
-                    results.append(result)
-
-            except Exception as e:
-                pytest.fail(f"Coordination should not raise exceptions: {e}")
+        results = self._submit_requests_and_collect_results(
+            mock_coordinator, team_id, 5
+        )
 
         # Then - Service processes what it can and rejects excess cleanly
         successful_requests = [r for r in results if r.success]

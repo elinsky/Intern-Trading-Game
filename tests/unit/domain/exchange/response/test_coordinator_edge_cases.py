@@ -134,6 +134,81 @@ class TestValidationTimeouts:
 class TestConcurrentValidation:
     """Test concurrent order validation scenarios."""
 
+    def _create_validation_response(
+        self, team_num: int, team_id: str, request_id: str
+    ) -> ApiResponse:
+        """Create a validation response for testing."""
+        if team_num % 10 == 0:  # 10% rejection rate
+            return ApiResponse(
+                success=False,
+                request_id=request_id,
+                order_id=None,
+                error=ApiError(
+                    code="POSITION_LIMIT_EXCEEDED",
+                    message=f"Team {team_id} at position limit",
+                ),
+            )
+        else:
+            return ApiResponse(
+                success=True,
+                request_id=request_id,
+                order_id=f"ORD_{team_num:06d}",
+            )
+
+    def _submit_order_for_team(
+        self,
+        coordinator,
+        team_num: int,
+        results: dict,
+        errors: list,
+        result_lock,
+    ):
+        """Simulate one team's order submission."""
+        try:
+            team_id = f"TEAM_{team_num:03d}"
+
+            # Register request
+            registration = coordinator.register_request(team_id)
+
+            # Simulate validator processing with variable time
+            time.sleep(0.01 + (team_num % 5) * 0.002)  # 10-18ms
+
+            # Create validation response
+            response = self._create_validation_response(
+                team_num, team_id, registration.request_id
+            )
+
+            # Notify completion
+            coordinator.notify_completion(
+                request_id=registration.request_id,
+                api_response=response,
+                order_id=response.order_id,
+            )
+
+            # Wait for result
+            result = coordinator.wait_for_completion(registration.request_id)
+
+            with result_lock:
+                results[team_id] = result
+
+        except Exception as e:
+            with result_lock:
+                errors.append((team_num, str(e)))
+
+    def _verify_results(self, results: dict):
+        """Verify no cross-contamination in results."""
+        for team_id, result in results.items():
+            team_num = int(team_id.split("_")[1])
+            if team_num % 10 == 0:
+                # Should be rejected
+                assert result.success is False
+                assert team_id in result.api_response.error.message
+            else:
+                # Should be accepted
+                assert result.success is True
+                expected_order_id = f"ORD_{team_num:06d}"
+                assert result.api_response.order_id == expected_order_id
+
     def test_concurrent_order_validation(self):
         """Test multiple teams submitting orders simultaneously.
 
@@ -160,59 +235,13 @@ class TestConcurrentValidation:
             errors = []
             result_lock = threading.Lock()
 
-            def submit_order_for_team(team_num):
-                """Simulate one team's order submission."""
-                try:
-                    team_id = f"TEAM_{team_num:03d}"
-
-                    # Register request
-                    registration = coordinator.register_request(team_id)
-
-                    # Simulate validator processing with variable time
-                    time.sleep(0.01 + (team_num % 5) * 0.002)  # 10-18ms
-
-                    # Create validation response
-                    if team_num % 10 == 0:  # 10% rejection rate
-                        response = ApiResponse(
-                            success=False,
-                            request_id=registration.request_id,
-                            order_id=None,
-                            error=ApiError(
-                                code="POSITION_LIMIT_EXCEEDED",
-                                message=f"Team {team_id} at position limit",
-                            ),
-                        )
-                    else:
-                        response = ApiResponse(
-                            success=True,
-                            request_id=registration.request_id,
-                            order_id=f"ORD_{team_num:06d}",
-                        )
-
-                    # Notify completion
-                    coordinator.notify_completion(
-                        request_id=registration.request_id,
-                        api_response=response,
-                        order_id=response.order_id,
-                    )
-
-                    # Wait for result
-                    result = coordinator.wait_for_completion(
-                        registration.request_id
-                    )
-
-                    with result_lock:
-                        results[team_id] = result
-
-                except Exception as e:
-                    with result_lock:
-                        errors.append((team_num, str(e)))
-
             # When - All teams submit concurrently
             threads = []
             for i in range(num_teams):
                 thread = threading.Thread(
-                    target=submit_order_for_team, args=(i,), daemon=True
+                    target=self._submit_order_for_team,
+                    args=(coordinator, i, results, errors, result_lock),
+                    daemon=True,
                 )
                 threads.append(thread)
                 thread.start()
@@ -226,17 +255,7 @@ class TestConcurrentValidation:
             assert len(results) == num_teams
 
             # Verify no cross-contamination
-            for team_id, result in results.items():
-                team_num = int(team_id.split("_")[1])
-                if team_num % 10 == 0:
-                    # Should be rejected
-                    assert result.success is False
-                    assert team_id in result.api_response.error.message
-                else:
-                    # Should be accepted
-                    assert result.success is True
-                    expected_order_id = f"ORD_{team_num:06d}"
-                    assert result.api_response.order_id == expected_order_id
+            self._verify_results(results)
 
         finally:
             coordinator.shutdown()
@@ -381,6 +400,51 @@ class TestErrorHandling:
         finally:
             coordinator.shutdown()
 
+    def _register_pending_requests(self, coordinator, count: int) -> list:
+        """Register multiple pending requests for testing."""
+        pending_requests = []
+        for i in range(count):
+            team_id = f"TEAM_SHUTDOWN_{i:03d}"
+            reg = coordinator.register_request(team_id)
+            pending_requests.append(reg)
+        return pending_requests
+
+    def _start_wait_threads(
+        self, coordinator, pending_requests: list, results: dict
+    ) -> list:
+        """Start threads waiting for request completion."""
+        wait_threads = []
+
+        def wait_for_request(request_id):
+            try:
+                result = coordinator.wait_for_completion(
+                    request_id, timeout_seconds=5.0
+                )
+                results[request_id] = result
+            except Exception as e:
+                results[request_id] = f"Error: {e}"
+
+        for reg in pending_requests:
+            thread = threading.Thread(
+                target=wait_for_request, args=(reg.request_id,), daemon=True
+            )
+            wait_threads.append(thread)
+            thread.start()
+
+        return wait_threads
+
+    def _verify_shutdown_results(self, results: dict, expected_count: int):
+        """Verify all requests received proper shutdown responses."""
+        assert len(results) == expected_count
+        for request_id, result in results.items():
+            if isinstance(result, str):
+                # Got an error during shutdown
+                assert "Error:" in result
+            else:
+                # Got shutdown result
+                assert result.success is False
+                assert result.api_response.error.code == "SERVICE_SHUTDOWN"
+
     def test_graceful_shutdown_with_pending_validations(self):
         """Test coordinator shutdown with requests in flight.
 
@@ -399,31 +463,13 @@ class TestErrorHandling:
         coordinator = OrderResponseCoordinator(config)
 
         # Register some requests that won't complete
-        pending_requests = []
-        for i in range(3):
-            team_id = f"TEAM_SHUTDOWN_{i:03d}"
-            reg = coordinator.register_request(team_id)
-            pending_requests.append(reg)
+        pending_requests = self._register_pending_requests(coordinator, 3)
 
         # Start threads waiting for completion
-        wait_threads = []
         results = {}
-
-        def wait_for_request(request_id):
-            try:
-                result = coordinator.wait_for_completion(
-                    request_id, timeout_seconds=5.0
-                )
-                results[request_id] = result
-            except Exception as e:
-                results[request_id] = f"Error: {e}"
-
-        for reg in pending_requests:
-            thread = threading.Thread(
-                target=wait_for_request, args=(reg.request_id,), daemon=True
-            )
-            wait_threads.append(thread)
-            thread.start()
+        wait_threads = self._start_wait_threads(
+            coordinator, pending_requests, results
+        )
 
         # Give threads time to start waiting
         time.sleep(0.1)
@@ -442,12 +488,4 @@ class TestErrorHandling:
             assert not thread.is_alive(), "Wait thread still running"
 
         # All requests should have received shutdown responses
-        assert len(results) == 3
-        for request_id, result in results.items():
-            if isinstance(result, str):
-                # Got an error during shutdown
-                assert "Error:" in result
-            else:
-                # Got shutdown result
-                assert result.success is False
-                assert result.api_response.error.code == "SERVICE_SHUTDOWN"
+        self._verify_shutdown_results(results, 3)

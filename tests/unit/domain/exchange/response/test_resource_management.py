@@ -944,6 +944,50 @@ class TestCapacityLimits:
             final_pending == max_pending
         ), f"Wrong final count: {final_pending}"
 
+    def _create_id_tracking_registration(
+        self, request_id: str, team_id: str
+    ) -> ResponseRegistration:
+        """Create a registration with tracked ID."""
+        return ResponseRegistration(
+            request_id=request_id,
+            team_id=team_id,
+            timeout_at=datetime.now() + timedelta(seconds=5),
+            status=ResponseStatus.PENDING,
+        )
+
+    def _fill_capacity_with_requests(
+        self, mock_coordinator, count: int
+    ) -> list:
+        """Fill capacity with initial requests."""
+        registrations = []
+        for i in range(count):
+            reg = mock_coordinator.register_request(f"TEAM_{i:03d}")
+            registrations.append(reg)
+        return registrations
+
+    def _complete_specific_requests(
+        self, registrations: list, indices: list, mock_complete_func
+    ):
+        """Complete specific requests by indices."""
+        for i in indices:
+            mock_complete_func(registrations[i].request_id)
+
+    def _add_new_requests(self, mock_coordinator, count: int) -> list:
+        """Add new requests after some capacity is freed."""
+        new_registrations = []
+        for i in range(count):
+            reg = mock_coordinator.register_request(f"TEAM_NEW_{i:03d}")
+            new_registrations.append(reg)
+        return new_registrations
+
+    def _verify_id_uniqueness(
+        self, all_generated_ids: set, expected_count: int
+    ):
+        """Verify all generated IDs are unique."""
+        assert (
+            len(all_generated_ids) == expected_count
+        ), f"Expected {expected_count} unique IDs, got {len(all_generated_ids)}"
+
     def test_request_id_uniqueness_after_capacity_recovery(
         self, mock_coordinator, coordination_config
     ):
@@ -988,13 +1032,9 @@ class TestCapacityLimits:
                     )
                 all_generated_ids.add(request_id)
 
-                registration = ResponseRegistration(
-                    request_id=request_id,
-                    team_id=team_id,
-                    timeout_at=datetime.now() + timedelta(seconds=5),
-                    status=ResponseStatus.PENDING,
+                registration = self._create_id_tracking_registration(
+                    request_id, team_id
                 )
-
                 pending_requests[request_id] = registration
                 return registration
 
@@ -1008,26 +1048,15 @@ class TestCapacityLimits:
         )
 
         # When - Fill capacity, complete some, add more
-        registrations = []
-
-        # Fill to capacity (5 requests)
-        for i in range(5):
-            reg = mock_coordinator.register_request(f"TEAM_{i:03d}")
-            registrations.append(reg)
-
-        # Complete the middle 3 requests (indices 1, 2, 3)
-        for i in range(1, 4):
-            mock_complete_request(registrations[i].request_id)
-
-        # Add 3 new requests
-        for i in range(3):
-            reg = mock_coordinator.register_request(f"TEAM_NEW_{i:03d}")
-            registrations.append(reg)
+        registrations = self._fill_capacity_with_requests(mock_coordinator, 5)
+        self._complete_specific_requests(
+            registrations, [1, 2, 3], mock_complete_request
+        )
+        new_registrations = self._add_new_requests(mock_coordinator, 3)
+        registrations.extend(new_registrations)
 
         # Then - Verify no duplicate IDs were generated
-        assert (
-            len(all_generated_ids) == 8
-        ), f"Expected 8 unique IDs, got {len(all_generated_ids)}"
+        self._verify_id_uniqueness(all_generated_ids, 8)
 
         # Verify the IDs are as expected (counter starts at 0)
         expected_ids = {
@@ -1062,6 +1091,46 @@ class TestCapacityLimits:
             assert (
                 actual_pending == expected_pending
             ), f"Pending mismatch: {actual_pending}"
+
+    def _create_bad_id_registration(
+        self, request_id: str, team_id: str
+    ) -> ResponseRegistration:
+        """Create a registration with BAD length-based ID."""
+        return ResponseRegistration(
+            request_id=request_id,
+            team_id=team_id,
+            timeout_at=datetime.now() + timedelta(seconds=5),
+            status=ResponseStatus.PENDING,
+        )
+
+    def _track_id_generation(
+        self, request_id: str, all_generated_ids: list, id_counts: dict
+    ):
+        """Track ID generation for collision detection."""
+        all_generated_ids.append(request_id)
+        id_counts[request_id] = id_counts.get(request_id, 0) + 1
+
+    def _verify_duplicate_ids_exist(self, id_counts: dict) -> list:
+        """Verify that duplicate IDs were generated."""
+        duplicate_ids = [id for id, count in id_counts.items() if count > 1]
+        assert (
+            len(duplicate_ids) > 0
+        ), "Expected duplicate IDs with length-based generation"
+        return duplicate_ids
+
+    def _verify_id_sequence_duplicates(self, all_generated_ids: list):
+        """Verify that IDs appear multiple times in generation sequence."""
+        id_occurrences = {}
+        for id in all_generated_ids:
+            id_occurrences[id] = id_occurrences.get(id, 0) + 1
+
+        duplicated_in_sequence = [
+            id for id, count in id_occurrences.items() if count > 1
+        ]
+        assert len(duplicated_in_sequence) >= 1, (
+            f"Expected at least one ID to appear multiple times in sequence. "
+            f"Got: {all_generated_ids}"
+        )
 
     def test_request_id_collision_with_length_based_generation(
         self, mock_coordinator, coordination_config
@@ -1099,16 +1168,13 @@ class TestCapacityLimits:
                 request_id = f"req_bad_{len(pending_requests):03d}"
 
                 # Track ID generation
-                all_generated_ids.append(request_id)
-                id_counts[request_id] = id_counts.get(request_id, 0) + 1
-
-                registration = ResponseRegistration(
-                    request_id=request_id,
-                    team_id=team_id,
-                    timeout_at=datetime.now() + timedelta(seconds=5),
-                    status=ResponseStatus.PENDING,
+                self._track_id_generation(
+                    request_id, all_generated_ids, id_counts
                 )
 
+                registration = self._create_bad_id_registration(
+                    request_id, team_id
+                )
                 pending_requests[request_id] = registration
                 return registration
 
@@ -1122,35 +1188,25 @@ class TestCapacityLimits:
         )
 
         # When - Fill capacity, complete some, add more
-        registrations = []
-
-        # Fill to capacity (5 requests)
-        for i in range(5):
-            reg = mock_coordinator.register_request(f"TEAM_{i:03d}")
-            registrations.append(reg)
-
+        registrations = self._fill_capacity_with_requests(mock_coordinator, 5)
         # IDs generated so far: req_bad_000, 001, 002, 003, 004
 
         # Complete the first 3 requests
-        for i in range(3):
-            mock_complete_request(registrations[i].request_id)
-
+        self._complete_specific_requests(
+            registrations, [0, 1, 2], mock_complete_request
+        )
         # Now pending_requests has only 2 items (003 and 004)
 
         # Try to add 3 new requests
-        for i in range(3):
-            reg = mock_coordinator.register_request(f"TEAM_NEW_{i:03d}")
-            registrations.append(reg)
+        new_registrations = self._add_new_requests(mock_coordinator, 3)
+        registrations.extend(new_registrations)
 
         # Then - Demonstrate the ID collision problem
         # With length-based generation, new IDs are based on current size
         # This causes duplicate IDs to be generated!
 
         # Verify duplicates were generated
-        duplicate_ids = [id for id, count in id_counts.items() if count > 1]
-        assert (
-            len(duplicate_ids) > 0
-        ), "Expected duplicate IDs with length-based generation"
+        duplicate_ids = self._verify_duplicate_ids_exist(id_counts)
 
         # Verify the pattern: after completing 3 requests, we have 2 left
         # So new requests start at ID 002, which was already used!
@@ -1165,17 +1221,7 @@ class TestCapacityLimits:
         ), "Expected 5 initial + 3 new requests"
 
         # Verify that at least one ID appears twice in the sequence
-        id_occurrences = {}
-        for id in all_generated_ids:
-            id_occurrences[id] = id_occurrences.get(id, 0) + 1
-
-        duplicated_in_sequence = [
-            id for id, count in id_occurrences.items() if count > 1
-        ]
-        assert len(duplicated_in_sequence) >= 1, (
-            f"Expected at least one ID to appear multiple times in sequence. "
-            f"Got: {all_generated_ids}"
-        )
+        self._verify_id_sequence_duplicates(all_generated_ids)
 
         # Business impact: This would cause order tracking failures!
         print(f"Duplicate IDs generated: {duplicate_ids}")

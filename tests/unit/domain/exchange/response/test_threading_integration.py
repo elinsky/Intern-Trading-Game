@@ -31,6 +31,72 @@ from intern_trading_game.infrastructure.api.models import ApiError, ApiResponse
 class TestThreadSafetyAndSynchronization:
     """Test thread safety and synchronization mechanisms."""
 
+    def _create_thread_safe_registration(
+        self, request_id: str, team_id: str
+    ) -> ResponseRegistration:
+        """Create a thread-safe registration."""
+        return ResponseRegistration(
+            request_id=request_id,
+            team_id=team_id,
+            timeout_at=datetime.now() + timedelta(seconds=5),
+            status=ResponseStatus.PENDING,
+        )
+
+    def _register_requests_worker(
+        self,
+        thread_id: int,
+        mock_coordinator,
+        registrations: list,
+        registration_lock,
+        registration_errors: list,
+    ):
+        """Worker function to register requests from separate thread."""
+        try:
+            team_id = f"TEAM_THREAD_{thread_id:03d}"
+
+            # Each thread registers multiple requests
+            thread_registrations = []
+            for i in range(5):
+                registration = mock_coordinator.register_request(team_id)
+                thread_registrations.append(registration)
+
+                # Small delay to increase chance of race conditions
+                time.sleep(0.001)
+
+            # Thread-safe collection of results
+            with registration_lock:
+                registrations.extend(thread_registrations)
+
+        except Exception as e:
+            with registration_lock:
+                registration_errors.append((thread_id, str(e)))
+
+    def _start_concurrent_threads(
+        self, num_threads: int, worker_func, *args
+    ) -> list:
+        """Start multiple threads concurrently."""
+        threads = []
+        for thread_id in range(num_threads):
+            thread = threading.Thread(
+                target=worker_func, args=(thread_id, *args), daemon=True
+            )
+            threads.append(thread)
+            thread.start()
+        return threads
+
+    def _wait_for_threads(self, threads: list, timeout: float = 5.0):
+        """Wait for all threads to complete."""
+        for thread in threads:
+            thread.join(timeout=timeout)
+            assert not thread.is_alive(), "Thread did not complete in time"
+
+    def _verify_unique_request_ids(self, registrations: list):
+        """Verify all request IDs are unique."""
+        request_ids = [reg.request_id for reg in registrations]
+        assert len(set(request_ids)) == len(
+            request_ids
+        ), "Duplicate request IDs detected"
+
     def test_concurrent_request_registration(
         self, mock_coordinator, coordination_config
     ):
@@ -61,53 +127,22 @@ class TestThreadSafetyAndSynchronization:
                 global_counter[0] += 1
                 request_id = f"req_concurrent_{global_counter[0]:03d}"
 
-            return ResponseRegistration(
-                request_id=request_id,
-                team_id=team_id,
-                timeout_at=datetime.now() + timedelta(seconds=5),
-                status=ResponseStatus.PENDING,
-            )
+            return self._create_thread_safe_registration(request_id, team_id)
 
         mock_coordinator.register_request.side_effect = mock_register_request
 
-        def register_requests_worker(thread_id):
-            """Worker function to register requests from separate thread."""
-            try:
-                team_id = f"TEAM_THREAD_{thread_id:03d}"
-
-                # Each thread registers multiple requests
-                thread_registrations = []
-                for i in range(5):
-                    registration = mock_coordinator.register_request(team_id)
-                    thread_registrations.append(registration)
-
-                    # Small delay to increase chance of race conditions
-                    time.sleep(0.001)
-
-                # Thread-safe collection of results
-                with registration_lock:
-                    registrations.extend(thread_registrations)
-
-            except Exception as e:
-                with registration_lock:
-                    registration_errors.append((thread_id, str(e)))
-
         # When - Multiple threads register requests concurrently
-        threads = []
-        for thread_id in range(num_threads):
-            thread = threading.Thread(
-                target=register_requests_worker, args=(thread_id,), daemon=True
-            )
-            threads.append(thread)
-
-        # Start all threads simultaneously
-        for thread in threads:
-            thread.start()
+        threads = self._start_concurrent_threads(
+            num_threads,
+            self._register_requests_worker,
+            mock_coordinator,
+            registrations,
+            registration_lock,
+            registration_errors,
+        )
 
         # Wait for all threads to complete
-        for thread in threads:
-            thread.join(timeout=5.0)
-            assert not thread.is_alive(), "Thread did not complete in time"
+        self._wait_for_threads(threads)
 
         # Then - All registrations succeeded without errors
         assert (
@@ -116,16 +151,148 @@ class TestThreadSafetyAndSynchronization:
         assert len(registrations) == num_threads * 5  # 5 requests per thread
 
         # Verify all request IDs are unique (no race condition corruption)
-        request_ids = [reg.request_id for reg in registrations]
-        assert len(set(request_ids)) == len(
-            request_ids
-        ), "Duplicate request IDs detected"
+        self._verify_unique_request_ids(registrations)
 
         # Verify team ID assignments are correct
         for reg in registrations:
             assert reg.team_id.startswith(
                 "TEAM_THREAD_"
             ), f"Invalid team ID: {reg.team_id}"
+
+    def _create_event_registration(
+        self,
+        request_id: str,
+        team_id: str,
+        completion_events: dict,
+        event_lock,
+    ) -> ResponseRegistration:
+        """Create registration with event coordination."""
+        # Create real threading.Event for coordination
+        completion_event = threading.Event()
+
+        with event_lock:
+            completion_events[request_id] = completion_event
+
+        return ResponseRegistration(
+            request_id=request_id,
+            team_id=team_id,
+            timeout_at=datetime.now() + timedelta(seconds=5),
+            status=ResponseStatus.PENDING,
+        )
+
+    def _wait_for_event_completion(
+        self,
+        request_id: str,
+        completion_events: dict,
+        completion_results: dict,
+        event_lock,
+        timeout_seconds: float = None,
+    ) -> ResponseResult:
+        """Wait for event completion with timeout."""
+        # Get the event for this request
+        with event_lock:
+            event = completion_events.get(request_id)
+
+        if not event:
+            raise ValueError(f"No event found for request {request_id}")
+
+        # Wait for pipeline thread to signal completion
+        timeout = timeout_seconds or 2.0
+        if event.wait(timeout=timeout):
+            # Event was set, return the result
+            with event_lock:
+                return completion_results.get(request_id)
+        else:
+            # Timeout occurred
+            raise TimeoutError(f"Request {request_id} timed out")
+
+    def _notify_event_completion(
+        self,
+        request_id: str,
+        api_response,
+        order_id: str,
+        completion_events: dict,
+        completion_results: dict,
+        event_lock,
+    ) -> bool:
+        """Notify completion by setting event."""
+        # Simulate pipeline thread notifying completion
+        result = ResponseResult(
+            request_id=request_id,
+            success=api_response.success,
+            api_response=api_response,
+            processing_time_ms=100.0,
+            final_status=ResponseStatus.COMPLETED
+            if api_response.success
+            else ResponseStatus.ERROR,
+            order_id=order_id,
+        )
+
+        with event_lock:
+            completion_results[request_id] = result
+            event = completion_events.get(request_id)
+            if event:
+                event.set()  # Signal completion
+
+        return True
+
+    def _run_api_thread_worker(
+        self,
+        mock_coordinator,
+        team_id: str,
+        api_thread_result: list,
+        api_thread_error: list,
+    ):
+        """Simulate API thread waiting for completion."""
+        try:
+            # Register request
+            registration = mock_coordinator.register_request(team_id)
+
+            # Wait for completion (this will block until pipeline signals)
+            result = mock_coordinator.wait_for_completion(
+                registration.request_id
+            )
+            api_thread_result[0] = result
+
+        except Exception as e:
+            api_thread_error[0] = str(e)
+
+    def _run_pipeline_thread_worker(self, mock_coordinator, request_id: str):
+        """Simulate pipeline thread completing processing."""
+        # Simulate processing delay
+        time.sleep(0.1)
+
+        # Signal completion
+        success_response = ApiResponse(
+            success=True,
+            request_id=request_id,
+            order_id="ORD_EVENT_001",
+            data={"status": "filled", "quantity": 10},
+            error=None,
+        )
+
+        mock_coordinator.notify_completion(
+            request_id=request_id,
+            api_response=success_response,
+            order_id="ORD_EVENT_001",
+        )
+
+    def _verify_event_coordination_result(
+        self, api_thread_result: list, api_thread_error: list
+    ):
+        """Verify the result of event coordination."""
+        assert (
+            api_thread_error[0] is None
+        ), f"API thread error: {api_thread_error[0]}"
+        assert (
+            api_thread_result[0] is not None
+        ), "API thread did not receive result"
+
+        result = api_thread_result[0]
+        assert result.success is True
+        assert result.api_response.order_id == "ORD_EVENT_001"
+        assert result.api_response.data["status"] == "filled"
+        assert result.final_status == ResponseStatus.COMPLETED
 
     def test_threading_event_coordination(
         self, mock_coordinator, mock_pipeline_threads
@@ -147,62 +314,32 @@ class TestThreadSafetyAndSynchronization:
 
         def mock_register_request_with_event(team_id, timeout_seconds=None):
             request_id = f"req_event_{int(time.time_ns())}"
-
-            # Create real threading.Event for coordination
-            completion_event = threading.Event()
-
-            with event_lock:
-                completion_events[request_id] = completion_event
-
-            return ResponseRegistration(
-                request_id=request_id,
-                team_id=team_id,
-                timeout_at=datetime.now() + timedelta(seconds=5),
-                status=ResponseStatus.PENDING,
+            return self._create_event_registration(
+                request_id, team_id, completion_events, event_lock
             )
 
         def mock_wait_for_completion_with_event(
             request_id, timeout_seconds=None
         ):
-            # Get the event for this request
-            with event_lock:
-                event = completion_events.get(request_id)
-
-            if not event:
-                raise ValueError(f"No event found for request {request_id}")
-
-            # Wait for pipeline thread to signal completion
-            timeout = timeout_seconds or 2.0
-            if event.wait(timeout=timeout):
-                # Event was set, return the result
-                with event_lock:
-                    return completion_results.get(request_id)
-            else:
-                # Timeout occurred
-                raise TimeoutError(f"Request {request_id} timed out")
+            return self._wait_for_event_completion(
+                request_id,
+                completion_events,
+                completion_results,
+                event_lock,
+                timeout_seconds,
+            )
 
         def mock_notify_completion_with_event(
             request_id, api_response, order_id=None
         ):
-            # Simulate pipeline thread notifying completion
-            result = ResponseResult(
-                request_id=request_id,
-                success=api_response.success,
-                api_response=api_response,
-                processing_time_ms=100.0,
-                final_status=ResponseStatus.COMPLETED
-                if api_response.success
-                else ResponseStatus.ERROR,
-                order_id=order_id,
+            return self._notify_event_completion(
+                request_id,
+                api_response,
+                order_id,
+                completion_events,
+                completion_results,
+                event_lock,
             )
-
-            with event_lock:
-                completion_results[request_id] = result
-                event = completion_events.get(request_id)
-                if event:
-                    event.set()  # Signal completion
-
-            return True
 
         mock_coordinator.register_request.side_effect = (
             mock_register_request_with_event
@@ -218,44 +355,18 @@ class TestThreadSafetyAndSynchronization:
         api_thread_result = [None]
         api_thread_error = [None]
 
-        def api_thread_worker():
-            """Simulate API thread waiting for completion."""
-            try:
-                # Register request
-                registration = mock_coordinator.register_request(team_id)
-
-                # Wait for completion (this will block until pipeline signals)
-                result = mock_coordinator.wait_for_completion(
-                    registration.request_id
-                )
-                api_thread_result[0] = result
-
-            except Exception as e:
-                api_thread_error[0] = str(e)
-
-        def pipeline_thread_worker(request_id):
-            """Simulate pipeline thread completing processing."""
-            # Simulate processing delay
-            time.sleep(0.1)
-
-            # Signal completion
-            success_response = ApiResponse(
-                success=True,
-                request_id=request_id,
-                order_id="ORD_EVENT_001",
-                data={"status": "filled", "quantity": 10},
-                error=None,
-            )
-
-            mock_coordinator.notify_completion(
-                request_id=request_id,
-                api_response=success_response,
-                order_id="ORD_EVENT_001",
-            )
-
         # When - API thread starts waiting and pipeline thread signals completion
         # Start API thread
-        api_thread = threading.Thread(target=api_thread_worker, daemon=True)
+        api_thread = threading.Thread(
+            target=self._run_api_thread_worker,
+            args=(
+                mock_coordinator,
+                team_id,
+                api_thread_result,
+                api_thread_error,
+            ),
+            daemon=True,
+        )
         api_thread.start()
 
         # Give API thread time to register and start waiting
@@ -270,7 +381,9 @@ class TestThreadSafetyAndSynchronization:
 
         # Start pipeline thread to signal completion
         pipeline_thread = threading.Thread(
-            target=pipeline_thread_worker, args=(request_id,), daemon=True
+            target=self._run_pipeline_thread_worker,
+            args=(mock_coordinator, request_id),
+            daemon=True,
         )
         pipeline_thread.start()
 
@@ -279,18 +392,81 @@ class TestThreadSafetyAndSynchronization:
         pipeline_thread.join(timeout=2.0)
 
         # Then - API thread received correct result
-        assert (
-            api_thread_error[0] is None
-        ), f"API thread error: {api_thread_error[0]}"
-        assert (
-            api_thread_result[0] is not None
-        ), "API thread did not receive result"
+        self._verify_event_coordination_result(
+            api_thread_result, api_thread_error
+        )
 
-        result = api_thread_result[0]
-        assert result.success is True
-        assert result.api_response.order_id == "ORD_EVENT_001"
-        assert result.api_response.data["status"] == "filled"
-        assert result.final_status == ResponseStatus.COMPLETED
+    def _create_notification_response(
+        self, worker_id: int, i: int, request_id: str
+    ) -> ApiResponse:
+        """Create an API response for notification testing."""
+        return ApiResponse(
+            success=True,
+            request_id=request_id,
+            order_id=f"ORD_NOTIFY_{worker_id:03d}_{i:02d}",
+            data={"status": "filled", "worker_id": worker_id},
+            error=None,
+        )
+
+    def _notification_worker(
+        self,
+        worker_id: int,
+        mock_coordinator,
+        completed_results: list,
+        completion_lock,
+        completion_errors: list,
+    ):
+        """Worker function to send completion notifications."""
+        try:
+            # Each worker sends multiple notifications
+            worker_results = []
+            for i in range(3):
+                request_id = f"req_notify_{worker_id:03d}_{i:02d}"
+
+                api_response = self._create_notification_response(
+                    worker_id, i, request_id
+                )
+
+                success = mock_coordinator.notify_completion(
+                    request_id=request_id,
+                    api_response=api_response,
+                    order_id=api_response.order_id,
+                )
+
+                worker_results.append((request_id, success))
+
+                # Small delay to increase chance of race conditions
+                time.sleep(0.001)
+
+            # Thread-safe collection of results
+            with completion_lock:
+                completed_results.extend(worker_results)
+
+        except Exception as e:
+            with completion_lock:
+                completion_errors.append((worker_id, str(e)))
+
+    def _verify_notification_results(
+        self,
+        completed_results: list,
+        completion_errors: list,
+        expected_count: int,
+    ):
+        """Verify all notifications were processed correctly."""
+        assert (
+            len(completion_errors) == 0
+        ), f"Notification errors: {completion_errors}"
+        assert len(completed_results) == expected_count
+
+        # Verify all notifications succeeded
+        for request_id, success in completed_results:
+            assert success is True, f"Notification {request_id} failed"
+
+        # Verify all request IDs are unique
+        request_ids = [req_id for req_id, _ in completed_results]
+        assert len(set(request_ids)) == len(
+            request_ids
+        ), "Duplicate request IDs in notifications"
 
     def test_concurrent_completion_notifications(self, mock_coordinator):
         """Test handling of concurrent completion notifications.
@@ -327,80 +503,28 @@ class TestThreadSafetyAndSynchronization:
 
         mock_coordinator.notify_completion.side_effect = mock_notify_completion
 
-        def notification_worker(worker_id):
-            """Worker function to send completion notifications."""
-            try:
-                # Each worker sends multiple notifications
-                worker_results = []
-                for i in range(3):
-                    request_id = f"req_notify_{worker_id:03d}_{i:02d}"
-
-                    api_response = ApiResponse(
-                        success=True,
-                        request_id=request_id,
-                        order_id=f"ORD_NOTIFY_{worker_id:03d}_{i:02d}",
-                        data={"status": "filled", "worker_id": worker_id},
-                        error=None,
-                    )
-
-                    success = mock_coordinator.notify_completion(
-                        request_id=request_id,
-                        api_response=api_response,
-                        order_id=api_response.order_id,
-                    )
-
-                    worker_results.append((request_id, success))
-
-                    # Small delay to increase chance of race conditions
-                    time.sleep(0.001)
-
-                # Thread-safe collection of results
-                with completion_lock:
-                    completed_results.extend(worker_results)
-
-            except Exception as e:
-                with completion_lock:
-                    completion_errors.append((worker_id, str(e)))
-
         # When - Multiple threads send notifications concurrently
-        threads = []
-        for worker_id in range(
-            num_notifications // 3
-        ):  # 3 notifications per worker
-            thread = threading.Thread(
-                target=notification_worker, args=(worker_id,), daemon=True
-            )
-            threads.append(thread)
+        threads = self._start_concurrent_threads(
+            num_notifications // 3,  # 3 notifications per worker
+            self._notification_worker,
+            mock_coordinator,
+            completed_results,
+            completion_lock,
+            completion_errors,
+        )
 
         # Start all threads simultaneously
         start_time = time.perf_counter()
-        for thread in threads:
-            thread.start()
 
         # Wait for all threads to complete
-        for thread in threads:
-            thread.join(timeout=3.0)
-            assert (
-                not thread.is_alive()
-            ), "Notification thread did not complete"
+        self._wait_for_threads(threads, timeout=3.0)
 
         processing_time = time.perf_counter() - start_time
 
         # Then - All notifications processed successfully
-        assert (
-            len(completion_errors) == 0
-        ), f"Completion errors: {completion_errors}"
-        assert len(completed_results) == num_notifications
-
-        # Verify all notifications were successful
-        for request_id, success in completed_results:
-            assert success is True, f"Notification failed for {request_id}"
-
-        # Verify all request IDs are unique
-        request_ids = [result[0] for result in completed_results]
-        assert len(set(request_ids)) == len(
-            request_ids
-        ), "Duplicate request IDs in notifications"
+        self._verify_notification_results(
+            completed_results, completion_errors, num_notifications
+        )
 
         # Verify notification counter was incremented correctly
         with counter_lock:
@@ -414,6 +538,81 @@ class TestThreadSafetyAndSynchronization:
 
 class TestRaceConditionHandling:
     """Test handling of race conditions and timing-sensitive scenarios."""
+
+    def _create_slow_registration(self, team_id: str) -> ResponseRegistration:
+        """Create a registration with simulated slow processing."""
+        # Simulate slow registration process
+        time.sleep(0.1)
+
+        return ResponseRegistration(
+            request_id=f"req_race_{int(time.time_ns())}",
+            team_id=team_id,
+            timeout_at=datetime.now()
+            + timedelta(milliseconds=50),  # Very short timeout
+            status=ResponseStatus.PENDING,
+        )
+
+    def _run_registration_worker(
+        self,
+        mock_coordinator,
+        team_id: str,
+        registration_results: list,
+        race_condition_detected: list,
+        race_lock,
+    ):
+        """Worker that registers requests slowly."""
+        try:
+            for i in range(3):
+                registration = mock_coordinator.register_request(team_id)
+                registration_results.append(registration)
+                time.sleep(0.05)  # Delay between registrations
+        except Exception:
+            with race_lock:
+                race_condition_detected[0] = True
+
+    def _run_cleanup_worker(
+        self,
+        mock_coordinator,
+        cleanup_results: list,
+        race_condition_detected: list,
+        race_lock,
+    ):
+        """Worker that runs cleanup frequently."""
+        try:
+            for i in range(10):
+                cleaned = mock_coordinator.cleanup_completed_requests()
+                cleanup_results.append(cleaned)
+                time.sleep(0.02)  # Frequent cleanup
+        except Exception:
+            with race_lock:
+                race_condition_detected[0] = True
+
+    def _verify_race_condition_results(
+        self,
+        race_condition_detected: list,
+        race_lock,
+        registration_results: list,
+        cleanup_results: list,
+        team_id: str,
+    ):
+        """Verify race condition was handled gracefully."""
+        with race_lock:
+            assert not race_condition_detected[
+                0
+            ], "Race condition caused exception"
+
+        # Verify registration still worked
+        assert (
+            len(registration_results) == 3
+        ), "Not all registrations completed"
+
+        # Verify cleanup continued to run
+        assert len(cleanup_results) >= 5, "Cleanup did not run enough times"
+
+        # Verify all registrations have valid data
+        for registration in registration_results:
+            assert registration.team_id == team_id
+            assert registration.request_id.startswith("req_race_")
 
     def test_registration_and_timeout_race_condition(
         self, mock_coordinator, coordination_config
@@ -432,62 +631,42 @@ class TestRaceConditionHandling:
         team_id = "TEAM_RACE_001"
         race_condition_detected = [False]
         race_lock = threading.Lock()
-
-        # Mock registration that simulates slow registration
-        def mock_slow_register_request(team_id, timeout_seconds=None):
-            # Simulate slow registration process
-            time.sleep(0.1)
-
-            return ResponseRegistration(
-                request_id=f"req_race_{int(time.time_ns())}",
-                team_id=team_id,
-                timeout_at=datetime.now()
-                + timedelta(milliseconds=50),  # Very short timeout
-                status=ResponseStatus.PENDING,
-            )
-
-        # Mock cleanup that runs during registration
-        cleanup_calls = []
-
-        def mock_cleanup_expired_requests():
-            cleanup_calls.append(datetime.now())
-            return 0  # No requests cleaned up
-
-        mock_coordinator.register_request.side_effect = (
-            mock_slow_register_request
-        )
-        mock_coordinator.cleanup_completed_requests.side_effect = (
-            mock_cleanup_expired_requests
-        )
-
         registration_results = []
         cleanup_results = []
+        cleanup_calls = []
 
-        def registration_worker():
-            """Worker that registers requests slowly."""
-            try:
-                for i in range(3):
-                    registration = mock_coordinator.register_request(team_id)
-                    registration_results.append(registration)
-                    time.sleep(0.05)  # Delay between registrations
-            except Exception:
-                with race_lock:
-                    race_condition_detected[0] = True
-
-        def cleanup_worker():
-            """Worker that runs cleanup frequently."""
-            try:
-                for i in range(10):
-                    cleaned = mock_coordinator.cleanup_completed_requests()
-                    cleanup_results.append(cleaned)
-                    time.sleep(0.02)  # Frequent cleanup
-            except Exception:
-                with race_lock:
-                    race_condition_detected[0] = True
+        # Mock registration and cleanup
+        mock_coordinator.register_request.side_effect = (
+            lambda team_id,
+            timeout_seconds=None: self._create_slow_registration(team_id)
+        )
+        mock_coordinator.cleanup_completed_requests.side_effect = lambda: (
+            cleanup_calls.append(datetime.now()),
+            0,
+        )[1]
 
         # When - Registration and cleanup run concurrently
-        reg_thread = threading.Thread(target=registration_worker, daemon=True)
-        cleanup_thread = threading.Thread(target=cleanup_worker, daemon=True)
+        reg_thread = threading.Thread(
+            target=self._run_registration_worker,
+            args=(
+                mock_coordinator,
+                team_id,
+                registration_results,
+                race_condition_detected,
+                race_lock,
+            ),
+            daemon=True,
+        )
+        cleanup_thread = threading.Thread(
+            target=self._run_cleanup_worker,
+            args=(
+                mock_coordinator,
+                cleanup_results,
+                race_condition_detected,
+                race_lock,
+            ),
+            daemon=True,
+        )
 
         reg_thread.start()
         cleanup_thread.start()
@@ -496,24 +675,87 @@ class TestRaceConditionHandling:
         cleanup_thread.join(timeout=2.0)
 
         # Then - Race condition handled gracefully
-        with race_lock:
-            assert not race_condition_detected[
-                0
-            ], "Race condition caused exception"
+        self._verify_race_condition_results(
+            race_condition_detected,
+            race_lock,
+            registration_results,
+            cleanup_results,
+            team_id,
+        )
 
-        # Verify registration still worked
-        assert (
-            len(registration_results) == 3
-        ), "Not all registrations completed"
+    def _create_completion_result(
+        self, request_id: str, api_response, order_id: str
+    ) -> ResponseResult:
+        """Create a completion result with delay."""
+        # Simulate processing delay
+        time.sleep(0.05)
 
-        # Verify cleanup continued to run
-        assert len(cleanup_results) >= 5, "Cleanup did not run enough times"
+        return ResponseResult(
+            request_id=request_id,
+            success=True,
+            api_response=api_response,
+            processing_time_ms=200.0,
+            final_status=ResponseStatus.COMPLETED,
+            order_id=order_id,
+        )
 
-        # Verify all registrations have valid data
-        for registration in registration_results:
-            assert registration.team_id == team_id
-            assert registration.request_id.startswith("req_race_")
-            assert registration.status == ResponseStatus.PENDING
+    def _create_timeout_result(self, req_id: str) -> ResponseResult:
+        """Create a timeout result."""
+        timeout_response = ApiResponse(
+            success=False,
+            request_id=req_id,
+            order_id=None,
+            data=None,
+            error=ApiError(
+                code="PROCESSING_TIMEOUT",
+                message="Request timed out",
+                details={"timeout_ms": 100},
+            ),
+        )
+
+        return ResponseResult(
+            request_id=req_id,
+            success=False,
+            api_response=timeout_response,
+            processing_time_ms=100.0,
+            final_status=ResponseStatus.TIMEOUT,
+            order_id=None,
+        )
+
+    def _run_completion_worker(self, mock_coordinator, request_id: str):
+        """Worker that sends completion notification."""
+        success_response = ApiResponse(
+            success=True,
+            request_id=request_id,
+            order_id="ORD_RACE_001",
+            data={"status": "filled"},
+            error=None,
+        )
+
+        mock_coordinator.notify_completion(
+            request_id=request_id,
+            api_response=success_response,
+            order_id="ORD_RACE_001",
+        )
+
+    def _verify_race_results(self, final_results: list, result_lock):
+        """Verify results from race condition are consistent."""
+        with result_lock:
+            assert len(final_results) >= 1, "No result recorded"
+
+            # In a real system, only one should win, but in this mock test
+            # both might complete. Verify they're consistent with their type
+            for result_type, result in final_results:
+                if result_type == "completion":
+                    assert result.success is True
+                    assert result.final_status == ResponseStatus.COMPLETED
+                    assert result.api_response.order_id == "ORD_RACE_001"
+                elif result_type == "timeout":
+                    assert result.success is False
+                    assert result.final_status == ResponseStatus.TIMEOUT
+                    assert (
+                        result.api_response.error.code == "PROCESSING_TIMEOUT"
+                    )
 
     def test_completion_notification_and_timeout_race(self, mock_coordinator):
         """Test race between completion notification and request timeout.
@@ -537,70 +779,23 @@ class TestRaceConditionHandling:
         def mock_delayed_notify_completion(
             request_id, api_response, order_id=None
         ):
-            # Simulate processing delay
-            time.sleep(0.05)
-
-            result = ResponseResult(
-                request_id=request_id,
-                success=True,
-                api_response=api_response,
-                processing_time_ms=200.0,
-                final_status=ResponseStatus.COMPLETED,
-                order_id=order_id,
+            result = self._create_completion_result(
+                request_id, api_response, order_id
             )
-
             with result_lock:
                 final_results.append(("completion", result))
-
             return True
 
         # Mock timeout handling
         def mock_handle_timeout(req_id):
-            timeout_response = ApiResponse(
-                success=False,
-                request_id=req_id,
-                order_id=None,
-                data=None,
-                error=ApiError(
-                    code="PROCESSING_TIMEOUT",
-                    message="Request timed out",
-                    details={"timeout_ms": 100},
-                ),
-            )
-
-            timeout_result = ResponseResult(
-                request_id=req_id,
-                success=False,
-                api_response=timeout_response,
-                processing_time_ms=100.0,
-                final_status=ResponseStatus.TIMEOUT,
-                order_id=None,
-            )
-
+            timeout_result = self._create_timeout_result(req_id)
             with result_lock:
                 final_results.append(("timeout", timeout_result))
-
             return timeout_result
 
         mock_coordinator.notify_completion.side_effect = (
             mock_delayed_notify_completion
         )
-
-        def completion_worker():
-            """Worker that sends completion notification."""
-            success_response = ApiResponse(
-                success=True,
-                request_id=request_id,
-                order_id="ORD_RACE_001",
-                data={"status": "filled"},
-                error=None,
-            )
-
-            mock_coordinator.notify_completion(
-                request_id=request_id,
-                api_response=success_response,
-                order_id="ORD_RACE_001",
-            )
 
         def timeout_worker():
             """Worker that handles timeout."""
@@ -610,7 +805,9 @@ class TestRaceConditionHandling:
 
         # When - Completion and timeout workers run simultaneously
         completion_thread = threading.Thread(
-            target=completion_worker, daemon=True
+            target=self._run_completion_worker,
+            args=(mock_coordinator, request_id),
+            daemon=True,
         )
         timeout_thread = threading.Thread(target=timeout_worker, daemon=True)
 
@@ -621,47 +818,33 @@ class TestRaceConditionHandling:
         timeout_thread.join(timeout=1.0)
 
         # Then - System remains consistent (either completion or timeout wins)
-        with result_lock:
-            assert len(final_results) >= 1, "No result recorded"
+        self._verify_race_results(final_results, result_lock)
 
-            # In a real system, only one should win, but in this mock test
-            # both might complete. Verify they're consistent with their type
-            for result_type, result in final_results:
-                if result_type == "completion":
-                    assert result.success is True
-                    assert result.final_status == ResponseStatus.COMPLETED
-                    assert result.api_response.order_id == "ORD_RACE_001"
-                elif result_type == "timeout":
-                    assert result.success is False
-                    assert result.final_status == ResponseStatus.TIMEOUT
-                    assert (
-                        result.api_response.error.code == "PROCESSING_TIMEOUT"
-                    )
+    def _track_status_update(
+        self,
+        req_id: str,
+        status,
+        stage_details,
+        status_updates: list,
+        update_lock,
+    ):
+        """Track a status update."""
+        with update_lock:
+            status_updates.append(
+                (req_id, status, datetime.now(), stage_details)
+            )
+        # Simulate processing time
+        time.sleep(0.01)
 
-    def test_concurrent_status_updates_and_completion(self, mock_coordinator):
-        """Test race between status updates and completion notification.
-
-        Given - Multiple threads updating status while completion occurs
-        When - Status updates and completion happen simultaneously
-        Then - Final status reflects completion, intermediate updates don't interfere
-
-        This test validates that status updates don't interfere with
-        completion notifications in a multi-threaded environment.
-        """
-        # Given - Setup for status update/completion race
-        request_id = "req_status_race_001"
-        status_updates = []
-        completion_results = []
-        update_lock = threading.Lock()
+    def _setup_mock_status_tracking(
+        self, mock_coordinator, status_updates, completion_results, update_lock
+    ):
+        """Set up mock functions for status tracking."""
 
         def mock_update_status(req_id, status, stage_details=None):
-            with update_lock:
-                status_updates.append(
-                    (req_id, status, datetime.now(), stage_details)
-                )
-
-            # Simulate processing time
-            time.sleep(0.01)
+            self._track_status_update(
+                req_id, status, stage_details, status_updates, update_lock
+            )
             return True
 
         def mock_notify_completion_with_tracking(
@@ -686,59 +869,48 @@ class TestRaceConditionHandling:
             mock_notify_completion_with_tracking
         )
 
-        def status_update_worker():
-            """Worker that sends multiple status updates."""
-            statuses = [
-                ResponseStatus.VALIDATING,
-                ResponseStatus.MATCHING,
-                ResponseStatus.SETTLING,
-            ]
+    def _run_status_update_worker(self, mock_coordinator, request_id):
+        """Worker that sends multiple status updates."""
+        statuses = [
+            ResponseStatus.VALIDATING,
+            ResponseStatus.MATCHING,
+            ResponseStatus.SETTLING,
+        ]
 
-            for status in statuses:
-                mock_coordinator.update_status(
-                    request_id,
-                    status,
-                    stage_details={
-                        "stage": status.value,
-                        "worker": "status_updater",
-                    },
-                )
-                time.sleep(0.02)
-
-        def completion_worker():
-            """Worker that sends completion notification."""
-            # Delay to let some status updates happen first
-            time.sleep(0.03)
-
-            success_response = ApiResponse(
-                success=True,
-                request_id=request_id,
-                order_id="ORD_STATUS_RACE_001",
-                data={"status": "filled", "final": True},
-                error=None,
+        for status in statuses:
+            mock_coordinator.update_status(
+                request_id,
+                status,
+                stage_details={
+                    "stage": status.value,
+                    "worker": "status_updater",
+                },
             )
+            time.sleep(0.02)
 
-            mock_coordinator.notify_completion(
-                request_id=request_id,
-                api_response=success_response,
-                order_id="ORD_STATUS_RACE_001",
-            )
+    def _run_status_completion_worker(self, mock_coordinator, request_id):
+        """Worker that sends completion notification for status test."""
+        # Delay to let some status updates happen first
+        time.sleep(0.03)
 
-        # When - Status updates and completion run concurrently
-        status_thread = threading.Thread(
-            target=status_update_worker, daemon=True
-        )
-        completion_thread = threading.Thread(
-            target=completion_worker, daemon=True
+        success_response = ApiResponse(
+            success=True,
+            request_id=request_id,
+            order_id="ORD_STATUS_RACE_001",
+            data={"status": "filled", "final": True},
+            error=None,
         )
 
-        status_thread.start()
-        completion_thread.start()
+        mock_coordinator.notify_completion(
+            request_id=request_id,
+            api_response=success_response,
+            order_id="ORD_STATUS_RACE_001",
+        )
 
-        status_thread.join(timeout=1.0)
-        completion_thread.join(timeout=1.0)
-
-        # Then - All operations completed successfully
+    def _verify_status_and_completion_results(
+        self, request_id, status_updates, completion_results, update_lock
+    ):
+        """Verify status updates and completion results."""
         with update_lock:
             # Verify status updates were recorded
             assert (
@@ -769,9 +941,139 @@ class TestRaceConditionHandling:
                     first_status_time <= completion_time
                 ), "Status updates should start before completion"
 
+    def test_concurrent_status_updates_and_completion(self, mock_coordinator):
+        """Test race between status updates and completion notification.
+
+        Given - Multiple threads updating status while completion occurs
+        When - Status updates and completion happen simultaneously
+        Then - Final status reflects completion, intermediate updates don't interfere
+
+        This test validates that status updates don't interfere with
+        completion notifications in a multi-threaded environment.
+        """
+        # Given - Setup for status update/completion race
+        request_id = "req_status_race_001"
+        status_updates = []
+        completion_results = []
+        update_lock = threading.Lock()
+
+        self._setup_mock_status_tracking(
+            mock_coordinator, status_updates, completion_results, update_lock
+        )
+
+        # When - Status updates and completion run concurrently
+        status_thread = threading.Thread(
+            target=self._run_status_update_worker,
+            args=(mock_coordinator, request_id),
+            daemon=True,
+        )
+        completion_thread = threading.Thread(
+            target=self._run_status_completion_worker,
+            args=(mock_coordinator, request_id),
+            daemon=True,
+        )
+
+        status_thread.start()
+        completion_thread.start()
+
+        status_thread.join(timeout=1.0)
+        completion_thread.join(timeout=1.0)
+
+        # Then - All operations completed successfully
+        self._verify_status_and_completion_results(
+            request_id, status_updates, completion_results, update_lock
+        )
+
 
 class TestThreadPoolScenarios:
     """Test coordination behavior under thread pool execution patterns."""
+
+    def _create_thread_pool_registration(
+        self, request_counter: list, counter_lock, team_id: str
+    ) -> ResponseRegistration:
+        """Create a thread-safe registration for thread pool."""
+        with counter_lock:
+            request_counter[0] += 1
+            request_id = f"req_pool_{request_counter[0]:03d}"
+
+        return ResponseRegistration(
+            request_id=request_id,
+            team_id=team_id,
+            timeout_at=datetime.now() + timedelta(seconds=5),
+            status=ResponseStatus.PENDING,
+        )
+
+    def _create_thread_pool_result(self, request_id: str) -> ResponseResult:
+        """Create a result for thread pool testing."""
+        # Simulate processing time variation
+        processing_time = 0.02 + (hash(request_id) % 50) / 1000.0  # 20-70ms
+        time.sleep(processing_time)
+
+        order_num = int(request_id.split("_")[-1])
+
+        return ResponseResult(
+            request_id=request_id,
+            success=True,
+            api_response=ApiResponse(
+                success=True,
+                request_id=request_id,
+                order_id=f"ORD_POOL_{order_num:03d}",
+                data={
+                    "order_id": f"ORD_POOL_{order_num:03d}",
+                    "status": "filled",
+                    "processing_time_ms": processing_time * 1000,
+                    "thread_id": threading.current_thread().ident,
+                },
+                error=None,
+            ),
+            processing_time_ms=processing_time * 1000,
+            final_status=ResponseStatus.COMPLETED,
+            order_id=f"ORD_POOL_{order_num:03d}",
+        )
+
+    def _process_single_order(
+        self,
+        order,
+        order_index: int,
+        mock_coordinator,
+        processing_results: list,
+        result_lock,
+    ):
+        """Process a single order through coordination system."""
+        try:
+            team_id = f"TEAM_POOL_{order_index:03d}"
+
+            # Register request
+            registration = mock_coordinator.register_request(team_id)
+
+            # Wait for completion
+            result = mock_coordinator.wait_for_completion(
+                registration.request_id
+            )
+
+            # Record result
+            with result_lock:
+                processing_results.append(
+                    {
+                        "order_index": order_index,
+                        "request_id": registration.request_id,
+                        "result": result,
+                        "thread_id": threading.current_thread().ident,
+                    }
+                )
+
+            return result
+
+        except Exception as e:
+            with result_lock:
+                processing_results.append(
+                    {
+                        "order_index": order_index,
+                        "error": str(e),
+                        "thread_id": threading.current_thread().ident,
+                    }
+                )
+            raise
 
     def test_thread_pool_order_processing(
         self, mock_coordinator, concurrent_orders
@@ -800,47 +1102,14 @@ class TestThreadPoolScenarios:
         counter_lock = threading.Lock()
 
         def mock_register_request_thread_safe(team_id, timeout_seconds=None):
-            with counter_lock:
-                request_counter[0] += 1
-                request_id = f"req_pool_{request_counter[0]:03d}"
-
-            return ResponseRegistration(
-                request_id=request_id,
-                team_id=team_id,
-                timeout_at=datetime.now() + timedelta(seconds=5),
-                status=ResponseStatus.PENDING,
+            return self._create_thread_pool_registration(
+                request_counter, counter_lock, team_id
             )
 
         def mock_wait_for_completion_thread_safe(
             request_id, timeout_seconds=None
         ):
-            # Simulate processing time variation
-            processing_time = (
-                0.02 + (hash(request_id) % 50) / 1000.0
-            )  # 20-70ms
-            time.sleep(processing_time)
-
-            order_num = int(request_id.split("_")[-1])
-
-            return ResponseResult(
-                request_id=request_id,
-                success=True,
-                api_response=ApiResponse(
-                    success=True,
-                    request_id=request_id,
-                    order_id=f"ORD_POOL_{order_num:03d}",
-                    data={
-                        "order_id": f"ORD_POOL_{order_num:03d}",
-                        "status": "filled",
-                        "processing_time_ms": processing_time * 1000,
-                        "thread_id": threading.current_thread().ident,
-                    },
-                    error=None,
-                ),
-                processing_time_ms=processing_time * 1000,
-                final_status=ResponseStatus.COMPLETED,
-                order_id=f"ORD_POOL_{order_num:03d}",
-            )
+            return self._create_thread_pool_result(request_id)
 
         mock_coordinator.register_request.side_effect = (
             mock_register_request_thread_safe
@@ -849,50 +1118,20 @@ class TestThreadPoolScenarios:
             mock_wait_for_completion_thread_safe
         )
 
-        def process_single_order(order, order_index):
-            """Process a single order through coordination system."""
-            try:
-                team_id = f"TEAM_POOL_{order_index:03d}"
-
-                # Register request
-                registration = mock_coordinator.register_request(team_id)
-
-                # Wait for completion
-                result = mock_coordinator.wait_for_completion(
-                    registration.request_id
-                )
-
-                # Record result
-                with result_lock:
-                    processing_results.append(
-                        {
-                            "order_index": order_index,
-                            "request_id": registration.request_id,
-                            "result": result,
-                            "thread_id": threading.current_thread().ident,
-                        }
-                    )
-
-                return result
-
-            except Exception as e:
-                with result_lock:
-                    processing_results.append(
-                        {
-                            "order_index": order_index,
-                            "error": str(e),
-                            "thread_id": threading.current_thread().ident,
-                        }
-                    )
-                raise
-
         # When - Orders processed concurrently via thread pool
         start_time = time.perf_counter()
 
         with ThreadPoolExecutor(max_workers=max_workers) as executor:
             # Submit all orders to thread pool
             future_to_order = {
-                executor.submit(process_single_order, order, i): (order, i)
+                executor.submit(
+                    self._process_single_order,
+                    order,
+                    i,
+                    mock_coordinator,
+                    processing_results,
+                    result_lock,
+                ): (order, i)
                 for i, order in enumerate(orders)
             }
 
@@ -909,6 +1148,28 @@ class TestThreadPoolScenarios:
         processing_time = time.perf_counter() - start_time
 
         # Then - All orders processed successfully
+        self._verify_thread_pool_results(
+            processing_results, orders, max_workers, result_lock
+        )
+
+        # Performance verification - concurrent processing should be faster than sequential
+        sequential_time_estimate = (
+            sum(r["result"].processing_time_ms for r in processing_results)
+            / 1000.0
+        )
+
+        assert (
+            processing_time < sequential_time_estimate * 0.8
+        ), f"Thread pool should be faster: {processing_time:.2f}s vs estimated {sequential_time_estimate:.2f}s"
+
+    def _verify_thread_pool_results(
+        self,
+        processing_results: list,
+        orders: list,
+        max_workers: int,
+        result_lock,
+    ):
+        """Verify thread pool processing results."""
         with result_lock:
             # Verify all orders completed
             assert len(processing_results) == len(orders)
@@ -939,19 +1200,68 @@ class TestThreadPoolScenarios:
                 request_ids
             ), "Duplicate request IDs detected"
 
-        # Performance verification - concurrent processing should be faster than sequential
-        _max_individual_time = (
-            max(r["result"].processing_time_ms for r in processing_results)
-            / 1000.0  # For performance comparison
-        )
-        sequential_time_estimate = (
-            sum(r["result"].processing_time_ms for r in processing_results)
-            / 1000.0
+    def _create_cleanup_test_registration(
+        self,
+        request_id: str,
+        team_id: str,
+        active_requests: list,
+        cleanup_lock,
+    ) -> ResponseRegistration:
+        """Create a registration for cleanup testing."""
+        with cleanup_lock:
+            active_requests.append(request_id)
+
+        return ResponseRegistration(
+            request_id=request_id,
+            team_id=team_id,
+            timeout_at=datetime.now()
+            + timedelta(seconds=1),  # Short timeout for test
+            status=ResponseStatus.PENDING,
         )
 
-        assert (
-            processing_time < sequential_time_estimate * 0.8
-        ), f"Thread pool should be faster: {processing_time:.2f}s vs estimated {sequential_time_estimate:.2f}s"
+    def _perform_mock_cleanup(
+        self, active_requests: list, cleaned_requests: list, cleanup_lock
+    ) -> int:
+        """Simulate cleanup of expired requests."""
+        with cleanup_lock:
+            # In real implementation, this would check timeouts
+            # For test, we'll clean up older requests
+            if len(active_requests) > 5:
+                cleaned = active_requests[:2]  # Clean oldest 2
+                active_requests[:2] = []
+                cleaned_requests.extend(cleaned)
+                return len(cleaned)
+        return 0
+
+    def _run_active_processing_worker(
+        self,
+        mock_coordinator,
+        active_requests: list,
+        processing_completed: list,
+        cleanup_lock,
+    ):
+        """Worker that continuously processes requests."""
+        for i in range(20):
+            team_id = f"TEAM_ACTIVE_{i:03d}"
+            registration = mock_coordinator.register_request(team_id)
+
+            # Simulate processing time
+            time.sleep(0.01)
+
+            # Mark as completed (remove from active list)
+            with cleanup_lock:
+                if registration.request_id in active_requests:
+                    active_requests.remove(registration.request_id)
+                    processing_completed[0] += 1
+
+            time.sleep(0.01)
+
+    def _run_cleanup_worker(self, mock_coordinator, cleanup_completed: list):
+        """Worker that runs periodic cleanup."""
+        for i in range(30):
+            cleaned_count = mock_coordinator.cleanup_completed_requests()
+            cleanup_completed[0] += cleaned_count
+            time.sleep(0.01)
 
     def test_cleanup_coordination_with_active_threads(self, mock_coordinator):
         """Test background cleanup coordination with active processing threads.
@@ -972,29 +1282,14 @@ class TestThreadPoolScenarios:
         # Mock active request processing
         def mock_register_with_cleanup_test(team_id, timeout_seconds=None):
             request_id = f"req_cleanup_{int(time.time_ns())}"
-
-            with cleanup_lock:
-                active_requests.append(request_id)
-
-            return ResponseRegistration(
-                request_id=request_id,
-                team_id=team_id,
-                timeout_at=datetime.now()
-                + timedelta(seconds=1),  # Short timeout for test
-                status=ResponseStatus.PENDING,
+            return self._create_cleanup_test_registration(
+                request_id, team_id, active_requests, cleanup_lock
             )
 
         def mock_cleanup_with_tracking():
-            # Simulate cleanup identifying and removing expired requests
-            with cleanup_lock:
-                # In real implementation, this would check timeouts
-                # For test, we'll clean up older requests
-                if len(active_requests) > 5:
-                    cleaned = active_requests[:2]  # Clean oldest 2
-                    active_requests[:2] = []
-                    cleaned_requests.extend(cleaned)
-                    return len(cleaned)
-            return 0
+            return self._perform_mock_cleanup(
+                active_requests, cleaned_requests, cleanup_lock
+            )
 
         mock_coordinator.register_request.side_effect = (
             mock_register_with_cleanup_test
@@ -1007,35 +1302,22 @@ class TestThreadPoolScenarios:
         processing_completed = [0]
         cleanup_completed = [0]
 
-        def active_processing_worker():
-            """Worker that continuously processes requests."""
-            for i in range(20):
-                team_id = f"TEAM_ACTIVE_{i:03d}"
-                registration = mock_coordinator.register_request(team_id)
-
-                # Simulate processing time
-                time.sleep(0.01)
-
-                # Mark as completed (remove from active list)
-                with cleanup_lock:
-                    if registration.request_id in active_requests:
-                        active_requests.remove(registration.request_id)
-                        processing_completed[0] += 1
-
-                time.sleep(0.01)
-
-        def cleanup_worker():
-            """Worker that runs periodic cleanup."""
-            for i in range(30):
-                cleaned_count = mock_coordinator.cleanup_completed_requests()
-                cleanup_completed[0] += cleaned_count
-                time.sleep(0.01)
-
         # When - Active processing and cleanup run concurrently
         processing_thread = threading.Thread(
-            target=active_processing_worker, daemon=True
+            target=self._run_active_processing_worker,
+            args=(
+                mock_coordinator,
+                active_requests,
+                processing_completed,
+                cleanup_lock,
+            ),
+            daemon=True,
         )
-        cleanup_thread = threading.Thread(target=cleanup_worker, daemon=True)
+        cleanup_thread = threading.Thread(
+            target=self._run_cleanup_worker,
+            args=(mock_coordinator, cleanup_completed),
+            daemon=True,
+        )
 
         processing_thread.start()
         cleanup_thread.start()

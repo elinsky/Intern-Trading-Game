@@ -36,6 +36,91 @@ def check_file(file_path: str) -> List[Tuple[int, str]]:
     return matches
 
 
+def should_check_file(file_path: str) -> bool:
+    """
+    Determine if a file should be checked for math directives.
+
+    Parameters
+    ----------
+    file_path : str
+        Path to the file to check.
+
+    Returns
+    -------
+    bool
+        True if the file should be checked, False otherwise.
+    """
+    if not Path(file_path).exists():
+        return False
+
+    # Skip the pre-commit hook itself to avoid false positives
+    if file_path.endswith("check_math_directives.py"):
+        return False
+
+    # Only check Python files
+    if not file_path.endswith(".py"):
+        return False
+
+    return True
+
+
+def print_match_details(line_num: int, line: str) -> None:
+    """
+    Print details about a found math directive match.
+
+    Parameters
+    ----------
+    line_num : int
+        The line number where the match was found.
+    line : str
+        The content of the line with the match.
+    """
+    print(f"  Line {line_num}: {line}")
+    print(
+        "  Found reStructuredText math directive. Please use MathJax syntax instead:"
+    )
+    print("  Replace:")
+    print("    .. math::")
+    print("")
+    print("        Priority = (Price, Time)")
+    print("  With:")
+    print("    $$\\text{Priority} = (\\text{Price}, \\text{Time})$$")
+    print(
+        "  See docs/contributing/docstring-math-guide.md for more information."
+    )
+    print()
+
+
+def process_files(files: List[str]) -> int:
+    """
+    Process a list of files and check for math directives.
+
+    Parameters
+    ----------
+    files : List[str]
+        List of file paths to check.
+
+    Returns
+    -------
+    int
+        Exit code (0 if no issues found, 1 if issues found).
+    """
+    exit_code = 0
+
+    for file_path in files:
+        if not should_check_file(file_path):
+            continue
+
+        matches = check_file(file_path)
+        if matches:
+            exit_code = 1
+            print(f"\n{file_path}:")
+            for line_num, line in matches:
+                print_match_details(line_num, line)
+
+    return exit_code
+
+
 def main():
     """Run the pre-commit hook."""
     parser = argparse.ArgumentParser(
@@ -46,40 +131,7 @@ def main():
     )
     args = parser.parse_args()
 
-    exit_code = 0
-    for file_path in args.files:
-        if not Path(file_path).exists():
-            continue
-
-        # Skip the pre-commit hook itself to avoid false positives
-        if file_path.endswith("check_math_directives.py"):
-            continue
-
-        # Only check Python files
-        if not file_path.endswith(".py"):
-            continue
-
-        matches = check_file(file_path)
-        if matches:
-            exit_code = 1
-            print(f"\n{file_path}:")
-            for line_num, line in matches:
-                print(f"  Line {line_num}: {line}")
-                print(
-                    "  Found reStructuredText math directive. Please use MathJax syntax instead:"
-                )
-                print("  Replace:")
-                print("    .. math::")
-                print("")
-                print("        Priority = (Price, Time)")
-                print("  With:")
-                print(
-                    "    $$\\text{Priority} = (\\text{Price}, \\text{Time})$$"
-                )
-                print(
-                    "  See docs/contributing/docstring-math-guide.md for more information."
-                )
-                print()
+    exit_code = process_files(args.files)
 
     if exit_code == 0:
         print("No reStructuredText math directives found.")
