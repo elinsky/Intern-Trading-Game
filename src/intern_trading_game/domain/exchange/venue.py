@@ -8,6 +8,7 @@ the exchange.
 from typing import Dict, List, Optional, Set
 
 from .book.matching_engine import (
+    BatchMatchingEngine,
     ContinuousMatchingEngine,
     MatchingEngine,
 )
@@ -16,6 +17,8 @@ from .models.instrument import Instrument
 from .models.order import Order
 from .models.trade import Trade
 from .order_result import OrderResult
+from .phase.interfaces import PhaseManagerInterface
+from .types import PhaseState
 
 
 class ExchangeVenue:
@@ -104,11 +107,17 @@ class ExchangeVenue:
     'accepted'
     """
 
-    def __init__(self, matching_engine: Optional[MatchingEngine] = None):
+    def __init__(
+        self,
+        phase_manager: PhaseManagerInterface,
+        matching_engine: Optional[MatchingEngine] = None,
+    ):
         """Initialize the exchange venue.
 
         Parameters
         ----------
+        phase_manager : PhaseManagerInterface
+            The phase manager that determines market phases and rules
         matching_engine : MatchingEngine, optional
             The matching engine to use. Defaults to ContinuousMatchingEngine
             if not provided.
@@ -119,8 +128,8 @@ class ExchangeVenue:
         - ContinuousMatchingEngine: Orders match immediately upon submission
         - BatchMatchingEngine: Orders are collected and matched in batches
 
-        This design allows the exchange to support different trading scenarios
-        without changing the core order management logic.
+        The phase manager is required to enforce phase-based trading rules
+        and ensure orders are only accepted/matched during appropriate phases.
         """
         # Map of instrument IDs to their order books
         self.order_books: Dict[str, OrderBook] = {}
@@ -131,9 +140,16 @@ class ExchangeVenue:
         # Set of all order IDs across all books
         self.all_order_ids: Set[str] = set()
 
+        # Phase manager is required for phase-aware operations
+        self.phase_manager = phase_manager
+
         # Initialize matching engine - default to continuous if not specified
         # This maintains backward compatibility while allowing batch mode
         self.matching_engine = matching_engine or ContinuousMatchingEngine()
+
+        # Initialize all engine types for phase-aware operation
+        self._continuous_engine = ContinuousMatchingEngine()
+        self._batch_engine = BatchMatchingEngine()
 
     def list_instrument(self, instrument: Instrument) -> None:
         """
@@ -171,10 +187,22 @@ class ExchangeVenue:
 
         Notes
         -----
-        This method delegates the actual matching logic to the configured
-        matching engine. In continuous mode, orders may match immediately.
-        In batch mode, orders are collected for later processing.
+        This method first checks the current phase state to ensure orders
+        can be submitted. It then delegates the actual matching logic to
+        the configured matching engine. In continuous mode, orders may match
+        immediately. In batch mode, orders are collected for later processing.
         """
+        # Check phase state
+        phase_state = self.phase_manager.get_current_phase_state()
+        if not phase_state.is_order_submission_allowed:
+            return OrderResult(
+                order_id=order.order_id,
+                status="rejected",
+                fills=[],
+                remaining_quantity=order.quantity,
+                error_message=f"Order submission not allowed during {phase_state.phase_type.value} phase",
+            )
+
         # Validate the order
         if order.instrument_id not in self.order_books:
             raise ValueError(f"Instrument {order.instrument_id} not found")
@@ -188,10 +216,22 @@ class ExchangeVenue:
         # Get the order book for this instrument
         order_book = self.order_books[order.instrument_id]
 
-        # Delegate to the matching engine
-        # This is the key change - we no longer directly call order_book.add_order
-        # Instead, the matching engine decides how to handle the order
-        result = self.matching_engine.submit_order(order, order_book)
+        # Select engine based on phase state
+        engine: MatchingEngine
+        if (
+            phase_state.execution_style == "batch"
+            or not phase_state.is_matching_enabled
+        ):
+            # Pre-open and opening auction: use batch engine
+            # During pre-open, orders are collected but not matched
+            # During opening auction, execute_batch processes them
+            engine = self._batch_engine
+        else:
+            # Continuous: use continuous engine
+            engine = self._continuous_engine
+
+        # Delegate to the selected engine
+        result = engine.submit_order(order, order_book)
 
         # For batch mode, the order might be pending without fills
         # For continuous mode, the order might have immediate fills
@@ -211,6 +251,11 @@ class ExchangeVenue:
         Raises:
             ValueError: If the trader doesn't own the order.
         """
+        # Check phase state
+        phase_state = self.phase_manager.get_current_phase_state()
+        if not phase_state.is_order_cancellation_allowed:
+            return False
+
         # Check if the order exists
         if order_id not in self.all_order_ids:
             return False
@@ -339,9 +384,15 @@ class ExchangeVenue:
         ...     for order_id, result in instrument_results.items():
         ...         print(f"Order {order_id}: {result.status}")
         """
-        # Delegate to the matching engine
-        # The engine knows whether it has pending orders to process
-        return self.matching_engine.execute_batch(self.order_books)
+        # Get current phase to determine which engine to use
+        phase_state = self.phase_manager.get_current_phase_state()
+
+        # Only batch engine has meaningful execute_batch
+        if phase_state.execution_style == "batch":
+            return self._batch_engine.execute_batch(self.order_books)
+        else:
+            # Other engines return empty dict
+            return {}
 
     def get_matching_mode(self) -> str:
         """Get the current matching mode of the exchange.
@@ -368,3 +419,116 @@ class ExchangeVenue:
         'batch'
         """
         return self.matching_engine.get_mode()
+
+    def get_current_phase_state(self) -> PhaseState:
+        """Get the current market phase state.
+
+        Returns
+        -------
+        PhaseState
+            The current phase state including phase type and operational rules
+
+        Notes
+        -----
+        This delegates to the phase manager to get the current phase state.
+        The phase state determines what operations are allowed at any given time.
+
+        Examples
+        --------
+        >>> state = exchange.get_current_phase_state()
+        >>> if state.is_order_submission_allowed:
+        ...     # Submit orders
+        >>> if state.phase_type == PhaseType.CLOSED:
+        ...     print("Market is closed")
+        """
+        return self.phase_manager.get_current_phase_state()
+
+    def set_matching_engine(self, matching_engine: MatchingEngine) -> None:
+        """Set the matching engine for the exchange.
+
+        This method allows switching between different matching engines,
+        typically used for phase transitions (e.g., switching to batch
+        mode for opening auction).
+
+        Parameters
+        ----------
+        matching_engine : MatchingEngine
+            The new matching engine to use
+
+        Notes
+        -----
+        This is primarily used by the PhaseTransitionExecutor to switch
+        between continuous and batch matching modes based on market phase.
+        """
+        self.matching_engine = matching_engine
+
+    def execute_opening_auction(self) -> None:
+        """Execute the opening auction batch match.
+
+        This method is called when transitioning from OPENING_AUCTION
+        to CONTINUOUS phase. It processes all orders collected during
+        pre-open using batch matching to establish fair opening prices.
+
+        Notes
+        -----
+        This method assumes the exchange is currently using a batch
+        matching engine. It executes the batch for all instruments
+        and processes the results.
+
+        The opening auction ensures:
+        - All crossing orders from pre-open are matched
+        - Orders at the same price are randomized fairly
+        - Opening prices are established for all traded instruments
+        """
+        # Execute batch matching for all instruments
+        # Use batch engine directly since we're now in continuous phase
+        results = self._batch_engine.execute_batch(self.order_books)
+
+        # Log summary of opening auction results
+        total_trades = 0
+        for instrument_id, instrument_results in results.items():
+            trades_for_instrument = sum(
+                len(result.fills) for result in instrument_results.values()
+            )
+            if trades_for_instrument > 0:
+                total_trades += trades_for_instrument
+                # Could emit opening price events here in the future
+
+        # Log auction completion
+        # In a real system, this might publish market data events
+
+    def cancel_all_orders(self) -> None:
+        """Cancel all resting orders across all instruments.
+
+        This method is called when the market closes to ensure all
+        open orders are cancelled and don't carry over to the next
+        trading day.
+
+        Notes
+        -----
+        This iterates through all order books and cancels every resting
+        order. In a real system, this would also notify traders of the
+        cancellations.
+        """
+        cancelled_count = 0
+
+        for instrument_id, order_book in self.order_books.items():
+            # Get all order IDs from the book
+            all_orders: List[Order] = []
+
+            # Collect all buy orders
+            for price_level in order_book.bids:
+                all_orders.extend(price_level.orders)
+
+            # Collect all sell orders
+            for price_level in order_book.asks:
+                all_orders.extend(price_level.orders)
+
+            # Cancel each order
+            for order in all_orders:
+                if order_book.cancel_order(order.order_id):
+                    self.all_order_ids.discard(order.order_id)
+                    cancelled_count += 1
+
+        # Log cancellation summary
+        # In a real system, this might publish end-of-day events

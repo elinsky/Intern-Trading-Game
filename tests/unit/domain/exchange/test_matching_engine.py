@@ -11,6 +11,7 @@ identified in our design phase.
 """
 
 from collections import Counter
+from unittest.mock import Mock
 
 import pytest
 
@@ -22,8 +23,39 @@ from intern_trading_game.domain.exchange import (
     OrderBook,
 )
 from intern_trading_game.domain.exchange.models.instrument import Instrument
+from intern_trading_game.domain.exchange.types import PhaseState, PhaseType
 
 # Test fixtures
+
+
+@pytest.fixture
+def mock_phase_manager():
+    """Create a mock phase manager for testing."""
+    manager = Mock()
+    # Default to continuous trading phase
+    manager.get_current_phase_state.return_value = PhaseState(
+        phase_type=PhaseType.CONTINUOUS,
+        is_order_submission_allowed=True,
+        is_order_cancellation_allowed=True,
+        is_matching_enabled=True,
+        execution_style="continuous",
+    )
+    return manager
+
+
+@pytest.fixture
+def mock_batch_phase_manager():
+    """Create a mock phase manager for batch testing."""
+    manager = Mock()
+    # Set to opening auction phase with batch execution
+    manager.get_current_phase_state.return_value = PhaseState(
+        phase_type=PhaseType.OPENING_AUCTION,
+        is_order_submission_allowed=False,
+        is_order_cancellation_allowed=False,
+        is_matching_enabled=True,
+        execution_style="batch",
+    )
+    return manager
 
 
 @pytest.fixture
@@ -683,8 +715,21 @@ def test_continuous_engine_execute_batch_is_noop(continuous_engine):
 
 def test_exchange_venue_batch_matching_preserves_order_ids():
     """Test that order IDs are preserved through batch matching."""
-    # Given - Exchange with batch engine
-    exchange = ExchangeVenue(BatchMatchingEngine())
+    # Given - Exchange with batch engine and phase manager
+    phase_manager = Mock()
+
+    # During pre-open, orders can be submitted with batch execution
+    phase_manager.get_current_phase_state.return_value = PhaseState(
+        phase_type=PhaseType.PRE_OPEN,
+        is_order_submission_allowed=True,
+        is_order_cancellation_allowed=True,
+        is_matching_enabled=False,
+        execution_style="batch",
+    )
+
+    exchange = ExchangeVenue(
+        phase_manager=phase_manager, matching_engine=BatchMatchingEngine()
+    )
     exchange.list_instrument(Instrument(symbol="TEST", underlying="TEST"))
 
     # Create orders with specific IDs
@@ -713,10 +758,10 @@ def test_exchange_venue_batch_matching_preserves_order_ids():
 # ============================================================================
 
 
-def test_exchange_venue_with_continuous_engine():
+def test_exchange_venue_with_continuous_engine(mock_phase_manager):
     """Test ExchangeVenue integration with continuous engine."""
     # Given - Default exchange (continuous)
-    exchange = ExchangeVenue()
+    exchange = ExchangeVenue(phase_manager=mock_phase_manager)
     exchange.list_instrument(Instrument(symbol="TEST", underlying="TEST"))
 
     # Verify mode
@@ -736,8 +781,19 @@ def test_exchange_venue_with_continuous_engine():
 
 def test_exchange_venue_with_batch_engine():
     """Test ExchangeVenue integration with batch engine."""
-    # Given - Exchange with batch engine
-    exchange = ExchangeVenue(BatchMatchingEngine())
+    # Given - Exchange with batch engine and appropriate phase
+    phase_manager = Mock()
+    phase_manager.get_current_phase_state.return_value = PhaseState(
+        phase_type=PhaseType.PRE_OPEN,
+        is_order_submission_allowed=True,
+        is_order_cancellation_allowed=True,
+        is_matching_enabled=False,
+        execution_style="batch",
+    )
+
+    exchange = ExchangeVenue(
+        phase_manager=phase_manager, matching_engine=BatchMatchingEngine()
+    )
     exchange.list_instrument(Instrument(symbol="TEST", underlying="TEST"))
 
     # Verify mode
@@ -764,8 +820,19 @@ def test_exchange_venue_with_batch_engine():
 
 def test_exchange_venue_batch_multiple_instruments():
     """Test batch execution across multiple instruments."""
-    # Given - Exchange with multiple instruments
-    exchange = ExchangeVenue(BatchMatchingEngine())
+    # Given - Exchange with batch phase
+    phase_manager = Mock()
+    phase_manager.get_current_phase_state.return_value = PhaseState(
+        phase_type=PhaseType.PRE_OPEN,
+        is_order_submission_allowed=True,
+        is_order_cancellation_allowed=True,
+        is_matching_enabled=False,
+        execution_style="batch",
+    )
+
+    exchange = ExchangeVenue(
+        phase_manager=phase_manager, matching_engine=BatchMatchingEngine()
+    )
     exchange.list_instrument(Instrument(symbol="SPX", underlying="SPX"))
     exchange.list_instrument(Instrument(symbol="SPY", underlying="SPY"))
 
@@ -812,8 +879,19 @@ def test_exchange_venue_batch_with_invalid_instrument(batch_engine):
 
 def test_exchange_venue_multiple_batches_sequential():
     """Test running multiple batches sequentially."""
-    # Given - Exchange with batch engine
-    exchange = ExchangeVenue(BatchMatchingEngine())
+    # Given - Exchange with batch phase
+    phase_manager = Mock()
+    phase_manager.get_current_phase_state.return_value = PhaseState(
+        phase_type=PhaseType.PRE_OPEN,
+        is_order_submission_allowed=True,
+        is_order_cancellation_allowed=True,
+        is_matching_enabled=False,
+        execution_style="batch",
+    )
+
+    exchange = ExchangeVenue(
+        phase_manager=phase_manager, matching_engine=BatchMatchingEngine()
+    )
     exchange.list_instrument(Instrument(symbol="TEST", underlying="TEST"))
 
     # First batch
@@ -848,7 +926,18 @@ def test_exchange_venue_multiple_batches_sequential():
 
 def test_batch_engine_duplicate_order_id_rejected():
     """Test that duplicate order IDs are rejected."""
-    exchange = ExchangeVenue(BatchMatchingEngine())
+    phase_manager = Mock()
+    phase_manager.get_current_phase_state.return_value = PhaseState(
+        phase_type=PhaseType.PRE_OPEN,
+        is_order_submission_allowed=True,
+        is_order_cancellation_allowed=True,
+        is_matching_enabled=False,
+        execution_style="batch",
+    )
+
+    exchange = ExchangeVenue(
+        phase_manager=phase_manager, matching_engine=BatchMatchingEngine()
+    )
     exchange.list_instrument(Instrument(symbol="TEST", underlying="TEST"))
 
     # Submit order

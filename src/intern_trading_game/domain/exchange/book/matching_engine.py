@@ -317,6 +317,10 @@ class BatchContext:
             trade
         )
 
+        # Also record in order book's trade history
+        if instrument_id in self.order_books:
+            self.order_books[instrument_id].trades.append(trade)
+
     def match_batch_orders(self) -> None:
         """Match orders within each instrument's batch."""
         for instrument_id, orders in self.pending_orders.items():

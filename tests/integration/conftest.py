@@ -59,7 +59,23 @@ def role_fees():
 @pytest.fixture
 def exchange():
     """Create a clean exchange for testing."""
-    exchange = ExchangeVenue(ContinuousMatchingEngine())
+    from unittest.mock import Mock
+
+    from intern_trading_game.domain.exchange.types import PhaseState, PhaseType
+
+    # Create a mock phase manager for continuous trading
+    phase_manager = Mock()
+    phase_manager.get_current_phase_state.return_value = PhaseState(
+        phase_type=PhaseType.CONTINUOUS,
+        is_order_submission_allowed=True,
+        is_order_cancellation_allowed=True,
+        is_matching_enabled=True,
+        execution_style="continuous",
+    )
+
+    exchange = ExchangeVenue(
+        phase_manager=phase_manager, matching_engine=ContinuousMatchingEngine()
+    )
 
     # List test instruments
     instruments = [

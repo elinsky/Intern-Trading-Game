@@ -4,7 +4,7 @@ Tests focus on error handling and edge cases not covered in the main test file.
 This complements test_exchange.py by covering error paths and less common scenarios.
 """
 
-from unittest.mock import patch
+from unittest.mock import Mock, patch
 
 import pytest
 
@@ -13,6 +13,7 @@ from intern_trading_game.domain.exchange.book.matching_engine import (
 )
 from intern_trading_game.domain.exchange.models.instrument import Instrument
 from intern_trading_game.domain.exchange.models.order import Order
+from intern_trading_game.domain.exchange.types import PhaseState, PhaseType
 from intern_trading_game.domain.exchange.venue import ExchangeVenue
 from tests.fixtures import (
     create_matched_orders,
@@ -23,9 +24,24 @@ from tests.fixtures import (
 
 
 @pytest.fixture
-def exchange():
+def mock_phase_manager():
+    """Create a mock phase manager for testing."""
+    manager = Mock()
+    # Default to continuous trading phase
+    manager.get_current_phase_state.return_value = PhaseState(
+        phase_type=PhaseType.CONTINUOUS,
+        is_order_submission_allowed=True,
+        is_order_cancellation_allowed=True,
+        is_matching_enabled=True,
+        execution_style="continuous",
+    )
+    return manager
+
+
+@pytest.fixture
+def exchange(mock_phase_manager):
     """Create an exchange with a test SPX option."""
-    exchange = ExchangeVenue()
+    exchange = ExchangeVenue(phase_manager=mock_phase_manager)
     # Create SPX option with proper date format
     spx_option = Instrument(
         symbol="SPX_CALL_4500",
@@ -213,7 +229,7 @@ class TestExchangeVenueAdditionalMethods:
         assert instruments[0].strike == 4500.0
         assert instruments[0].option_type == "call"
 
-    def test_get_all_instruments_multiple(self):
+    def test_get_all_instruments_multiple(self, mock_phase_manager):
         """Test getting all instruments with multiple instruments.
 
         Given - An exchange with multiple instruments
@@ -221,7 +237,7 @@ class TestExchangeVenueAdditionalMethods:
         Then - List with all instruments should be returned
         """
         # Given - Exchange with multiple instruments
-        exchange = ExchangeVenue()
+        exchange = ExchangeVenue(phase_manager=mock_phase_manager)
 
         inst1 = Instrument(symbol="AAPL", underlying="AAPL")
         inst2 = Instrument(
@@ -265,9 +281,20 @@ class TestExchangeVenueAdditionalMethods:
         When - We call execute_batch
         Then - Results with order statuses should be returned
         """
-        # Given - Exchange in batch mode
+        # Given - Exchange in batch mode with appropriate phase
+        phase_manager = Mock()
+        phase_manager.get_current_phase_state.return_value = PhaseState(
+            phase_type=PhaseType.PRE_OPEN,
+            is_order_submission_allowed=True,
+            is_order_cancellation_allowed=True,
+            is_matching_enabled=False,
+            execution_style="batch",
+        )
+
         batch_engine = BatchMatchingEngine()
-        exchange = ExchangeVenue(matching_engine=batch_engine)
+        exchange = ExchangeVenue(
+            phase_manager=phase_manager, matching_engine=batch_engine
+        )
 
         # List instrument
         inst = Instrument(
@@ -335,9 +362,20 @@ class TestExchangeVenueAdditionalMethods:
         When - We call get_matching_mode
         Then - 'batch' should be returned
         """
-        # Given - Exchange in batch mode
+        # Given - Exchange in batch mode with appropriate phase
+        phase_manager = Mock()
+        phase_manager.get_current_phase_state.return_value = PhaseState(
+            phase_type=PhaseType.PRE_OPEN,
+            is_order_submission_allowed=True,
+            is_order_cancellation_allowed=True,
+            is_matching_enabled=False,
+            execution_style="batch",
+        )
+
         batch_engine = BatchMatchingEngine()
-        exchange = ExchangeVenue(matching_engine=batch_engine)
+        exchange = ExchangeVenue(
+            phase_manager=phase_manager, matching_engine=batch_engine
+        )
 
         # When - Get matching mode
         mode = exchange.get_matching_mode()
@@ -618,9 +656,20 @@ class TestExchangeVenueTrading:
         When - We execute the batch
         Then - Orders should match according to price-time priority
         """
-        # Given - Create batch exchange with SPX option
+        # Given - Create batch exchange with appropriate phase
+        phase_manager = Mock()
+        phase_manager.get_current_phase_state.return_value = PhaseState(
+            phase_type=PhaseType.PRE_OPEN,
+            is_order_submission_allowed=True,
+            is_order_cancellation_allowed=True,
+            is_matching_enabled=False,
+            execution_style="batch",
+        )
+
         batch_engine = BatchMatchingEngine()
-        exchange = ExchangeVenue(matching_engine=batch_engine)
+        exchange = ExchangeVenue(
+            phase_manager=phase_manager, matching_engine=batch_engine
+        )
         spx_option = Instrument(
             symbol="SPX_CALL_4500",
             strike=4500.0,

@@ -10,6 +10,7 @@ the full API threading infrastructure. They test:
 
 from queue import Queue
 from typing import Any, List, Tuple
+from unittest.mock import Mock
 
 import pytest
 
@@ -22,6 +23,7 @@ from intern_trading_game.domain.exchange.models.order import (
     OrderSide,
     OrderType,
 )
+from intern_trading_game.domain.exchange.types import PhaseState, PhaseType
 from intern_trading_game.domain.exchange.venue import ExchangeVenue
 
 
@@ -60,9 +62,27 @@ class MockQueueProcessor:
 
 
 @pytest.fixture
-def exchange():
+def mock_phase_manager():
+    """Create a mock phase manager for testing."""
+    manager = Mock()
+    # Default to continuous trading phase
+    manager.get_current_phase_state.return_value = PhaseState(
+        phase_type=PhaseType.CONTINUOUS,
+        is_order_submission_allowed=True,
+        is_order_cancellation_allowed=True,
+        is_matching_enabled=True,
+        execution_style="continuous",
+    )
+    return manager
+
+
+@pytest.fixture
+def exchange(mock_phase_manager):
     """Create a fresh exchange instance for testing."""
-    return ExchangeVenue(ContinuousMatchingEngine())
+    return ExchangeVenue(
+        phase_manager=mock_phase_manager,
+        matching_engine=ContinuousMatchingEngine(),
+    )
 
 
 @pytest.fixture

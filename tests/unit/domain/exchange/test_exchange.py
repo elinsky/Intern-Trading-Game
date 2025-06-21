@@ -2,17 +2,35 @@
 Tests for the exchange system.
 """
 
+from unittest.mock import Mock
+
 import pytest
 
 from intern_trading_game.domain.exchange.models.instrument import Instrument
 from intern_trading_game.domain.exchange.models.order import Order
+from intern_trading_game.domain.exchange.types import PhaseState, PhaseType
 from intern_trading_game.domain.exchange.venue import ExchangeVenue
 
 
 @pytest.fixture
-def exchange():
+def mock_phase_manager():
+    """Create a mock phase manager for testing."""
+    manager = Mock()
+    # Default to continuous trading phase
+    manager.get_current_phase_state.return_value = PhaseState(
+        phase_type=PhaseType.CONTINUOUS,
+        is_order_submission_allowed=True,
+        is_order_cancellation_allowed=True,
+        is_matching_enabled=True,
+        execution_style="continuous",
+    )
+    return manager
+
+
+@pytest.fixture
+def exchange(mock_phase_manager):
     """Create an exchange with a test instrument."""
-    exchange = ExchangeVenue()
+    exchange = ExchangeVenue(phase_manager=mock_phase_manager)
 
     # Create a test instrument
     test_instrument = Instrument(
@@ -358,7 +376,7 @@ def test_market_orders(exchange):
     assert book.best_ask() == (5.25, 5)  # 5 remaining from the sell order
 
 
-def test_cancel_order(exchange):
+def test_cancel_order(exchange, mock_phase_manager):
     """Test cancelling orders."""
     # Given - Market setup with a resting buy order
     # We have an exchange venue with a test instrument listed for trading.
