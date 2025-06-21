@@ -68,6 +68,8 @@ class PhaseType(str, Enum):
     ----------
     PRE_OPEN : str
         Market is preparing to open. Orders accepted but not matched.
+    OPENING_AUCTION : str
+        Opening auction phase. Book frozen, batch matching executes.
     CONTINUOUS : str
         Normal trading hours. Orders accepted and matched immediately.
     CLOSED : str
@@ -75,11 +77,12 @@ class PhaseType(str, Enum):
 
     Notes
     -----
-    The exchange operates in one of these three phases at all times.
+    The exchange operates in one of these four phases at all times.
     Phase transitions are based on configured market hours and days.
 
     Each phase has specific rules for order handling:
     - PRE_OPEN: Accept orders, queue for opening
+    - OPENING_AUCTION: No new orders, execute batch matching
     - CONTINUOUS: Accept orders, match immediately
     - CLOSED: Reject all orders
 
@@ -94,6 +97,7 @@ class PhaseType(str, Enum):
     """
 
     PRE_OPEN = "pre_open"
+    OPENING_AUCTION = "opening_auction"
     CONTINUOUS = "continuous"
     CLOSED = "closed"
 

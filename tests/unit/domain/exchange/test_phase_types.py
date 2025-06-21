@@ -13,9 +13,10 @@ class TestPhaseType:
 
     def test_phase_type_values(self):
         """Test that PhaseType has the correct values."""
-        # Then - PhaseType should have exactly three values
-        assert len(PhaseType) == 3
+        # Then - PhaseType should have exactly four values
+        assert len(PhaseType) == 4
         assert PhaseType.PRE_OPEN.value == "pre_open"
+        assert PhaseType.OPENING_AUCTION.value == "opening_auction"
         assert PhaseType.CONTINUOUS.value == "continuous"
         assert PhaseType.CLOSED.value == "closed"
 

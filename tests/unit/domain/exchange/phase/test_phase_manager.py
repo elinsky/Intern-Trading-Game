@@ -32,7 +32,18 @@ class TestConfigDrivenPhaseManager:
             schedule={
                 "pre_open": PhaseScheduleConfig(
                     start_time="08:00",
-                    end_time="09:30",
+                    end_time="09:29:30",
+                    weekdays=[
+                        "Monday",
+                        "Tuesday",
+                        "Wednesday",
+                        "Thursday",
+                        "Friday",
+                    ],
+                ),
+                "opening_auction": PhaseScheduleConfig(
+                    start_time="09:29:30",
+                    end_time="09:30:00",
                     weekdays=[
                         "Monday",
                         "Tuesday",
@@ -42,8 +53,8 @@ class TestConfigDrivenPhaseManager:
                     ],
                 ),
                 "continuous": PhaseScheduleConfig(
-                    start_time="09:30",
-                    end_time="16:00",
+                    start_time="09:30:00",
+                    end_time="16:00:00",
                     weekdays=[
                         "Monday",
                         "Tuesday",
@@ -65,6 +76,12 @@ class TestConfigDrivenPhaseManager:
                     is_order_cancellation_allowed=True,
                     is_matching_enabled=False,
                     execution_style="none",
+                ),
+                "opening_auction": PhaseStateConfig(
+                    is_order_submission_allowed=False,
+                    is_order_cancellation_allowed=False,
+                    is_matching_enabled=True,
+                    execution_style="batch",
                 ),
                 "continuous": PhaseStateConfig(
                     is_order_submission_allowed=True,
@@ -145,6 +162,24 @@ class TestConfigDrivenPhaseManager:
         # Then - Market should be in pre-open
         assert phase_type == PhaseType.PRE_OPEN
 
+    def test_opening_auction_phase(self, default_phase_config):
+        """Test opening auction phase detection."""
+        # Given - A weekday during opening auction (9:29:45 AM)
+        auction_time = datetime(
+            2024, 1, 8, 9, 29, 45, tzinfo=ZoneInfo("America/Chicago")
+        )
+
+        # When - Checking phase during auction
+        from intern_trading_game.domain.exchange.phase.manager import (
+            ConfigDrivenPhaseManager,
+        )
+
+        manager = ConfigDrivenPhaseManager(default_phase_config)
+        phase_type = manager.get_current_phase_type(auction_time)
+
+        # Then - Market should be in opening auction
+        assert phase_type == PhaseType.OPENING_AUCTION
+
     def test_continuous_phase(self, default_phase_config):
         """Test continuous trading phase detection."""
         # Given - A weekday during regular trading hours
@@ -182,7 +217,16 @@ class TestConfigDrivenPhaseManager:
             == PhaseType.PRE_OPEN
         )
 
-        # Test continuous start (9:30 AM)
+        # Test opening auction start (9:29:30 AM)
+        auction_start = datetime(
+            2024, 1, 8, 9, 29, 30, tzinfo=ZoneInfo("America/Chicago")
+        )
+        assert (
+            manager.get_current_phase_type(auction_start)
+            == PhaseType.OPENING_AUCTION
+        )
+
+        # Test continuous start (9:30:00 AM)
         continuous_start = datetime(
             2024, 1, 8, 9, 30, 0, tzinfo=ZoneInfo("America/Chicago")
         )
@@ -306,24 +350,32 @@ class TestConfigDrivenPhaseManager:
             ), f"{day_name} at 10 AM should be {expected_phase}"
 
     @pytest.mark.parametrize(
-        "hour,minute,expected_phase",
+        "hour,minute,second,expected_phase",
         [
-            (7, 59, PhaseType.CLOSED),  # Before pre-open
-            (8, 0, PhaseType.PRE_OPEN),  # Pre-open start
-            (9, 29, PhaseType.PRE_OPEN),  # End of pre-open
-            (9, 30, PhaseType.CONTINUOUS),  # Continuous start
-            (15, 59, PhaseType.CONTINUOUS),  # End of continuous
-            (16, 0, PhaseType.CLOSED),  # Market close
-            (20, 0, PhaseType.CLOSED),  # Evening
+            (7, 59, 0, PhaseType.CLOSED),  # Before pre-open
+            (8, 0, 0, PhaseType.PRE_OPEN),  # Pre-open start
+            (9, 29, 0, PhaseType.PRE_OPEN),  # Still in pre-open
+            (9, 29, 30, PhaseType.OPENING_AUCTION),  # Auction start
+            (9, 29, 45, PhaseType.OPENING_AUCTION),  # During auction
+            (9, 30, 0, PhaseType.CONTINUOUS),  # Continuous start
+            (15, 59, 0, PhaseType.CONTINUOUS),  # End of continuous
+            (16, 0, 0, PhaseType.CLOSED),  # Market close
+            (20, 0, 0, PhaseType.CLOSED),  # Evening
         ],
     )
     def test_phase_throughout_day(
-        self, default_phase_config, hour, minute, expected_phase
+        self, default_phase_config, hour, minute, second, expected_phase
     ):
         """Test phase detection throughout a trading day."""
         # Given - Various times during a weekday
         test_time = datetime(
-            2024, 1, 8, hour, minute, 0, tzinfo=ZoneInfo("America/Chicago")
+            2024,
+            1,
+            8,
+            hour,
+            minute,
+            second,
+            tzinfo=ZoneInfo("America/Chicago"),
         )
 
         # When - Checking phase
