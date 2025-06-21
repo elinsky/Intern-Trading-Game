@@ -5,11 +5,12 @@ components in the exchange domain.
 """
 
 from datetime import datetime
-from typing import Optional, Protocol
+from typing import Optional, Protocol, runtime_checkable
 
 from ..types import PhaseState, PhaseType
 
 
+@runtime_checkable
 class PhaseManagerInterface(Protocol):
     """Protocol for phase management operations.
 

@@ -5,5 +5,6 @@ their associated trading rules.
 """
 
 from .interfaces import PhaseManagerInterface
+from .manager import ConfigDrivenPhaseManager
 
-__all__ = ["PhaseManagerInterface"]
+__all__ = ["PhaseManagerInterface", "ConfigDrivenPhaseManager"]
