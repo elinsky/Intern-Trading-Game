@@ -28,6 +28,161 @@ from intern_trading_game.domain.exchange.response.models import (
 from intern_trading_game.infrastructure.api.models import ApiError, ApiResponse
 
 
+class MockPipelineThreads:
+    """Mock pipeline threads for integration testing."""
+
+    def __init__(self):
+        self.validator_queue = asyncio.Queue()
+        self.matcher_queue = asyncio.Queue()
+        self.publisher_queue = asyncio.Queue()
+        self.coordinator = None
+        self._running = False
+        self._threads = []
+
+    def start(self, coordinator):
+        """Start mock pipeline threads."""
+        self.coordinator = coordinator
+        self._running = True
+
+        # Start all threads
+        thread_configs = [
+            ("validator", self._validator_thread),
+            ("matcher", self._matcher_thread),
+            ("publisher", self._publisher_thread),
+        ]
+
+        for name, target in thread_configs:
+            thread = threading.Thread(target=target, daemon=True)
+            thread.start()
+            self._threads.append(thread)
+
+    def stop(self):
+        """Stop mock pipeline threads."""
+        self._running = False
+
+    def submit_order(self, order, team_info, request_id):
+        """Submit order to validator queue."""
+        self.validator_queue.put_nowait((order, team_info, request_id))
+
+    def _validator_thread(self):
+        """Mock validator thread."""
+        while self._running:
+            try:
+                item = self.validator_queue.get(timeout=0.1)
+                self._process_validation(item)
+            except Exception:
+                continue
+
+    def _process_validation(self, item):
+        """Process validation for an order item."""
+        order, team_info, request_id = item
+
+        # Update status
+        self.coordinator.update_status(request_id, ResponseStatus.VALIDATING)
+
+        # Simulate validation timing
+        time.sleep(0.02)
+
+        # Process validation result
+        if self._should_reject_order(order, team_info):
+            self._handle_validation_failure(order, request_id)
+        else:
+            self._handle_validation_success(order, team_info, request_id)
+
+    def _handle_validation_failure(self, order, request_id):
+        """Handle validation failure."""
+        self.coordinator.notify_completion(
+            request_id=request_id,
+            api_response=self._create_validation_error(order),
+        )
+
+    def _handle_validation_success(self, order, team_info, request_id):
+        """Handle validation success."""
+        self.coordinator.update_status(request_id, ResponseStatus.MATCHING)
+        self.matcher_queue.put_nowait((order, team_info, request_id))
+
+    def _matcher_thread(self):
+        """Mock matcher thread."""
+        while self._running:
+            try:
+                item = self.matcher_queue.get(timeout=0.1)
+                self._process_matching(item)
+            except Exception:
+                continue
+
+    def _process_matching(self, item):
+        """Process matching for an order item."""
+        order, team_info, request_id = item
+
+        # Simulate matching timing
+        time.sleep(0.05)
+
+        # Forward to publisher
+        self.coordinator.update_status(request_id, ResponseStatus.SETTLING)
+        self.publisher_queue.put_nowait((order, team_info, request_id))
+
+    def _publisher_thread(self):
+        """Mock publisher thread."""
+        while self._running:
+            try:
+                item = self.publisher_queue.get(timeout=0.1)
+                self._process_publishing(item)
+            except Exception:
+                continue
+
+    def _process_publishing(self, item):
+        """Process publishing for an order item."""
+        order, team_info, request_id = item
+
+        # Simulate settlement timing
+        time.sleep(0.03)
+
+        # Complete successfully
+        self.coordinator.notify_completion(
+            request_id=request_id,
+            api_response=self._create_success_response(order),
+            order_id=f"ORD_{request_id[-6:]}",
+        )
+
+    def _should_reject_order(self, order, team_info):
+        """Mock validation logic."""
+        return order.get("quantity", 0) > 100
+
+    def _create_validation_error(self, order):
+        """Create validation error response."""
+        return ApiResponse(
+            success=False,
+            request_id="mock_request",
+            order_id=None,
+            data=None,
+            error=ApiError(
+                code="VALIDATION_ERROR",
+                message=f"Order quantity {order.get('quantity')} exceeds limit",
+                details={"max_quantity": 100},
+            ),
+        )
+
+    def _create_success_response(self, order):
+        """Create successful order response."""
+        is_market_order = order.get("order_type") == "market"
+        return ApiResponse(
+            success=True,
+            request_id="mock_request",
+            order_id="ORD_MOCK",
+            data={
+                "order_id": "ORD_MOCK",
+                "status": "filled" if is_market_order else "new",
+                "filled_quantity": order.get("quantity")
+                if is_market_order
+                else 0,
+                "average_price": order.get("price", 128.50),
+                "fees": -0.50,
+                "liquidity_type": "taker" if is_market_order else None,
+            },
+            error=None,
+        )
+
+
 @pytest.fixture
 def coordination_config():
     """Default coordination configuration for testing."""
@@ -235,167 +390,6 @@ def system_error_scenarios():
 @pytest.fixture
 def mock_pipeline_threads():
     """Mock pipeline threads for integration testing."""
-
-    class MockPipelineThreads:
-        def __init__(self):
-            self.validator_queue = asyncio.Queue()
-            self.matcher_queue = asyncio.Queue()
-            self.publisher_queue = asyncio.Queue()
-            self.coordinator = None
-            self._running = False
-            self._threads = []
-
-        def start(self, coordinator):
-            """Start mock pipeline threads."""
-            self.coordinator = coordinator
-            self._running = True
-
-            # Start validator thread
-            validator_thread = threading.Thread(
-                target=self._validator_thread, daemon=True
-            )
-            validator_thread.start()
-            self._threads.append(validator_thread)
-
-            # Start matcher thread
-            matcher_thread = threading.Thread(
-                target=self._matcher_thread, daemon=True
-            )
-            matcher_thread.start()
-            self._threads.append(matcher_thread)
-
-            # Start publisher thread
-            publisher_thread = threading.Thread(
-                target=self._publisher_thread, daemon=True
-            )
-            publisher_thread.start()
-            self._threads.append(publisher_thread)
-
-        def stop(self):
-            """Stop mock pipeline threads."""
-            self._running = False
-
-        def submit_order(self, order, team_info, request_id):
-            """Submit order to validator queue."""
-            self.validator_queue.put_nowait((order, team_info, request_id))
-
-        def _validator_thread(self):
-            """Mock validator thread."""
-            while self._running:
-                try:
-                    item = self.validator_queue.get(timeout=0.1)
-                    order, team_info, request_id = item
-
-                    # Update status
-                    self.coordinator.update_status(
-                        request_id, ResponseStatus.VALIDATING
-                    )
-
-                    # Simulate validation (20ms)
-                    time.sleep(0.02)
-
-                    # Mock validation logic
-                    if self._should_reject_order(order, team_info):
-                        # Validation failed
-                        self.coordinator.notify_completion(
-                            request_id=request_id,
-                            api_response=self._create_validation_error(order),
-                        )
-                    else:
-                        # Pass to matcher
-                        self.coordinator.update_status(
-                            request_id, ResponseStatus.MATCHING
-                        )
-                        self.matcher_queue.put_nowait(
-                            (order, team_info, request_id)
-                        )
-
-                except Exception:
-                    continue
-
-        def _matcher_thread(self):
-            """Mock matcher thread."""
-            while self._running:
-                try:
-                    item = self.matcher_queue.get(timeout=0.1)
-                    order, team_info, request_id = item
-
-                    # Simulate matching (50ms)
-                    time.sleep(0.05)
-
-                    # Pass to publisher
-                    self.coordinator.update_status(
-                        request_id, ResponseStatus.SETTLING
-                    )
-                    self.publisher_queue.put_nowait(
-                        (order, team_info, request_id)
-                    )
-
-                except Exception:
-                    continue
-
-        def _publisher_thread(self):
-            """Mock publisher thread."""
-            while self._running:
-                try:
-                    item = self.publisher_queue.get(timeout=0.1)
-                    order, team_info, request_id = item
-
-                    # Simulate settlement (30ms)
-                    time.sleep(0.03)
-
-                    # Complete successfully
-                    self.coordinator.notify_completion(
-                        request_id=request_id,
-                        api_response=self._create_success_response(order),
-                        order_id=f"ORD_{request_id[-6:]}",
-                    )
-
-                except Exception:
-                    continue
-
-        def _should_reject_order(self, order, team_info):
-            """Mock validation logic."""
-            # Reject if quantity > 100 (test scenario)
-            return order.get("quantity", 0) > 100
-
-        def _create_validation_error(self, order):
-            """Create validation error response."""
-            return ApiResponse(
-                success=False,
-                request_id="mock_request",
-                order_id=None,
-                data=None,
-                error=ApiError(
-                    code="VALIDATION_ERROR",
-                    message=f"Order quantity {order.get('quantity')} exceeds limit",
-                    details={"max_quantity": 100},
-                ),
-            )
-
-        def _create_success_response(self, order):
-            """Create successful order response."""
-            return ApiResponse(
-                success=True,
-                request_id="mock_request",
-                order_id="ORD_MOCK",
-                data={
-                    "order_id": "ORD_MOCK",
-                    "status": "filled"
-                    if order.get("order_type") == "market"
-                    else "new",
-                    "filled_quantity": order.get("quantity")
-                    if order.get("order_type") == "market"
-                    else 0,
-                    "average_price": order.get("price", 128.50),
-                    "fees": -0.50,
-                    "liquidity_type": "taker"
-                    if order.get("order_type") == "market"
-                    else None,
-                },
-                error=None,
-            )
-
     return MockPipelineThreads()
 
 
