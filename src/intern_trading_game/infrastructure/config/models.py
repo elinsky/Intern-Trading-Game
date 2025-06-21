@@ -83,3 +83,64 @@ class InstrumentConfigData:
     strike: float
     option_type: str
     underlying: str
+
+
+@dataclass
+class PhaseScheduleConfig:
+    """Configuration for a market phase schedule.
+
+    Attributes
+    ----------
+    start_time : str
+        Start time in 24-hour format (e.g., "08:00")
+    end_time : str
+        End time in 24-hour format (e.g., "09:30")
+    weekdays : List[str]
+        List of weekdays when this phase is active
+        (e.g., ["Monday", "Tuesday", "Wednesday", "Thursday", "Friday"])
+    """
+
+    start_time: str
+    end_time: str
+    weekdays: List[str]
+
+
+@dataclass
+class PhaseStateConfig:
+    """Configuration for a market phase state.
+
+    Attributes
+    ----------
+    is_order_submission_allowed : bool
+        Whether new orders can be submitted in this phase
+    is_order_cancellation_allowed : bool
+        Whether existing orders can be cancelled in this phase
+    is_matching_enabled : bool
+        Whether order matching occurs in this phase
+    execution_style : str
+        How orders are executed ("none", "continuous", "batch")
+    """
+
+    is_order_submission_allowed: bool
+    is_order_cancellation_allowed: bool
+    is_matching_enabled: bool
+    execution_style: str
+
+
+@dataclass
+class MarketPhasesConfig:
+    """Configuration for market phases.
+
+    Attributes
+    ----------
+    timezone : str
+        Timezone for all phase times (e.g., "America/Chicago")
+    schedule : Dict[str, PhaseScheduleConfig]
+        Mapping of phase names to their schedules
+    phase_states : Dict[str, PhaseStateConfig]
+        Mapping of phase names to their state configurations
+    """
+
+    timezone: str
+    schedule: Dict[str, PhaseScheduleConfig]
+    phase_states: Dict[str, PhaseStateConfig]

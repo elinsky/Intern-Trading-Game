@@ -4,6 +4,45 @@
 exchange:
   matching_mode: continuous  # Options: continuous, batch
 
+# Market phase configuration
+market_phases:
+  # Timezone for all phase times
+  timezone: "America/Chicago"
+
+  # Phase schedule (24-hour format)
+  schedule:
+    pre_open:
+      start_time: "08:00"
+      end_time: "09:30"
+      weekdays: ["Monday", "Tuesday", "Wednesday", "Thursday", "Friday"]
+
+    continuous:
+      start_time: "09:30"
+      end_time: "16:00"
+      weekdays: ["Monday", "Tuesday", "Wednesday", "Thursday", "Friday"]
+
+    # Closed is implicit - any time not covered above
+
+  # Phase configurations
+  phase_states:
+    closed:
+      is_order_submission_allowed: false
+      is_order_cancellation_allowed: false
+      is_matching_enabled: false
+      execution_style: "none"
+
+    pre_open:
+      is_order_submission_allowed: true
+      is_order_cancellation_allowed: true
+      is_matching_enabled: false
+      execution_style: "none"
+
+    continuous:
+      is_order_submission_allowed: true
+      is_order_cancellation_allowed: true
+      is_matching_enabled: true
+      execution_style: "continuous"
+
 # Order response coordination configuration
 response_coordinator:
   # Maximum time (seconds) to wait for order processing

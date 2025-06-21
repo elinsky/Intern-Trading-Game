@@ -16,7 +16,12 @@ from ...domain.exchange.validation.order_validator import (
     ConstraintType,
 )
 from ...domain.positions.models import FeeSchedule
-from .models import ExchangeConfig
+from .models import (
+    ExchangeConfig,
+    MarketPhasesConfig,
+    PhaseScheduleConfig,
+    PhaseStateConfig,
+)
 
 
 class ConfigLoader:
@@ -358,3 +363,178 @@ class ConfigLoader:
             ),
             request_id_prefix=str(coord_data["request_id_prefix"]),
         )
+
+    def get_market_phases_config(self) -> MarketPhasesConfig:
+        """Get market phases configuration.
+
+        Loads the market phases configuration including timezone,
+        phase schedules, and phase state definitions.
+
+        Returns
+        -------
+        MarketPhasesConfig
+            The market phases configuration
+
+        Raises
+        ------
+        ValueError
+            If the market_phases section is missing or invalid
+
+        Notes
+        -----
+        The market phases configuration defines:
+        - Trading hours and days for each phase
+        - What operations are allowed in each phase
+        - How order execution behaves in each phase
+
+        This configuration drives the entire market schedule and
+        trading rules, so validation is strict.
+
+        Valid phase names are: closed, pre_open, continuous
+
+        Examples
+        --------
+        >>> loader = ConfigLoader()
+        >>> phases_config = loader.get_market_phases_config()
+        >>> print(phases_config.timezone)
+        America/Chicago
+        """
+        data = self.load()
+
+        # Require market_phases section
+        if "market_phases" not in data:
+            raise ValueError(
+                "Missing required 'market_phases' section in configuration. "
+                "Market phases must be explicitly configured."
+            )
+
+        phases_data = data["market_phases"]
+
+        # Validate timezone
+        if "timezone" not in phases_data:
+            raise ValueError("Missing required 'timezone' in market_phases")
+        timezone = phases_data["timezone"]
+
+        # Parse schedule and phase states
+        schedule = self._parse_phase_schedule(phases_data)
+        phase_states = self._parse_phase_states(phases_data)
+
+        return MarketPhasesConfig(
+            timezone=timezone,
+            schedule=schedule,
+            phase_states=phase_states,
+        )
+
+    def _parse_phase_schedule(
+        self, phases_data: Dict
+    ) -> Dict[str, PhaseScheduleConfig]:
+        """Parse phase schedule from configuration.
+
+        Parameters
+        ----------
+        phases_data : Dict
+            The market_phases section of the configuration
+
+        Returns
+        -------
+        Dict[str, PhaseScheduleConfig]
+            Mapping of phase names to schedule configurations
+
+        Raises
+        ------
+        ValueError
+            If schedule is missing, has invalid phase names, or missing fields
+        """
+        VALID_PHASE_NAMES = {"closed", "pre_open", "continuous"}
+
+        if "schedule" not in phases_data:
+            raise ValueError("Missing required 'schedule' in market_phases")
+        schedule_data = phases_data["schedule"]
+
+        schedule = {}
+        for phase_name, phase_schedule in schedule_data.items():
+            # Validate phase name
+            if phase_name not in VALID_PHASE_NAMES:
+                raise ValueError(
+                    f"Invalid phase name '{phase_name}' in schedule. "
+                    f"Valid phase names are: {', '.join(sorted(VALID_PHASE_NAMES))}"
+                )
+
+            # Validate required fields
+            required = ["start_time", "end_time", "weekdays"]
+            missing = [f for f in required if f not in phase_schedule]
+            if missing:
+                raise ValueError(
+                    f"Missing required fields {missing} in schedule for phase: {phase_name}"
+                )
+
+            schedule[phase_name] = PhaseScheduleConfig(
+                start_time=phase_schedule["start_time"],
+                end_time=phase_schedule["end_time"],
+                weekdays=phase_schedule["weekdays"],
+            )
+
+        return schedule
+
+    def _parse_phase_states(
+        self, phases_data: Dict
+    ) -> Dict[str, PhaseStateConfig]:
+        """Parse phase states from configuration.
+
+        Parameters
+        ----------
+        phases_data : Dict
+            The market_phases section of the configuration
+
+        Returns
+        -------
+        Dict[str, PhaseStateConfig]
+            Mapping of phase names to state configurations
+
+        Raises
+        ------
+        ValueError
+            If phase_states is missing, has invalid phase names, or missing fields
+        """
+        VALID_PHASE_NAMES = {"closed", "pre_open", "continuous"}
+
+        if "phase_states" not in phases_data:
+            raise ValueError(
+                "Missing required 'phase_states' in market_phases"
+            )
+        states_data = phases_data["phase_states"]
+
+        phase_states = {}
+        for phase_name, state_data in states_data.items():
+            # Validate phase name
+            if phase_name not in VALID_PHASE_NAMES:
+                raise ValueError(
+                    f"Invalid phase name '{phase_name}' in phase_states. "
+                    f"Valid phase names are: {', '.join(sorted(VALID_PHASE_NAMES))}"
+                )
+
+            # Validate required fields
+            required = [
+                "is_order_submission_allowed",
+                "is_order_cancellation_allowed",
+                "is_matching_enabled",
+                "execution_style",
+            ]
+            missing = [f for f in required if f not in state_data]
+            if missing:
+                raise ValueError(
+                    f"Missing required fields {missing} in phase_states for phase: {phase_name}"
+                )
+
+            phase_states[phase_name] = PhaseStateConfig(
+                is_order_submission_allowed=bool(
+                    state_data["is_order_submission_allowed"]
+                ),
+                is_order_cancellation_allowed=bool(
+                    state_data["is_order_cancellation_allowed"]
+                ),
+                is_matching_enabled=bool(state_data["is_matching_enabled"]),
+                execution_style=state_data["execution_style"],
+            )
+
+        return phase_states
