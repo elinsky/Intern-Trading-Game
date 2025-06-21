@@ -23,6 +23,7 @@ from typing import Dict, Optional, Protocol
 from .book.order_book import OrderBook
 from .models.order import Order
 from .order_result import OrderResult
+from .types import PhaseState
 
 
 class ExchangeServiceProtocol(Protocol):
@@ -118,6 +119,29 @@ class ExchangeServiceProtocol(Protocol):
         -----
         Property access for compatibility with existing implementation.
         Used by GET /orders to iterate all instruments.
+        """
+        ...
+
+    def get_current_phase_state(self) -> PhaseState:
+        """Get the current market phase state.
+
+        Returns the complete phase state configuration including
+        the current phase type and all operational rules.
+
+        Returns
+        -------
+        PhaseState
+            Current market phase state with operational rules
+
+        Notes
+        -----
+        This method is used by the REST API and other components
+        to determine what operations are currently allowed.
+        The phase state affects:
+        - Order submission permissions
+        - Order cancellation permissions
+        - Order matching behavior
+        - Execution style (continuous vs batch)
         """
         ...
 

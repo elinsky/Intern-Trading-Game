@@ -4,6 +4,7 @@ This module contains shared types used across the exchange components
 to avoid circular imports.
 """
 
+from dataclasses import dataclass
 from enum import Enum
 
 
@@ -56,3 +57,142 @@ class LiquidityType(str, Enum):
 
     MAKER = "maker"
     TAKER = "taker"
+
+
+class PhaseType(str, Enum):
+    """Market phase types for the trading system.
+
+    These phases control when and how orders can be submitted and matched.
+
+    Attributes
+    ----------
+    PRE_OPEN : str
+        Market is preparing to open. Orders accepted but not matched.
+    CONTINUOUS : str
+        Normal trading hours. Orders accepted and matched immediately.
+    CLOSED : str
+        Market is closed. No orders accepted.
+
+    Notes
+    -----
+    The exchange operates in one of these three phases at all times.
+    Phase transitions are based on configured market hours and days.
+
+    Each phase has specific rules for order handling:
+    - PRE_OPEN: Accept orders, queue for opening
+    - CONTINUOUS: Accept orders, match immediately
+    - CLOSED: Reject all orders
+
+    Examples
+    --------
+    >>> phase = PhaseType.CONTINUOUS
+    >>> if phase == PhaseType.CLOSED:
+    ...     print("Market is closed")
+    ... else:
+    ...     print(f"Market phase: {phase.value}")
+    Market phase: continuous
+    """
+
+    PRE_OPEN = "pre_open"
+    CONTINUOUS = "continuous"
+    CLOSED = "closed"
+
+
+@dataclass
+class PhaseState:
+    """Complete state information for a market phase.
+
+    This dataclass combines the phase type with its operational rules,
+    defining exactly what operations are allowed and how the exchange
+    should behave.
+
+    Attributes
+    ----------
+    phase_type : PhaseType
+        The type of market phase
+    is_order_submission_allowed : bool
+        Whether new orders can be submitted
+    is_order_cancellation_allowed : bool
+        Whether existing orders can be cancelled
+    is_matching_enabled : bool
+        Whether order matching should occur
+    execution_style : str
+        How orders are executed ("none", "continuous", "batch")
+
+    Notes
+    -----
+    PhaseState acts as the exchange's operational configuration,
+    determining its behavior at any point in time. The state is
+    typically derived from the current time and market schedule.
+
+    The execution_style field supports future expansion:
+    - "none": No execution (pre-open, closed)
+    - "continuous": Immediate matching (normal trading)
+    - "batch": Periodic auctions (future feature)
+
+    Examples
+    --------
+    >>> # Pre-open state
+    >>> state = PhaseState(
+    ...     phase_type=PhaseType.PRE_OPEN,
+    ...     is_order_submission_allowed=True,
+    ...     is_order_cancellation_allowed=True,
+    ...     is_matching_enabled=False,
+    ...     execution_style="none"
+    ... )
+    >>> if state.is_order_submission_allowed and not state.is_matching_enabled:
+    ...     print("Orders accepted but held for opening")
+    Orders accepted but held for opening
+    """
+
+    phase_type: PhaseType
+    is_order_submission_allowed: bool
+    is_order_cancellation_allowed: bool
+    is_matching_enabled: bool
+    execution_style: str
+
+    @classmethod
+    def from_phase_type(cls, phase_type: PhaseType, config) -> "PhaseState":
+        """Create PhaseState from phase type and configuration.
+
+        Factory method that creates a PhaseState using the provided
+        phase type and configuration settings.
+
+        Parameters
+        ----------
+        phase_type : PhaseType
+            The phase type to create state for
+        config : PhaseStateConfig
+            Configuration with the phase rules
+
+        Returns
+        -------
+        PhaseState
+            A new PhaseState instance with configured rules
+
+        Notes
+        -----
+        This factory method allows the phase rules to be driven by
+        configuration rather than hardcoded, supporting different
+        market structures and testing scenarios.
+
+        Examples
+        --------
+        >>> from intern_trading_game.infrastructure.config.models import PhaseStateConfig
+        >>> config = PhaseStateConfig(
+        ...     is_order_submission_allowed=True,
+        ...     is_order_cancellation_allowed=True,
+        ...     is_matching_enabled=True,
+        ...     execution_style="continuous"
+        ... )
+        >>> state = PhaseState.from_phase_type(PhaseType.CONTINUOUS, config)
+        >>> state.execution_style
+        'continuous'
+        """
+        return cls(
+            phase_type=phase_type,
+            is_order_submission_allowed=config.is_order_submission_allowed,
+            is_order_cancellation_allowed=config.is_order_cancellation_allowed,
+            is_matching_enabled=config.is_matching_enabled,
+            execution_style=config.execution_style,
+        )
