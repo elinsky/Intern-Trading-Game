@@ -88,7 +88,7 @@ known-first-party = ["intern_trading_game"]
 
 [tool.ruff.lint.mccabe]
 # Maximum allowed complexity per function
-max-complexity = 15
+max-complexity = 14
 
 [tool.coverage.run]
 source = ["intern_trading_game"]

@@ -128,6 +128,71 @@ def _complete_request_for_cleanup(request_id, coordination_lock):
     pass
 
 
+def create_sustained_load_registration(team_id, request_counter):
+    """Create a registration for sustained load testing."""
+    request_counter[0] += 1
+    request_id = f"req_sustained_{request_counter[0]:06d}"
+
+    return ResponseRegistration(
+        request_id=request_id,
+        team_id=team_id,
+        timeout_at=datetime.now() + timedelta(seconds=2),
+        status=ResponseStatus.PENDING,
+    )
+
+
+def complete_sustained_load_request(
+    request_id, active_requests, completed_requests, snapshot_lock
+):
+    """Complete a request and move to completed storage."""
+    with snapshot_lock:
+        if request_id in active_requests:
+            request_data = active_requests.pop(request_id)
+            completed_requests[request_id] = {
+                **request_data,
+                "completed_at": datetime.now(),
+            }
+
+
+def cleanup_sustained_load_requests(completed_requests, snapshot_lock):
+    """Clean up old completed requests."""
+    cleaned = 0
+    current_time = datetime.now()
+    cleanup_age = timedelta(seconds=0.5)
+
+    with snapshot_lock:
+        to_remove = [
+            rid
+            for rid, data in completed_requests.items()
+            if current_time - data.get("completed_at", current_time)
+            > cleanup_age
+        ]
+
+        for request_id in to_remove:
+            del completed_requests[request_id]
+            cleaned += 1
+
+    return cleaned
+
+
+def take_sustained_load_snapshot(
+    active_requests,
+    completed_requests,
+    request_counter,
+    memory_snapshots,
+    snapshot_lock,
+):
+    """Take snapshot of current memory usage."""
+    with snapshot_lock:
+        snapshot = {
+            "timestamp": datetime.now(),
+            "active_count": len(active_requests),
+            "completed_count": len(completed_requests),
+            "total_requests": request_counter[0],
+        }
+        memory_snapshots.append(snapshot)
+
+
 class TestMemoryManagement:
     """Test memory usage and leak prevention mechanisms."""
 
@@ -297,170 +362,163 @@ class TestMemoryManagement:
         This test validates that the coordination system can handle
         sustained load without memory usage growing unbounded over time.
         """
-        # Given - Setup for sustained load testing
+        # Given - Setup test data structures
         memory_snapshots = []
         active_requests = {}
         completed_requests = {}
         snapshot_lock = threading.Lock()
-
         request_counter = [0]
 
-        def mock_register_request_sustained(team_id, timeout_seconds=None):
-            request_counter[0] += 1
-            request_id = f"req_sustained_{request_counter[0]:06d}"
+        # Setup mock coordinator behavior
+        self._setup_sustained_load_mocks(
+            mock_coordinator,
+            active_requests,
+            completed_requests,
+            snapshot_lock,
+            request_counter,
+        )
 
-            registration = ResponseRegistration(
-                request_id=request_id,
-                team_id=team_id,
-                timeout_at=datetime.now() + timedelta(seconds=2),
-                status=ResponseStatus.PENDING,
+        # When - Run sustained load simulation
+        self._run_sustained_load_simulation(
+            mock_coordinator,
+            active_requests,
+            completed_requests,
+            memory_snapshots,
+            snapshot_lock,
+            request_counter,
+        )
+
+        # Then - Analyze memory efficiency
+        self._analyze_sustained_load_results(memory_snapshots)
+
+    def _setup_sustained_load_mocks(
+        self,
+        mock_coordinator,
+        active_requests,
+        completed_requests,
+        snapshot_lock,
+        request_counter,
+    ):
+        """Setup mock coordinator for sustained load testing."""
+
+        def register_with_tracking(team_id, timeout_seconds=None):
+            registration = create_sustained_load_registration(
+                team_id, request_counter
             )
-
-            # Track active requests
             with snapshot_lock:
-                active_requests[request_id] = {
+                active_requests[registration.request_id] = {
                     "registration": registration,
                     "created_at": datetime.now(),
                 }
-
             return registration
 
-        def mock_complete_request_sustained(request_id):
-            """Complete a request and move to completed storage."""
-            with snapshot_lock:
-                if request_id in active_requests:
-                    request_data = active_requests.pop(request_id)
-                    completed_requests[request_id] = {
-                        **request_data,
-                        "completed_at": datetime.now(),
-                    }
+        def cleanup_with_tracking():
+            return cleanup_sustained_load_requests(
+                completed_requests, snapshot_lock
+            )
 
-        def mock_cleanup_sustained():
-            """Clean up old completed requests."""
-            cleaned = 0
-            current_time = datetime.now()
-            cleanup_age = timedelta(seconds=0.5)  # Cleanup after 500ms
-
-            with snapshot_lock:
-                to_remove = []
-                for request_id, data in completed_requests.items():
-                    completed_at = data.get("completed_at", current_time)
-                    if current_time - completed_at > cleanup_age:
-                        to_remove.append(request_id)
-
-                for request_id in to_remove:
-                    del completed_requests[request_id]
-                    cleaned += 1
-
-            return cleaned
-
-        def take_memory_snapshot():
-            """Take snapshot of current memory usage."""
-            with snapshot_lock:
-                snapshot = {
-                    "timestamp": datetime.now(),
-                    "active_count": len(active_requests),
-                    "completed_count": len(completed_requests),
-                    "total_requests": request_counter[0],
-                }
-                memory_snapshots.append(snapshot)
-
-        mock_coordinator.register_request.side_effect = (
-            mock_register_request_sustained
-        )
+        mock_coordinator.register_request.side_effect = register_with_tracking
         mock_coordinator.cleanup_completed_requests.side_effect = (
-            mock_cleanup_sustained
+            cleanup_with_tracking
         )
 
-        # When - Sustained load with periodic cleanup
-        load_duration = 1.0  # 1 second of sustained load
-        request_rate = 100  # 100 requests per second
-        cleanup_frequency = 0.1  # Cleanup every 100ms
+    def _run_sustained_load_simulation(
+        self,
+        mock_coordinator,
+        active_requests,
+        completed_requests,
+        memory_snapshots,
+        snapshot_lock,
+        request_counter,
+    ):
+        """Run the sustained load simulation."""
+        load_duration = 1.0
+        batch_size = 10
+        request_rate = 100
+        cleanup_frequency = 0.1
+        snapshot_frequency = 0.1
 
         start_time = time.perf_counter()
         last_cleanup = start_time
         last_snapshot = start_time
-        snapshot_frequency = 0.1  # Snapshot every 100ms
 
         while time.perf_counter() - start_time < load_duration:
             # Process batch of requests
-            batch_size = 10
             for _ in range(batch_size):
-                team_id = (
-                    f"TEAM_LOAD_{request_counter[0] % 50:03d}"  # Cycle teams
-                )
+                team_id = f"TEAM_LOAD_{request_counter[0] % 50:03d}"
                 registration = mock_coordinator.register_request(team_id)
 
-                # Simulate fast completion (90% complete quickly)
-                if request_counter[0] % 10 != 0:  # 90% complete quickly
-                    mock_complete_request_sustained(registration.request_id)
+                # 90% complete quickly
+                if request_counter[0] % 10 != 0:
+                    complete_sustained_load_request(
+                        registration.request_id,
+                        active_requests,
+                        completed_requests,
+                        snapshot_lock,
+                    )
 
             current_time = time.perf_counter()
 
-            # Periodic cleanup
+            # Periodic operations
             if current_time - last_cleanup >= cleanup_frequency:
                 mock_coordinator.cleanup_completed_requests()
                 last_cleanup = current_time
 
-            # Periodic memory snapshot
             if current_time - last_snapshot >= snapshot_frequency:
-                take_memory_snapshot()
+                take_sustained_load_snapshot(
+                    active_requests,
+                    completed_requests,
+                    request_counter,
+                    memory_snapshots,
+                    snapshot_lock,
+                )
                 last_snapshot = current_time
 
-            # Control request rate
             time.sleep(batch_size / request_rate)
 
         # Final cleanup and snapshot
         for _ in range(3):
             mock_coordinator.cleanup_completed_requests()
-        take_memory_snapshot()
 
-        # Then - Memory usage stabilizes under sustained load
+        take_sustained_load_snapshot(
+            active_requests,
+            completed_requests,
+            request_counter,
+            memory_snapshots,
+            snapshot_lock,
+        )
+
+    def _analyze_sustained_load_results(self, memory_snapshots):
+        """Analyze memory efficiency from sustained load test."""
         assert len(memory_snapshots) >= 5, "Not enough memory snapshots taken"
 
-        # Analyze memory growth pattern
-        total_requests_over_time = [
-            s["total_requests"] for s in memory_snapshots
-        ]
-        active_requests_over_time = [
-            s["active_count"] for s in memory_snapshots
-        ]
-        completed_requests_over_time = [
-            s["completed_count"] for s in memory_snapshots
-        ]
+        # Extract time series data
+        total_requests = [s["total_requests"] for s in memory_snapshots]
+        active_counts = [s["active_count"] for s in memory_snapshots]
+        completed_counts = [s["completed_count"] for s in memory_snapshots]
 
-        # Total requests should grow consistently
+        # Verify processing occurred
+        assert total_requests[-1] > total_requests[0], "No requests processed"
+
+        # Verify memory bounds
+        max_active = max(active_counts)
+        max_completed = max(completed_counts)
+        final_total = total_requests[-1]
+
         assert (
-            total_requests_over_time[-1] > total_requests_over_time[0]
-        ), "No requests processed"
-
-        # Active requests should remain bounded (not grow with total)
-        max_active = max(active_requests_over_time)
-        final_active = active_requests_over_time[-1]
+            max_active < final_total * 0.2
+        ), f"Too many active requests: {max_active}"
         assert (
-            max_active < total_requests_over_time[-1] * 0.2
-        ), f"Too many active requests: {max_active} vs total {total_requests_over_time[-1]}"
+            max_completed < final_total * 0.5
+        ), f"Too many completed requests: {max_completed}"
 
-        # Completed requests should be cleaned up (not accumulate)
-        max_completed = max(completed_requests_over_time)
-        final_completed = completed_requests_over_time[-1]
-        assert (
-            max_completed < total_requests_over_time[-1] * 0.5
-        ), f"Too many completed requests: {max_completed} vs total {total_requests_over_time[-1]}"
-
-        # Memory should not grow linearly with total requests (shows cleanup working)
+        # Verify memory efficiency
         memory_efficiency = (
-            final_active + final_completed
-        ) / total_requests_over_time[-1]
+            active_counts[-1] + completed_counts[-1]
+        ) / final_total
         assert (
-            memory_efficiency < 0.6  # More realistic threshold
+            memory_efficiency < 0.6
         ), f"Poor memory efficiency: {memory_efficiency:.2f}"
-
-        print(
-            f"Processed {total_requests_over_time[-1]} requests, "
-            f"final active: {final_active}, final completed: {final_completed}, "
-            f"efficiency: {memory_efficiency:.2f}"
-        )
 
     def test_weak_reference_cleanup_validation(self, mock_coordinator):
         """Test that objects are properly released using weak references.
