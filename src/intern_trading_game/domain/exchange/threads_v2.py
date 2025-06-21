@@ -186,6 +186,31 @@ def handle_unexpected_status(status, request_id, response_coordinator):
     )
 
 
+def handle_validator_error(e, request_id, response_coordinator):
+    """Handle errors in validator thread."""
+    print(f"Validator thread error: {e}")
+    if request_id:
+        try:
+            error_response = ApiResponse(
+                success=False,
+                request_id=request_id,
+                order_id=None,
+                data=None,
+                error=ApiError(
+                    code=ErrorCodes.INTERNAL_ERROR,
+                    message=f"Validator thread error: {str(e)}",
+                    details=None,
+                ),
+                timestamp=datetime.now(),
+            )
+            response_coordinator.notify_completion(
+                request_id=request_id,
+                api_response=error_response,
+            )
+        except Exception:
+            pass  # nosec B110 - Best effort error handling, failures are logged above
+
+
 def validator_thread_v2(
     order_queue: Queue,
     match_queue: Queue,
@@ -255,28 +280,11 @@ def validator_thread_v2(
                 )
 
         except Exception as e:
-            print(f"Validator thread error: {e}")
-            # For unexpected errors, try to complete the request if we have one
-            if "request_id" in locals():
-                try:
-                    error_response = ApiResponse(
-                        success=False,
-                        request_id=request_id,
-                        order_id=None,
-                        data=None,
-                        error=ApiError(
-                            code=ErrorCodes.INTERNAL_ERROR,
-                            message=f"Validator thread error: {str(e)}",
-                            details=None,
-                        ),
-                        timestamp=datetime.now(),
-                    )
-                    response_coordinator.notify_completion(
-                        request_id=request_id,
-                        api_response=error_response,
-                    )
-                except Exception:
-                    pass  # nosec B110 - Best effort error handling, failures are logged above
+            handle_validator_error(
+                e,
+                request_id if "request_id" in locals() else None,
+                response_coordinator,
+            )
 
 
 def matching_thread_v2(

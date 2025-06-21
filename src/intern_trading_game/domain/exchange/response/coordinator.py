@@ -511,6 +511,32 @@ class OrderResponseCoordinator(OrderResponseCoordinatorInterface):
         with self._lock:
             return self._pending_requests.get(request_id)
 
+    def _handle_expired_request(
+        self, request_id: str, pending_request: PendingRequest
+    ):
+        """Handle an expired request during cleanup."""
+        if pending_request.status != ResponseStatus.TIMEOUT:
+            pending_request.status = ResponseStatus.TIMEOUT
+            # Create and store timeout response
+            self._completion_results[request_id] = (
+                self._create_timeout_response(pending_request)
+            )
+            # Signal any waiting threads
+            pending_request.completion_event.set()
+
+    def _should_clean_completed_request(
+        self, pending_request: PendingRequest, current_time: datetime
+    ) -> bool:
+        """Check if a completed request should be cleaned up."""
+        if not pending_request.status.is_terminal():
+            return False
+
+        completion_age = current_time - pending_request.registered_at
+        return (
+            completion_age.total_seconds()
+            > self.config.cleanup_interval_seconds
+        )
+
     def cleanup_completed_requests(self) -> int:
         """Remove completed and expired requests from tracking.
 
@@ -544,27 +570,14 @@ class OrderResponseCoordinator(OrderResponseCoordinatorInterface):
                 # Check if expired
                 if pending_request.is_expired():
                     to_remove.append(request_id)
-                    # Ensure timeout status is set
-                    if pending_request.status != ResponseStatus.TIMEOUT:
-                        pending_request.status = ResponseStatus.TIMEOUT
-                        # Create and store timeout response
-                        self._completion_results[request_id] = (
-                            self._create_timeout_response(pending_request)
-                        )
-                        # Signal any waiting threads
-                        pending_request.completion_event.set()
+                    self._handle_expired_request(request_id, pending_request)
                     continue
 
                 # Check if completed and old enough to clean
-                if pending_request.status.is_terminal():
-                    completion_age = (
-                        current_time - pending_request.registered_at
-                    )
-                    if (
-                        completion_age.total_seconds()
-                        > self.config.cleanup_interval_seconds
-                    ):
-                        to_remove.append(request_id)
+                if self._should_clean_completed_request(
+                    pending_request, current_time
+                ):
+                    to_remove.append(request_id)
 
             # Remove identified requests and their results
             for request_id in to_remove:

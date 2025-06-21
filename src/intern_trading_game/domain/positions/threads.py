@@ -9,6 +9,41 @@ from queue import Queue
 from .position_service import PositionManagementService
 
 
+def process_aggressor_position(fill, order, team_info, position_service):
+    """Process position update for the aggressor."""
+    if order.side.value == "buy":
+        aggressor_delta = fill.quantity
+    else:  # sell
+        aggressor_delta = -fill.quantity
+
+    position_service.update_position(
+        team_id=team_info.team_id,
+        instrument_id=order.instrument_id,
+        delta=aggressor_delta,
+    )
+
+
+def process_counterparty_position(fill, order, team_info, position_service):
+    """Process position update for the counterparty."""
+    # Determine which team is the counterparty
+    if order.side.value == "buy":
+        # Aggressor bought, so counterparty sold
+        counterparty_team_id = fill.seller_id
+        counterparty_delta = -fill.quantity
+    else:
+        # Aggressor sold, so counterparty bought
+        counterparty_team_id = fill.buyer_id
+        counterparty_delta = fill.quantity
+
+    # Skip if counterparty is the same as aggressor (self-trading)
+    if counterparty_team_id != team_info.team_id:
+        position_service.update_position(
+            team_id=counterparty_team_id,
+            instrument_id=order.instrument_id,
+            delta=counterparty_delta,
+        )
+
+
 def position_tracker_thread(
     position_queue: Queue,
     position_service: PositionManagementService,
@@ -66,35 +101,14 @@ def position_tracker_thread(
             if result.fills:
                 for fill in result.fills:
                     # Update aggressor's position
-                    if order.side.value == "buy":
-                        aggressor_delta = fill.quantity
-                    else:  # sell
-                        aggressor_delta = -fill.quantity
-
-                    position_service.update_position(
-                        team_id=team_info.team_id,
-                        instrument_id=order.instrument_id,
-                        delta=aggressor_delta,
+                    process_aggressor_position(
+                        fill, order, team_info, position_service
                     )
 
                     # Update counterparty's position
-                    # Determine which team is the counterparty
-                    if order.side.value == "buy":
-                        # Aggressor bought, so counterparty sold
-                        counterparty_team_id = fill.seller_id
-                        counterparty_delta = -fill.quantity
-                    else:
-                        # Aggressor sold, so counterparty bought
-                        counterparty_team_id = fill.buyer_id
-                        counterparty_delta = fill.quantity
-
-                    # Skip if counterparty is the same as aggressor (self-trading)
-                    if counterparty_team_id != team_info.team_id:
-                        position_service.update_position(
-                            team_id=counterparty_team_id,
-                            instrument_id=order.instrument_id,
-                            delta=counterparty_delta,
-                        )
+                    process_counterparty_position(
+                        fill, order, team_info, position_service
+                    )
 
             # Mark queue task as done
             position_queue.task_done()

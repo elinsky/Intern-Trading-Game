@@ -44,6 +44,74 @@ def get_response_coordinator() -> OrderResponseCoordinatorInterface:
     return coordinator
 
 
+def validate_order_type(order_request: OrderRequest):
+    """Validate and convert order type."""
+    from ...domain.exchange.models.order import OrderType
+
+    try:
+        return OrderType[order_request.order_type.upper()]
+    except KeyError:
+        return None
+
+
+def validate_order_side(order_request: OrderRequest):
+    """Validate and convert order side."""
+    from ...domain.exchange.models.order import OrderSide
+
+    try:
+        return OrderSide(order_request.side)
+    except ValueError:
+        return None
+
+
+def create_validation_error_response(code: str, message: str) -> ApiResponse:
+    """Create a validation error response."""
+    return ApiResponse(
+        success=False,
+        request_id="",  # Empty string for errors before registration
+        error=ApiError(
+            code=code,
+            message=message,
+        ),
+        timestamp=datetime.now(),
+    )
+
+
+async def process_order_submission(
+    order, team_info, order_queue, coordinator, request_id
+):
+    """Process the order submission after validation."""
+    # Create event for backward compatibility with current thread design
+    response_event = asyncio.Event()
+
+    # Submit to order queue with request_id
+    order_queue.put(
+        (
+            "new_order",
+            order,
+            team_info,
+            response_event,  # Not used by v2 threads
+            request_id,
+        )
+    )
+
+    # Wait for response using coordinator (async)
+    def wait_for_completion():
+        return coordinator.wait_for_completion(request_id)
+
+    # Run synchronous wait in thread pool
+    result = await asyncio.to_thread(wait_for_completion)
+
+    if result is None or result.api_response is None:
+        # Timeout occurred
+        raise HTTPException(
+            status_code=status.HTTP_408_REQUEST_TIMEOUT,
+            detail="Order processing timeout",
+        )
+
+    return result.api_response
+
+
 @router.post("/orders", response_model=ApiResponse)
 async def submit_order(
     order_request: OrderRequest,
@@ -82,46 +150,28 @@ async def submit_order(
     """
     try:
         # Convert request to domain order
-        from ...domain.exchange.models.order import Order, OrderSide, OrderType
+        from ...domain.exchange.models.order import Order, OrderType
 
-        # Convert order type
-        try:
-            order_type = OrderType[order_request.order_type.upper()]
-        except KeyError:
-            return ApiResponse(
-                success=False,
-                request_id="",  # Empty string for errors before registration
-                error=ApiError(
-                    code=ErrorCodes.INVALID_ORDER_TYPE,
-                    message=f"Invalid order type: {order_request.order_type}",
-                ),
-                timestamp=datetime.now(),
+        # Validate order type
+        order_type = validate_order_type(order_request)
+        if order_type is None:
+            return create_validation_error_response(
+                ErrorCodes.INVALID_ORDER_TYPE,
+                f"Invalid order type: {order_request.order_type}",
             )
 
-        # Convert side
-        try:
-            side = OrderSide(order_request.side)
-        except ValueError:
-            return ApiResponse(
-                success=False,
-                request_id="",  # Empty string for errors before registration
-                error=ApiError(
-                    code=ErrorCodes.INVALID_SIDE,
-                    message=f"Invalid side: {order_request.side}. Must be 'buy' or 'sell'",
-                ),
-                timestamp=datetime.now(),
+        # Validate side
+        side = validate_order_side(order_request)
+        if side is None:
+            return create_validation_error_response(
+                ErrorCodes.INVALID_SIDE,
+                f"Invalid side: {order_request.side}. Must be 'buy' or 'sell'",
             )
 
         # Validate price for limit orders
         if order_type == OrderType.LIMIT and order_request.price is None:
-            return ApiResponse(
-                success=False,
-                request_id="",  # Empty string for errors before registration
-                error=ApiError(
-                    code=ErrorCodes.MISSING_PRICE,
-                    message="Price required for limit orders",
-                ),
-                timestamp=datetime.now(),
+            return create_validation_error_response(
+                ErrorCodes.MISSING_PRICE, "Price required for limit orders"
             )
 
         # Create order
@@ -142,35 +192,10 @@ async def submit_order(
         )
         request_id = registration.request_id
 
-        # Create event for backward compatibility with current thread design
-        response_event = asyncio.Event()
-
-        # Submit to order queue with request_id
-        order_queue.put(
-            (
-                "new_order",
-                order,
-                team_info,
-                response_event,  # Not used by v2 threads
-                request_id,
-            )
+        # Process the order submission
+        return await process_order_submission(
+            order, team_info, order_queue, coordinator, request_id
         )
-
-        # Wait for response using coordinator (async)
-        def wait_for_completion():
-            return coordinator.wait_for_completion(request_id)
-
-        # Run synchronous wait in thread pool
-        result = await asyncio.to_thread(wait_for_completion)
-
-        if result is None or result.api_response is None:
-            # Timeout occurred
-            raise HTTPException(
-                status_code=status.HTTP_408_REQUEST_TIMEOUT,
-                detail="Order processing timeout",
-            )
-
-        return result.api_response
 
     except HTTPException:
         raise
