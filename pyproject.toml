@@ -68,8 +68,8 @@ exclude = [
 ]
 
 [tool.ruff.lint]
-# Enable Pyflakes ('F'), pycodestyle ('E'), isort ('I') rules
-select = ["E", "F", "I"]
+# Enable Pyflakes ('F'), pycodestyle ('E'), isort ('I'), and McCabe complexity ('C901') rules
+select = ["E", "F", "I", "C901"]
 # Allow unused variables when underscore-prefixed
 dummy-variable-rgx = "^(_+|(_+[a-zA-Z0-9_]*[a-zA-Z0-9]+?))$"
 # Ignore E203 (same as in original flake8 config) and E501 (line too long)
@@ -85,6 +85,10 @@ line-ending = "auto"
 [tool.ruff.lint.isort]
 # Follow the Black profile for import sorting
 known-first-party = ["intern_trading_game"]
+
+[tool.ruff.lint.mccabe]
+# Maximum allowed complexity per function
+max-complexity = 20
 
 [tool.coverage.run]
 source = ["intern_trading_game"]
