@@ -282,6 +282,82 @@ def complete_capacity_tracked_request(
             del pending_requests[request_id]
 
 
+def simulate_resource_pressure(resource_pressure, pressure_lock):
+    """Simulate increasing resource pressure over time."""
+    with pressure_lock:
+        resource_pressure["memory_usage"] = min(
+            0.95, resource_pressure["memory_usage"] + 0.05
+        )
+        resource_pressure["cpu_usage"] = min(
+            0.95, resource_pressure["cpu_usage"] + 0.03
+        )
+
+
+def check_resource_pressure_response(
+    resource_pressure,
+    pressure_lock,
+    degradation_responses,
+    team_id,
+    timeout_seconds,
+):
+    """Check resource pressure and determine response."""
+    with pressure_lock:
+        memory = resource_pressure["memory_usage"]
+        cpu = resource_pressure["cpu_usage"]
+
+        if memory > 0.9 or cpu > 0.9:
+            # Severe pressure - reject
+            degradation_responses.append(
+                {
+                    "type": "rejection",
+                    "reason": "resource_exhaustion",
+                    "memory": memory,
+                    "cpu": cpu,
+                }
+            )
+            raise Exception(
+                f"Service overloaded - Memory: {memory:.1%}, CPU: {cpu:.1%}"
+            )
+
+        elif memory > 0.8 or cpu > 0.8:
+            # High pressure - warn but accept
+            degradation_responses.append(
+                {
+                    "type": "warning",
+                    "reason": "high_resource_usage",
+                    "memory": memory,
+                    "cpu": cpu,
+                }
+            )
+            timeout_seconds = (timeout_seconds or 5.0) * 2.0
+
+        # Accept request
+        request_id = f"req_pressure_{len(degradation_responses):03d}"
+        resource_pressure["pending_requests"] += 1
+
+        return ResponseRegistration(
+            request_id=request_id,
+            team_id=team_id,
+            timeout_at=datetime.now()
+            + timedelta(seconds=timeout_seconds or 5.0),
+            status=ResponseStatus.PENDING,
+        )
+
+
+def reduce_resource_pressure(resource_pressure, pressure_lock):
+    """Reduce resource pressure when request completes."""
+    with pressure_lock:
+        resource_pressure["pending_requests"] = max(
+            0, resource_pressure["pending_requests"] - 1
+        )
+        resource_pressure["memory_usage"] = max(
+            0.6, resource_pressure["memory_usage"] - 0.01
+        )
+        resource_pressure["cpu_usage"] = max(
+            0.5, resource_pressure["cpu_usage"] - 0.01
+        )
+
+
 class TestMemoryManagement:
     """Test memory usage and leak prevention mechanisms."""
 
@@ -1117,155 +1193,104 @@ class TestCapacityLimits:
         This test validates that the coordination system provides
         clear feedback and maintains stability when under resource pressure.
         """
-        # Given - System with resource pressure simulation
+        # Given - Setup test data
         resource_pressure = {
-            "memory_usage": 0.6,  # Start at 60% memory usage
-            "cpu_usage": 0.5,  # Start at 50% CPU usage
+            "memory_usage": 0.6,
+            "cpu_usage": 0.5,
             "pending_requests": 0,
         }
-
         pressure_lock = threading.Lock()
         degradation_responses = []
 
-        def simulate_resource_pressure():
-            """Simulate increasing resource pressure over time."""
-            with pressure_lock:
-                # Simulate memory and CPU pressure increasing
-                resource_pressure["memory_usage"] = min(
-                    0.95, resource_pressure["memory_usage"] + 0.05
-                )
-                resource_pressure["cpu_usage"] = min(
-                    0.95, resource_pressure["cpu_usage"] + 0.03
-                )
-
-        def mock_register_with_degradation(team_id, timeout_seconds=None):
-            simulate_resource_pressure()
-
-            with pressure_lock:
-                memory = resource_pressure["memory_usage"]
-                cpu = resource_pressure["cpu_usage"]
-                _pending = resource_pressure[
-                    "pending_requests"
-                ]  # For monitoring
-
-                # Determine response based on resource pressure
-                if memory > 0.9 or cpu > 0.9:
-                    # Severe pressure - reject with clear message
-                    degradation_responses.append(
-                        {
-                            "type": "rejection",
-                            "reason": "resource_exhaustion",
-                            "memory": memory,
-                            "cpu": cpu,
-                        }
-                    )
-                    raise Exception(
-                        f"Service overloaded - Memory: {memory:.1%}, CPU: {cpu:.1%}"
-                    )
-
-                elif memory > 0.8 or cpu > 0.8:
-                    # High pressure - warn but accept
-                    degradation_responses.append(
-                        {
-                            "type": "warning",
-                            "reason": "high_resource_usage",
-                            "memory": memory,
-                            "cpu": cpu,
-                        }
-                    )
-
-                    # Increase timeout to reflect slower processing
-                    timeout_seconds = (timeout_seconds or 5.0) * 2.0
-
-                # Accept request
-                request_id = f"req_pressure_{len(degradation_responses):03d}"
-                resource_pressure["pending_requests"] += 1
-
-                return ResponseRegistration(
-                    request_id=request_id,
-                    team_id=team_id,
-                    timeout_at=datetime.now()
-                    + timedelta(seconds=timeout_seconds or 5.0),
-                    status=ResponseStatus.PENDING,
-                )
-
-        def mock_complete_with_degradation(request_id):
-            """Complete request and reduce pressure."""
-            with pressure_lock:
-                resource_pressure["pending_requests"] = max(
-                    0, resource_pressure["pending_requests"] - 1
-                )
-                # Slightly reduce pressure when requests complete
-                resource_pressure["memory_usage"] = max(
-                    0.6, resource_pressure["memory_usage"] - 0.01
-                )
-                resource_pressure["cpu_usage"] = max(
-                    0.5, resource_pressure["cpu_usage"] - 0.01
-                )
-
-        mock_coordinator.register_request.side_effect = (
-            mock_register_with_degradation
+        # Setup mock coordinator
+        self._setup_resource_pressure_mocks(
+            mock_coordinator,
+            resource_pressure,
+            pressure_lock,
+            degradation_responses,
         )
 
-        # When - Load increases to trigger degradation
+        # When - Submit requests under increasing pressure
+        successful, rejected = self._submit_requests_with_pressure(
+            mock_coordinator, resource_pressure, pressure_lock
+        )
+
+        # Then - Verify graceful degradation
+        self._verify_graceful_degradation(degradation_responses, rejected)
+
+    def _setup_resource_pressure_mocks(
+        self,
+        mock_coordinator,
+        resource_pressure,
+        pressure_lock,
+        degradation_responses,
+    ):
+        """Setup mock coordinator with resource pressure simulation."""
+
+        def mock_register(team_id, timeout_seconds=None):
+            simulate_resource_pressure(resource_pressure, pressure_lock)
+            return check_resource_pressure_response(
+                resource_pressure,
+                pressure_lock,
+                degradation_responses,
+                team_id,
+                timeout_seconds,
+            )
+
+        mock_coordinator.register_request.side_effect = mock_register
+
+    def _submit_requests_with_pressure(
+        self, mock_coordinator, resource_pressure, pressure_lock
+    ):
+        """Submit requests while simulating increasing pressure."""
         successful_requests = []
         rejected_requests = []
 
-        for i in range(30):  # Submit many requests to trigger pressure
+        for i in range(30):
             try:
                 team_id = f"TEAM_PRESSURE_{i:03d}"
                 registration = mock_coordinator.register_request(team_id)
                 successful_requests.append(registration)
 
-                # Simulate some requests completing
+                # Simulate some completions
                 if i % 5 == 0 and successful_requests:
-                    completed_req = successful_requests[i // 5]
-                    mock_complete_with_degradation(completed_req.request_id)
+                    reduce_resource_pressure(resource_pressure, pressure_lock)
 
             except Exception as e:
                 rejected_requests.append(str(e))
 
-            time.sleep(0.01)  # Small delay between requests
+            time.sleep(0.01)
 
-        # Then - System degrades gracefully with clear feedback
-        assert (
-            len(degradation_responses) > 0
-        ), "No degradation responses recorded"
-        assert (
-            len(rejected_requests) > 0
-        ), "No requests were rejected under pressure"
+        return successful_requests, rejected_requests
 
-        # Analyze degradation pattern
+    def _verify_graceful_degradation(
+        self, degradation_responses, rejected_requests
+    ):
+        """Verify system degraded gracefully."""
+        assert degradation_responses, "No degradation responses recorded"
+        assert rejected_requests, "No requests were rejected under pressure"
+
+        # Check response types
         warnings = [r for r in degradation_responses if r["type"] == "warning"]
         rejections = [
             r for r in degradation_responses if r["type"] == "rejection"
         ]
 
-        assert (
-            len(warnings) > 0
-        ), "No warning responses during pressure buildup"
-        assert len(rejections) > 0, "No rejections during high pressure"
+        assert warnings, "No warning responses during pressure buildup"
+        assert rejections, "No rejections during high pressure"
 
-        # Verify degradation progression (warnings before rejections)
+        # Verify progression
         if warnings and rejections:
-            first_warning_memory = warnings[0]["memory"]
-            first_rejection_memory = rejections[0]["memory"]
             assert (
-                first_warning_memory <= first_rejection_memory
+                warnings[0]["memory"] <= rejections[0]["memory"]
             ), "Rejections should come after warnings"
 
-        # Verify error messages are informative
+        # Check error messages
         for rejection in rejected_requests:
-            assert (
-                "memory" in rejection.lower()
-                or "cpu" in rejection.lower()
-                or "overloaded" in rejection.lower()
-            ), f"Uninformative error message: {rejection}"
-
-        print(
-            f"Successful: {len(successful_requests)}, Rejected: {len(rejected_requests)}, "
-            f"Warnings: {len(warnings)}, Rejections: {len(rejections)}"
-        )
+            assert any(
+                word in rejection.lower()
+                for word in ["memory", "cpu", "overloaded"]
+            )
 
 
 class TestBackgroundCleanupOperations:

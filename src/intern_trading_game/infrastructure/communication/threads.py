@@ -155,6 +155,32 @@ def websocket_thread():
     asyncio.run(websocket_async_loop())
 
 
+async def route_websocket_message(msg_type, team_id, data):
+    """Route a message to the appropriate WebSocket broadcast method.
+
+    Parameters
+    ----------
+    msg_type : str
+        Type of message to route
+    team_id : str
+        Team ID to send message to
+    data : dict
+        Message data
+    """
+    if msg_type == "new_order_ack":
+        await ws_manager.broadcast_new_order_ack(team_id, **data)
+    elif msg_type == "new_order_reject":
+        await ws_manager.broadcast_new_order_reject(team_id, **data)
+    elif msg_type == "execution_report":
+        await ws_manager.broadcast_trade_execution(**data)
+    elif msg_type == "position_snapshot":
+        await ws_manager.send_position_snapshot(team_id, data["positions"])
+    elif msg_type == "order_cancelled":
+        await ws_manager.broadcast_cancel_ack(team_id, **data)
+    elif msg_type == "order_cancel_reject":
+        await ws_manager.broadcast_cancel_reject(team_id, **data)
+
+
 async def websocket_async_loop():
     """Async event loop for WebSocket operations.
 
@@ -184,22 +210,7 @@ async def websocket_async_loop():
 
             # Route to appropriate WebSocket method
             if ws_manager.is_connected(team_id):
-                if msg_type == "new_order_ack":
-                    await ws_manager.broadcast_new_order_ack(team_id, **data)
-                elif msg_type == "new_order_reject":
-                    await ws_manager.broadcast_new_order_reject(
-                        team_id, **data
-                    )
-                elif msg_type == "execution_report":
-                    await ws_manager.broadcast_trade_execution(**data)
-                elif msg_type == "position_snapshot":
-                    await ws_manager.send_position_snapshot(
-                        team_id, data["positions"]
-                    )
-                elif msg_type == "order_cancelled":
-                    await ws_manager.broadcast_cancel_ack(team_id, **data)
-                elif msg_type == "order_cancel_reject":
-                    await ws_manager.broadcast_cancel_reject(team_id, **data)
+                await route_websocket_message(msg_type, team_id, data)
 
         except Exception as e:
             print(f"WebSocket thread error: {e}")

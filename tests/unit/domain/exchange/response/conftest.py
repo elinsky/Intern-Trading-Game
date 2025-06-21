@@ -411,57 +411,59 @@ def concurrent_orders():
     return orders
 
 
+class PerformanceMonitor:
+    """Performance monitoring helper for tests."""
+
+    def __init__(self):
+        self.metrics = {}
+        self.start_times = {}
+
+    def start_timer(self, operation: str):
+        """Start timing an operation."""
+        self.start_times[operation] = time.perf_counter()
+
+    def end_timer(self, operation: str) -> float:
+        """End timing and return duration in milliseconds."""
+        if operation not in self.start_times:
+            return 0.0
+
+        duration_ms = (
+            time.perf_counter() - self.start_times[operation]
+        ) * 1000
+        if operation not in self.metrics:
+            self.metrics[operation] = []
+        self.metrics[operation].append(duration_ms)
+        del self.start_times[operation]
+        return duration_ms
+
+    def get_average_time(self, operation: str) -> float:
+        """Get average time for an operation."""
+        if operation not in self.metrics or not self.metrics[operation]:
+            return 0.0
+        return sum(self.metrics[operation]) / len(self.metrics[operation])
+
+    def get_max_time(self, operation: str) -> float:
+        """Get maximum time for an operation."""
+        if operation not in self.metrics or not self.metrics[operation]:
+            return 0.0
+        return max(self.metrics[operation])
+
+    def assert_performance(
+        self, operation: str, max_avg_ms: float, max_single_ms: float
+    ):
+        """Assert performance requirements are met."""
+        avg_time = self.get_average_time(operation)
+        max_time = self.get_max_time(operation)
+
+        assert (
+            avg_time <= max_avg_ms
+        ), f"Average {operation} time {avg_time:.1f}ms exceeds limit {max_avg_ms}ms"
+        assert (
+            max_time <= max_single_ms
+        ), f"Maximum {operation} time {max_time:.1f}ms exceeds limit {max_single_ms}ms"
+
+
 @pytest.fixture
 def performance_monitor():
     """Performance monitoring helper for tests."""
-
-    class PerformanceMonitor:
-        def __init__(self):
-            self.metrics = {}
-            self.start_times = {}
-
-        def start_timer(self, operation: str):
-            """Start timing an operation."""
-            self.start_times[operation] = time.perf_counter()
-
-        def end_timer(self, operation: str) -> float:
-            """End timing and return duration in milliseconds."""
-            if operation not in self.start_times:
-                return 0.0
-
-            duration_ms = (
-                time.perf_counter() - self.start_times[operation]
-            ) * 1000
-            if operation not in self.metrics:
-                self.metrics[operation] = []
-            self.metrics[operation].append(duration_ms)
-            del self.start_times[operation]
-            return duration_ms
-
-        def get_average_time(self, operation: str) -> float:
-            """Get average time for an operation."""
-            if operation not in self.metrics or not self.metrics[operation]:
-                return 0.0
-            return sum(self.metrics[operation]) / len(self.metrics[operation])
-
-        def get_max_time(self, operation: str) -> float:
-            """Get maximum time for an operation."""
-            if operation not in self.metrics or not self.metrics[operation]:
-                return 0.0
-            return max(self.metrics[operation])
-
-        def assert_performance(
-            self, operation: str, max_avg_ms: float, max_single_ms: float
-        ):
-            """Assert performance requirements are met."""
-            avg_time = self.get_average_time(operation)
-            max_time = self.get_max_time(operation)
-
-            assert (
-                avg_time <= max_avg_ms
-            ), f"Average {operation} time {avg_time:.1f}ms exceeds limit {max_avg_ms}ms"
-            assert (
-                max_time <= max_single_ms
-            ), f"Maximum {operation} time {max_time:.1f}ms exceeds limit {max_single_ms}ms"
-
     return PerformanceMonitor()

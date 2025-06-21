@@ -17,6 +17,175 @@ from ...services.order_validation import OrderValidationService
 from ..exchange.response.interfaces import OrderResponseCoordinatorInterface
 
 
+def handle_new_order_validation(
+    order,
+    team_info,
+    request_id,
+    validation_service,
+    match_queue,
+    websocket_queue,
+    response_coordinator,
+):
+    """Handle validation of a new order."""
+    result = validation_service.validate_new_order(order, team_info)
+
+    if result.status == "accepted":
+        # Send to matching engine
+        match_queue.put((order, team_info))
+        validation_service.increment_order_count(
+            team_info.team_id, time.time()
+        )
+
+        # Create success response
+        response = ApiResponse(
+            success=True,
+            request_id=request_id,
+            order_id=order.order_id,
+            data=None,
+            error=None,
+            timestamp=datetime.now(),
+        )
+        response_coordinator.notify_completion(
+            request_id=request_id,
+            api_response=response,
+            order_id=order.order_id,
+        )
+
+    elif result.status == "rejected":
+        assert result.error_code is not None
+        assert result.error_message is not None
+
+        # Send rejection via WebSocket
+        websocket_queue.put(
+            (
+                MessageType.NEW_ORDER_REJECT.value,
+                team_info.team_id,
+                {
+                    "order_id": order.order_id,
+                    "client_order_id": order.client_order_id,
+                    "reason": result.error_message,
+                    "error_code": result.error_code,
+                },
+            )
+        )
+
+        # Send rejection response
+        response = ApiResponse(
+            success=False,
+            request_id=request_id,
+            order_id=None,
+            data=None,
+            error=ApiError(
+                code=result.error_code,
+                message=result.error_message,
+                details=None,
+            ),
+            timestamp=datetime.now(),
+        )
+        response_coordinator.notify_completion(
+            request_id=request_id,
+            api_response=response,
+        )
+
+    else:
+        # Unexpected status
+        handle_unexpected_status(
+            result.status, request_id, response_coordinator
+        )
+
+
+def handle_order_cancellation(
+    order_id,
+    team_info,
+    request_id,
+    validation_service,
+    websocket_queue,
+    response_coordinator,
+):
+    """Handle order cancellation request."""
+    success, reason = validation_service.validate_cancellation(
+        order_id, team_info.team_id
+    )
+
+    if success:
+        # Send cancel acknowledgment
+        websocket_queue.put(
+            (
+                MessageType.CANCEL_ACK.value,
+                team_info.team_id,
+                {
+                    "order_id": order_id,
+                    "client_order_id": None,
+                    "cancelled_quantity": 0,
+                    "reason": "user_requested",
+                },
+            )
+        )
+
+        response = ApiResponse(
+            success=True,
+            request_id=request_id,
+            order_id=order_id,
+            data=None,
+            error=None,
+            timestamp=datetime.now(),
+        )
+    else:
+        # Send cancel rejection
+        websocket_queue.put(
+            (
+                MessageType.CANCEL_REJECT.value,
+                team_info.team_id,
+                {
+                    "order_id": order_id,
+                    "client_order_id": None,
+                    "reason": reason,
+                },
+            )
+        )
+
+        response = ApiResponse(
+            success=False,
+            request_id=request_id,
+            order_id=None,
+            data=None,
+            error=ApiError(
+                code=ErrorCodes.CANCEL_FAILED,
+                message=ErrorMessages.format_cancel_failed(
+                    reason or "Unknown error"
+                ),
+                details=None,
+            ),
+            timestamp=datetime.now(),
+        )
+
+    response_coordinator.notify_completion(
+        request_id=request_id,
+        api_response=response,
+    )
+
+
+def handle_unexpected_status(status, request_id, response_coordinator):
+    """Handle unexpected validation status."""
+    print(f"Unexpected validation status: {status}")
+    response = ApiResponse(
+        success=False,
+        request_id=request_id,
+        order_id=None,
+        data=None,
+        error=ApiError(
+            code=ErrorCodes.INTERNAL_ERROR,
+            message=f"Unexpected validation status: {status}",
+            details=None,
+        ),
+        timestamp=datetime.now(),
+    )
+    response_coordinator.notify_completion(
+        request_id=request_id,
+        api_response=response,
+    )
+
+
 def validator_thread_v2(
     order_queue: Queue,
     match_queue: Queue,
@@ -66,171 +235,23 @@ def validator_thread_v2(
             )
 
             if message_type == "new_order":
-                # Handle new order submission
-                order = data
-
-                # Validate order using service
-                result = validation_service.validate_new_order(
-                    order, team_info
+                handle_new_order_validation(
+                    data,
+                    team_info,
+                    request_id,
+                    validation_service,
+                    match_queue,
+                    websocket_queue,
+                    response_coordinator,
                 )
-
-                if result.status == "accepted":
-                    # Send to matching engine
-                    match_queue.put((order, team_info))
-
-                    # Update order count through validation service
-                    validation_service.increment_order_count(
-                        team_info.team_id, time.time()
-                    )
-
-                    # Create success response
-                    response = ApiResponse(
-                        success=True,
-                        request_id=request_id,
-                        order_id=order.order_id,
-                        data=None,
-                        error=None,
-                        timestamp=datetime.now(),
-                    )
-
-                    # Use coordinator to signal completion
-                    response_coordinator.notify_completion(
-                        request_id=request_id,
-                        api_response=response,
-                        order_id=order.order_id,
-                    )
-
-                elif result.status == "rejected":
-                    # When rejected, error fields are guaranteed to be set
-                    assert result.error_code is not None
-                    assert result.error_message is not None
-
-                    # Send rejection via WebSocket
-                    websocket_queue.put(
-                        (
-                            MessageType.NEW_ORDER_REJECT.value,
-                            team_info.team_id,
-                            {
-                                "order_id": order.order_id,
-                                "client_order_id": order.client_order_id,
-                                "reason": result.error_message,
-                                "error_code": result.error_code,
-                            },
-                        )
-                    )
-
-                    # Send rejection response
-                    response = ApiResponse(
-                        success=False,
-                        request_id=request_id,
-                        order_id=None,  # No order_id on failure
-                        data=None,
-                        error=ApiError(
-                            code=result.error_code,
-                            message=result.error_message,
-                            details=None,
-                        ),
-                        timestamp=datetime.now(),
-                    )
-
-                    # Use coordinator to signal completion
-                    response_coordinator.notify_completion(
-                        request_id=request_id,
-                        api_response=response,
-                    )
-
-                else:
-                    # Unexpected status - log and treat as rejection
-                    print(f"Unexpected validation status: {result.status}")
-                    response = ApiResponse(
-                        success=False,
-                        request_id=request_id,
-                        order_id=None,
-                        data=None,
-                        error=ApiError(
-                            code=ErrorCodes.INTERNAL_ERROR,
-                            message=f"Unexpected validation status: {result.status}",
-                            details=None,
-                        ),
-                        timestamp=datetime.now(),
-                    )
-
-                    # Use coordinator to signal completion
-                    response_coordinator.notify_completion(
-                        request_id=request_id,
-                        api_response=response,
-                    )
-
             elif message_type == "cancel_order":
-                # Handle order cancellation
-                order_id = data
-
-                # Validate and attempt cancellation using service
-                success, reason = validation_service.validate_cancellation(
-                    order_id, team_info.team_id
-                )
-
-                if success:
-                    # Send cancel acknowledgment via WebSocket
-                    websocket_queue.put(
-                        (
-                            MessageType.CANCEL_ACK.value,
-                            team_info.team_id,
-                            {
-                                "order_id": order_id,
-                                "client_order_id": None,  # TODO: track this
-                                "cancelled_quantity": 0,  # TODO: get from exchange
-                                "reason": "user_requested",
-                            },
-                        )
-                    )
-
-                    # Create success response
-                    response = ApiResponse(
-                        success=True,
-                        request_id=request_id,
-                        order_id=order_id,
-                        data=None,
-                        error=None,
-                        timestamp=datetime.now(),
-                    )
-                else:
-                    # Use failure reason from service
-                    error_code = ErrorCodes.CANCEL_FAILED
-
-                    # Send cancel rejection via WebSocket
-                    websocket_queue.put(
-                        (
-                            MessageType.CANCEL_REJECT.value,
-                            team_info.team_id,
-                            {
-                                "order_id": order_id,
-                                "client_order_id": None,
-                                "reason": reason,
-                            },
-                        )
-                    )
-
-                    # Create rejection response
-                    response = ApiResponse(
-                        success=False,
-                        request_id=request_id,
-                        order_id=None,
-                        data=None,
-                        error=ApiError(
-                            code=error_code,
-                            message=ErrorMessages.format_cancel_failed(
-                                reason or "Unknown error"
-                            ),
-                            details=None,
-                        ),
-                        timestamp=datetime.now(),
-                    )
-
-                # Use coordinator to signal completion
-                response_coordinator.notify_completion(
-                    request_id=request_id,
-                    api_response=response,
+                handle_order_cancellation(
+                    data,
+                    team_info,
+                    request_id,
+                    validation_service,
+                    websocket_queue,
+                    response_coordinator,
                 )
 
         except Exception as e:
