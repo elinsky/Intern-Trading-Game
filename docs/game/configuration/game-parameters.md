@@ -147,6 +147,20 @@ From High  0.01    0.09    0.90
 | order_expiration   | End of tick | All orders expire       |
 | self_trade         | Allowed     | Can trade with yourself |
 
+### Phase Transition Parameters
+
+| Parameter             | Default Value | Description                                                          |
+| --------------------- | ------------- | -------------------------------------------------------------------- |
+| phase_check_interval  | 0.1 seconds   | Maximum delay before checking for market phase transitions           |
+| order_queue_timeout   | 0.01 seconds  | Maximum wait time for new orders before checking market phases      |
+
+These parameters control the responsiveness of automatic market operations:
+
+- **phase_check_interval**: How often the system checks for phase changes (e.g., market open/close)
+- **order_queue_timeout**: How long to wait for orders during quiet periods before checking phases
+
+Lower values increase responsiveness but consume more CPU. Higher values reduce overhead but may delay critical operations like opening auctions.
+
 ## Scoring Parameters
 
 ### Weight Distribution

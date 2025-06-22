@@ -31,8 +31,9 @@ graph TB
 
         subgraph "Service Domains (Logical Separation)"
             subgraph "Exchange Domain"
-                EX_VENUE[ExchangeVenue<br/>- Order Books<br/>- Matching Engine]
+                EX_VENUE[ExchangeVenue<br/>- Order Books<br/>- Matching Engine<br/>- Phase Manager]
                 EX_VAL[ConstraintBasedOrderValidator<br/>- Position Limits<br/>- Order Rate Limits<br/>- Role-based Rules]
+                EX_PHASE[ExchangePhaseTransitionHandler<br/>- Opening Auction<br/>- Market Close<br/>- Automatic Actions]
             end
 
             subgraph "Service Layer"
@@ -98,6 +99,11 @@ graph TB
     SVC3 -.->|Updates| SVC4
     REST -.->|Auth| GAME
 
+    %% Phase Transition Integration
+    EX_VENUE -.->|Creates| EX_PHASE
+    T3 -.->|Triggers Check| EX_VENUE
+    EX_PHASE -.->|Executes Actions| EX_VENUE
+
     %% State Access
     SVC4 -.->|Read/Write| STATE
     GAME -.->|Read/Write| STATE
@@ -123,12 +129,13 @@ graph TB
 3. **Thread Communication**: Queue-based message passing
 4. **Shared State**: Protected by RLock for thread safety
 5. **Service Boundaries**: Clear domain separation achieved
-   - Exchange domain: core types, order book, matching, validation
+   - Exchange domain: core types, order book, matching, validation, phase transitions
    - Underlying domain: market data for underlying assets
    - Signals domain: trading signals for roles
    - Events domain: market news events
    - Game domain: configuration and game-specific logic
 6. **API Surface**: Single REST API with 5 endpoints + WebSocket endpoint
+7. **Phase Transitions**: Time-based checking with automatic market operations
 
 ### Queue Usage (Current)
 
@@ -261,7 +268,7 @@ graph TB
 ## Service Boundaries and Responsibilities
 
 ### Exchange Service
-**Owns**: Order matching, trade generation, order books
+**Owns**: Order matching, trade generation, order books, phase transitions
 
 **Responsibilities**:
 
@@ -270,6 +277,9 @@ graph TB
 - Generate trades with unique IDs
 - Maintain order book state
 - Publish trade events
+- Manage market phases and transitions
+- Execute opening auctions automatically
+- Cancel all orders at market close
 
 **Does NOT Own**:
 
@@ -466,6 +476,18 @@ graph TB
 2. When teams need independent deployment
 3. When technology requirements diverge
 4. When failure isolation becomes critical
+
+### Phase Transition Design Decision
+
+**Time-Based vs Event-Driven**: Phase transitions use time-based checking rather than event-driven mechanisms
+
+**Rationale**:
+
+1. **Predictability**: Market operations execute reliably even under high/low load
+2. **Simplicity**: No complex event coordination or race conditions
+3. **Performance**: Minimal overhead (100ms checks) with configurable intervals
+4. **Reliability**: Guaranteed execution of critical operations like opening auctions
+5. **Future-Ready**: Easy migration to event bus when moving to microservices
 
 ## Implementation Plan
 
