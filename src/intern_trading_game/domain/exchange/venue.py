@@ -148,6 +148,8 @@ class ExchangeVenue:
     def __init__(
         self,
         phase_manager: PhaseManagerInterface,
+        continuous_engine: Optional[ContinuousMatchingEngine] = None,
+        batch_engine: Optional[BatchMatchingEngine] = None,
         matching_engine: Optional[MatchingEngine] = None,
     ):
         """Initialize the exchange venue.
@@ -156,19 +158,27 @@ class ExchangeVenue:
         ----------
         phase_manager : PhaseManagerInterface
             The phase manager that determines market phases and rules
+        continuous_engine : ContinuousMatchingEngine, optional
+            The engine for continuous trading. If not provided, creates default.
+        batch_engine : BatchMatchingEngine, optional
+            The engine for batch trading. If not provided, creates default.
         matching_engine : MatchingEngine, optional
-            The matching engine to use. Defaults to ContinuousMatchingEngine
-            if not provided.
+            Deprecated: Use continuous_engine and batch_engine instead.
+            Maintained for backward compatibility.
 
         Notes
         -----
-        The choice of matching engine determines how orders are processed:
+        Preferred usage is to provide both continuous_engine and batch_engine
+        for explicit dependency injection and better testability:
 
-        - ContinuousMatchingEngine: Orders match immediately upon submission
-        - BatchMatchingEngine: Orders are collected and matched in batches
+        >>> exchange = ExchangeVenue(
+        ...     phase_manager=manager,
+        ...     continuous_engine=ContinuousMatchingEngine(),
+        ...     batch_engine=BatchMatchingEngine()
+        ... )
 
-        The phase manager is required to enforce phase-based trading rules
-        and ensure orders are only accepted/matched during appropriate phases.
+        The exchange automatically selects the appropriate engine based on
+        the current market phase as determined by the phase manager.
         """
         # Map of instrument IDs to their order books
         self.order_books: Dict[str, OrderBook] = {}
@@ -182,13 +192,14 @@ class ExchangeVenue:
         # Phase manager is required for phase-aware operations
         self.phase_manager = phase_manager
 
-        # Initialize matching engine - default to continuous if not specified
-        # This maintains backward compatibility while allowing batch mode
-        self.matching_engine = matching_engine or ContinuousMatchingEngine()
+        # Initialize engines - use injected engines or create defaults
+        self._continuous_engine = (
+            continuous_engine or ContinuousMatchingEngine()
+        )
+        self._batch_engine = batch_engine or BatchMatchingEngine()
 
-        # Initialize all engine types for phase-aware operation
-        self._continuous_engine = ContinuousMatchingEngine()
-        self._batch_engine = BatchMatchingEngine()
+        # For backward compatibility, still support old matching_engine param
+        self.matching_engine = matching_engine or self._continuous_engine
 
         # Cache current phase state to avoid repeated lookups
         self._current_phase_state = (
