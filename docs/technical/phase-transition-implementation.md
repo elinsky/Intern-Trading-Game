@@ -223,12 +223,12 @@ class ExchangeOperations(Protocol):
 - ~~Create `src/intern_trading_game/domain/exchange/phase/transition_handler.py`~~ [DONE]
 - ~~Implement full handler with comprehensive docstrings~~ [DONE]
 
-### Commit 4: Add ExchangeVenue Integration Tests
-**Commit Message**: `test: add failing integration tests for phase-aware ExchangeVenue`
+### ~~Commit 4: Add ExchangeVenue Integration Tests~~ [DONE]
+**Commit Message**: ~~`test: add failing integration tests for phase-aware ExchangeVenue`~~
 
 **Files**:
 
-- Create `tests/unit/domain/exchange/test_venue_phase_integration.py`
+- ~~Create `tests/unit/domain/exchange/test_venue_phase_integration.py`~~ [DONE]
 
 **Integration Test Cases**:
 
@@ -261,32 +261,31 @@ class ExchangeOperations(Protocol):
 18. `test_transition_with_locked_market` - Bid equals ask scenarios
 19. `test_transition_with_wide_spread_market` - No crossing orders
 
-### Commit 5: Integrate Handler into ExchangeVenue
-**Commit Message**: `feat: integrate phase transition handler into ExchangeVenue`
+### ~~Commit 5: Integrate Handler into ExchangeVenue~~ [DONE]
+**Commit Message**: ~~`feat: integrate phase transition handler into ExchangeVenue`~~
 
 **Changes**:
 
-- Update `__init__` to create handler
-- Add `check_phase_transitions()` method
-- Import necessary types
+- ~~Update `__init__` to create handler~~ [DONE]
+- ~~Add `check_phase_transitions()` method~~ [DONE]
+- ~~Import necessary types~~ [DONE]
 
-### Commit 6: Update Matching Thread
-**Commit Message**: `feat: add phase transition checking to matching thread`
-
-**Files**:
-
-- Update `src/intern_trading_game/domain/exchange/threads.py`
-- Add test to verify thread calls the method
-
-### Commit 7: Enable Integration Tests
-**Commit Message**: `test: enable and update phase transition integration tests`
+### ~~Commit 6: Update Matching Thread~~ [DONE]
+**Commit Message**: ~~`feat: add phase transition checking to matching thread`~~
 
 **Files**:
 
-- Update `tests/unit/domain/exchange/test_phase_transitions.py`
-- Update `tests/unit/domain/exchange/test_exchange_phase_integration.py`
-- Remove all `@pytest.mark.skip` decorators
-- Adjust test expectations for automatic behavior
+- ~~Update `src/intern_trading_game/domain/exchange/threads_v2.py`~~ [DONE]
+- ~~Add comprehensive functional tests for thread behavior~~ [DONE]
+
+### ~~Commit 7: Enable Integration Tests~~ [DONE]
+**Commit Message**: ~~`test: enable and update phase transition integration tests`~~
+
+**Files**:
+
+- ~~Update `tests/unit/domain/exchange/test_venue_phase_integration.py`~~ [DONE]
+- ~~Remove all `@pytest.mark.skip` decorators~~ [DONE]
+- ~~Fix test implementation to work with actual integration~~ [DONE]
 
 ### Commit 8: Add Documentation
 **Commit Message**: `docs: add phase transition architecture documentation`
@@ -544,10 +543,11 @@ def create_test_option(underlying: str, strike: float, option_type: str) -> Inst
 - [x] Create protocols.py with ExchangeOperations
 - [x] Write comprehensive unit tests for handler
 - [x] Implement handler with full docstrings
-- [ ] Write integration tests for venue
-- [ ] Integrate handler into venue
-- [ ] Update matching thread
-- [ ] Enable and fix all skipped tests
-- [ ] Document the architecture
-- [ ] Run full test suite
+- [x] Write integration tests for venue
+- [x] Integrate handler into venue
+- [x] Update matching thread with time-based checking
+- [x] Enable and fix all skipped tests
+- [x] Add configurable timing parameters
+- [x] Run full test suite
+- [ ] Document the architecture (partially done in implementation plan)
 - [ ] Update CLAUDE.md if needed

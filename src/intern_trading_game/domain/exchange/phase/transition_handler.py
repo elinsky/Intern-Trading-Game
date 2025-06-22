@@ -7,6 +7,9 @@ and order cancellations.
 
 from typing import Callable, Dict, Optional, Tuple
 
+from intern_trading_game.domain.exchange.phase.interfaces import (
+    PhaseManagerInterface,
+)
 from intern_trading_game.domain.exchange.phase.protocols import (
     ExchangeOperations,
 )
@@ -59,9 +62,9 @@ class ExchangePhaseTransitionHandler:
 
     Examples
     --------
-    >>> # Create handler with exchange operations
+    >>> # Create handler with exchange operations and phase manager
     >>> exchange = ExchangeVenue(phase_manager)
-    >>> handler = ExchangePhaseTransitionHandler(exchange)
+    >>> handler = ExchangePhaseTransitionHandler(exchange, phase_manager)
     >>>
     >>> # Check for phase transitions periodically
     >>> current_phase = phase_manager.get_current_phase_state().phase_type
@@ -71,16 +74,27 @@ class ExchangePhaseTransitionHandler:
     >>> handler.handle_transition(PhaseType.PRE_OPEN, PhaseType.OPENING_AUCTION)
     """
 
-    def __init__(self, exchange_operations: ExchangeOperations) -> None:
+    def __init__(
+        self,
+        exchange_operations: ExchangeOperations,
+        phase_manager: PhaseManagerInterface,
+    ) -> None:
         """Initialize the phase transition handler.
 
         Parameters
         ----------
         exchange_operations : ExchangeOperations
             The exchange operations interface for executing actions
+        phase_manager : PhaseManagerInterface
+            The phase manager for querying current phase state
         """
         self._exchange = exchange_operations
-        self._last_phase: Optional[PhaseType] = None
+        self._phase_manager = phase_manager
+
+        # Initialize with the current phase to establish baseline
+        # This prevents false transitions on first check (None -> CurrentPhase)
+        current_phase_state = phase_manager.get_current_phase_state()
+        self._last_phase: Optional[PhaseType] = current_phase_state.phase_type
 
         # Dispatch table for phase transitions
         # Maps (from_phase, to_phase) -> action method

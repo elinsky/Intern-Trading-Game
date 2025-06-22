@@ -6,7 +6,7 @@ instead of global dictionaries for managing order responses.
 
 import time
 from datetime import datetime
-from queue import Queue
+from queue import Empty, Queue
 from typing import Optional
 
 from ...constants.errors import ErrorCodes, ErrorMessages
@@ -287,18 +287,104 @@ def validator_thread_v2(
             )
 
 
+def _should_check_phases(last_check_time: float, interval: float) -> bool:
+    """Check if enough time has passed for a phase transition check.
+
+    Parameters
+    ----------
+    last_check_time : float
+        Timestamp of the last phase check
+    interval : float
+        Required interval between phase checks in seconds
+
+    Returns
+    -------
+    bool
+        True if a phase check should be performed
+    """
+    return (time.time() - last_check_time) >= interval
+
+
+def _process_single_order(
+    order_data,
+    matching_service,
+    trade_queue: Queue,
+    websocket_queue: Queue,
+    response_coordinator: Optional[OrderResponseCoordinatorInterface],
+):
+    """Process one order through the matching engine.
+
+    Parameters
+    ----------
+    order_data : tuple
+        Tuple containing (order, team_info)
+    matching_service : OrderMatchingService
+        Service for submitting orders to exchange
+    trade_queue : Queue
+        Queue for sending trade results to publisher
+    websocket_queue : Queue
+        Queue for sending WebSocket acknowledgments
+    response_coordinator : Optional[OrderResponseCoordinatorInterface]
+        Coordinator for handling error responses
+    """
+    order, team_info = order_data
+
+    # Submit to exchange using service
+    try:
+        result = matching_service.submit_order_to_exchange(order)
+
+        # Send ACK if order accepted by exchange
+        if result.status in ["new", "partially_filled", "filled"]:
+            websocket_queue.put(
+                (
+                    "new_order_ack",
+                    team_info.team_id,
+                    {
+                        "order_id": order.order_id,
+                        "client_order_id": order.client_order_id,
+                        "instrument_id": order.instrument_id,
+                        "side": order.side,
+                        "quantity": order.quantity,
+                        "price": order.price,
+                        "status": result.status,
+                    },
+                )
+            )
+
+        # Send to trade publisher
+        trade_queue.put((result, order, team_info))
+
+    except Exception as e:
+        # Handle exchange errors using service
+        result = matching_service.handle_exchange_error(e, order)
+
+        # If we have a response coordinator and can extract request_id,
+        # send error response directly. Otherwise, log and continue.
+        if response_coordinator:
+            # Note: In a full implementation, we'd need to track
+            # request_id through the pipeline or use order_id mapping
+            print(f"Exchange error for order {order.order_id}: {e}")
+            # For now, just log - the validator has already responded
+
+
 def matching_thread_v2(
     match_queue: Queue,
     trade_queue: Queue,
     websocket_queue: Queue,
     exchange,
     response_coordinator: Optional[OrderResponseCoordinatorInterface] = None,
+    phase_check_interval: float = 0.1,
+    order_queue_timeout: float = 0.01,
 ):
     """Thread 3: Matching Engine - processes validated orders.
 
     This updated version optionally uses the OrderResponseCoordinator
     for error cases. Most responses are handled by the validator thread,
     but exchange errors may need direct response handling.
+
+    The thread also performs regular phase transition checking to ensure
+    market operations like opening auctions and market close procedures
+    are executed automatically.
 
     Parameters
     ----------
@@ -312,63 +398,60 @@ def matching_thread_v2(
         The exchange venue for order matching
     response_coordinator : Optional[OrderResponseCoordinatorInterface]
         Coordinator for managing order response lifecycle (optional)
+    phase_check_interval : float, default=0.1
+        Maximum delay in seconds before checking for market phase transitions.
+        Controls how quickly the exchange responds to phase changes like market open
+        or close. Smaller values mean faster response to phase transitions but more
+        CPU overhead. Larger values reduce overhead but may delay critical market
+        operations like opening auctions.
+    order_queue_timeout : float, default=0.01
+        Maximum wait time in seconds for new orders before checking market phases.
+        In quiet markets with no new orders, this determines how long to wait
+        before deciding to check if the market phase needs to change. Smaller
+        values make phase transitions more responsive during quiet periods but
+        increase CPU usage.
 
     Notes
     -----
     This thread primarily forwards results to the trade publisher.
     The response coordinator is only used for exceptional error cases
     where the validator thread hasn't already handled the response.
+
+    Phase transitions are checked on a time-based schedule to guarantee
+    that market events (opening auctions, market close) execute even
+    during periods of high or low order activity.
     """
     print("Matching engine thread v2 started")
 
     # Initialize service once at thread startup
     matching_service = OrderMatchingService(exchange)
 
+    # Initialize phase checking timing
+    last_phase_check = time.time()
+
     while True:
         try:
-            # Get validated order
-            order_data = match_queue.get()
+            # Get validated order with configurable timeout to enable regular phase checking
+            order_data = match_queue.get(timeout=order_queue_timeout)
             if order_data is None:  # Shutdown signal
                 break
 
-            order, team_info = order_data
+            # Process the order using extracted helper function
+            _process_single_order(
+                order_data,
+                matching_service,
+                trade_queue,
+                websocket_queue,
+                response_coordinator,
+            )
 
-            # Submit to exchange using service
-            try:
-                result = matching_service.submit_order_to_exchange(order)
-
-                # Send ACK if order accepted by exchange
-                if result.status in ["new", "partially_filled", "filled"]:
-                    websocket_queue.put(
-                        (
-                            "new_order_ack",
-                            team_info.team_id,
-                            {
-                                "order_id": order.order_id,
-                                "client_order_id": order.client_order_id,
-                                "instrument_id": order.instrument_id,
-                                "side": order.side,
-                                "quantity": order.quantity,
-                                "price": order.price,
-                                "status": result.status,
-                            },
-                        )
-                    )
-
-                # Send to trade publisher
-                trade_queue.put((result, order, team_info))
-
-            except Exception as e:
-                # Handle exchange errors using service
-                result = matching_service.handle_exchange_error(e, order)
-
-                # If we have a response coordinator and can extract request_id,
-                # send error response directly. Otherwise, log and continue.
-                if response_coordinator:
-                    # Note: In a full implementation, we'd need to track
-                    # request_id through the pipeline or use order_id mapping
-                    print(f"Exchange error for order {order.order_id}: {e}")
-                    # For now, just log - the validator has already responded
-
+        except Empty:
+            # No orders available - this is normal, continue to phase checking
+            pass
         except Exception as e:
             print(f"Matching thread error: {e}")
+
+        # Check if it's time for a phase transition check
+        if _should_check_phases(last_phase_check, phase_check_interval):
+            exchange.check_phase_transitions()
+            last_phase_check = time.time()

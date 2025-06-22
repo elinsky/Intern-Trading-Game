@@ -18,9 +18,23 @@ class ExchangeConfig:
         The order matching mode for the exchange.
         - "continuous": Orders match immediately upon submission
         - "batch": Orders collected and matched at intervals
+    phase_check_interval : float
+        Maximum delay in seconds before checking for market phase transitions.
+        Controls how quickly the exchange responds to phase changes like market open
+        or close. Smaller values mean faster response to phase transitions but more
+        CPU overhead. Larger values reduce overhead but may delay critical market
+        operations like opening auctions. Default: 0.1 seconds.
+    order_queue_timeout : float
+        Maximum wait time in seconds for new orders before checking market phases.
+        In quiet markets with no new orders, this determines how long to wait
+        before deciding to check if the market phase needs to change. Smaller
+        values make phase transitions more responsive during quiet periods but
+        increase CPU usage. Default: 0.01 seconds.
     """
 
     matching_mode: Literal["continuous", "batch"] = "continuous"
+    phase_check_interval: float = 0.1
+    order_queue_timeout: float = 0.01
 
 
 @dataclass

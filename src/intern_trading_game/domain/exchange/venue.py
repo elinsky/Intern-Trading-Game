@@ -18,6 +18,7 @@ from .models.order import Order
 from .models.trade import Trade
 from .order_result import OrderResult
 from .phase.interfaces import PhaseManagerInterface
+from .phase.transition_handler import ExchangePhaseTransitionHandler
 from .types import PhaseState
 
 
@@ -189,6 +190,17 @@ class ExchangeVenue:
         self._continuous_engine = ContinuousMatchingEngine()
         self._batch_engine = BatchMatchingEngine()
 
+        # Cache current phase state to avoid repeated lookups
+        self._current_phase_state = (
+            self.phase_manager.get_current_phase_state()
+        )
+
+        # Initialize phase transition handler to automatically execute
+        # actions during phase transitions (e.g., opening auction, close)
+        self._transition_handler = ExchangePhaseTransitionHandler(
+            self, self.phase_manager
+        )
+
     def list_instrument(self, instrument: Instrument) -> None:
         """
         Register an instrument with the exchange.
@@ -231,14 +243,13 @@ class ExchangeVenue:
         immediately. In batch mode, orders are collected for later processing.
         """
         # Check phase state
-        phase_state = self.phase_manager.get_current_phase_state()
-        if not phase_state.is_order_submission_allowed:
+        if not self._current_phase_state.is_order_submission_allowed:
             return OrderResult(
                 order_id=order.order_id,
                 status="rejected",
                 fills=[],
                 remaining_quantity=order.quantity,
-                error_message=f"Order submission not allowed during {phase_state.phase_type.value} phase",
+                error_message=f"Order submission not allowed during {self._current_phase_state.phase_type.value} phase",
             )
 
         # Validate the order
@@ -256,10 +267,7 @@ class ExchangeVenue:
 
         # Select engine based on phase state
         engine: MatchingEngine
-        if (
-            phase_state.execution_style == "batch"
-            or not phase_state.is_matching_enabled
-        ):
+        if self._should_use_batch_engine():
             # Pre-open and opening auction: use batch engine
             # During pre-open, orders are collected but not matched
             # During opening auction, execute_batch processes them
@@ -290,8 +298,7 @@ class ExchangeVenue:
             ValueError: If the trader doesn't own the order.
         """
         # Check phase state
-        phase_state = self.phase_manager.get_current_phase_state()
-        if not phase_state.is_order_cancellation_allowed:
+        if not self._current_phase_state.is_order_cancellation_allowed:
             return False
 
         # Check if the order exists
@@ -423,11 +430,8 @@ class ExchangeVenue:
         ...     for order_id, result in instrument_results.items():
         ...         print(f"Order {order_id}: {result.status}")
         """
-        # Get current phase to determine which engine to use
-        phase_state = self.phase_manager.get_current_phase_state()
-
         # Only batch engine has meaningful execute_batch
-        if phase_state.execution_style == "batch":
+        if self._current_phase_state.execution_style == "batch":
             return self._batch_engine.execute_batch(self.order_books)
         else:
             # Other engines return empty dict
@@ -571,3 +575,62 @@ class ExchangeVenue:
 
         # Log cancellation summary
         # In a real system, this might publish end-of-day events
+
+    def check_phase_transitions(self) -> None:
+        """Check for phase transitions and execute actions if needed.
+
+        This method should be called periodically (e.g., every 100ms) to
+        monitor for phase changes and execute appropriate actions like
+        opening auctions or market close procedures.
+
+        The method:
+        1. Gets the current phase from the phase manager
+        2. Updates the cached phase state for use by other methods
+        3. Delegates to the transition handler to execute actions
+
+        Notes
+        -----
+        This is designed to be called from the matching thread's main loop.
+        It's safe to call frequently as it only takes action when phases
+        actually change.
+
+        Examples
+        --------
+        >>> # In the matching thread's run loop
+        >>> while self.running:
+        ...     # Check for phase transitions periodically
+        ...     self.exchange.check_phase_transitions()
+        ...     # Continue with normal order processing
+        ...     self._process_orders()
+        """
+        # Get current phase from phase manager and update cached state
+        new_phase_state = self.phase_manager.get_current_phase_state()
+        self._current_phase_state = new_phase_state
+
+        # Let the handler check and execute any needed actions
+        self._transition_handler.check_and_handle_transition(
+            new_phase_state.phase_type
+        )
+
+    def _should_use_batch_engine(self) -> bool:
+        """Determine if the batch matching engine should be used.
+
+        Returns
+        -------
+        bool
+            True if batch engine should be used based on current phase state
+
+        Notes
+        -----
+        Batch engine is used during:
+        - Pre-open phase: Orders collected but not matched
+        - Opening auction: Orders matched in batch at market open
+        - Any phase where matching is disabled
+
+        Continuous engine is used during:
+        - Continuous trading: Orders matched immediately
+        """
+        return (
+            self._current_phase_state.execution_style == "batch"
+            or not self._current_phase_state.is_matching_enabled
+        )

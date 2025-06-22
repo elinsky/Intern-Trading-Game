@@ -98,7 +98,11 @@ class ConfigLoader:
 
         # Create config with explicit field extraction for clarity
         return ExchangeConfig(
-            matching_mode=exchange_data.get("matching_mode", "continuous")
+            matching_mode=exchange_data.get("matching_mode", "continuous"),
+            phase_check_interval=exchange_data.get(
+                "phase_check_interval", 0.1
+            ),
+            order_queue_timeout=exchange_data.get("order_queue_timeout", 0.01),
         )
 
     def get_role_constraints(self, role: str) -> List[ConstraintConfig]:

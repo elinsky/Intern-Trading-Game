@@ -273,13 +273,26 @@ def _create_trade(
     assert (
         sell_order.price is not None
     ), "Sell order price cannot be None in trade"
+
+    # CRITICAL BUG: This function uses continuous crossing logic (passive price)
+    # instead of proper auction pricing for opening auctions!
+    #
+    # ISSUE: https://github.com/elinsky/Intern-Trading-Game/issues/17
+    #
+    # Current: Always trades at sell_order.price (biased toward sellers)
+    # Should: Use maximum volume + midpoint pricing for auction fairness
+    # Example: Buy 10@128 vs Sell 10@127 should trade at 127.50 (midpoint)
+    #          but currently trades at 127.00 (sell price)
+    #
+    # TODO: Implement proper auction pricing algorithm here
+
     return Trade(
         instrument_id=buy_order.instrument_id,
         buyer_order_id=buy_order.order_id,
         seller_order_id=sell_order.order_id,
         buyer_id=buy_order.trader_id,
         seller_id=sell_order.trader_id,
-        price=sell_order.price,  # Match at passive (sell) side
+        price=sell_order.price,  # BUG: Should use auction pricing, not passive price
         quantity=quantity,
         aggressor_side="buy",  # Buy order crossed the spread
     )

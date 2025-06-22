@@ -166,6 +166,9 @@ class TestPhaseTransitions:
             execution_style="continuous",
         )
 
+        # Update cached phase state after changing mock
+        exchange_with_phase_manager.check_phase_transitions()
+
         # Submit orders that won't match
         buy_order = Order(
             instrument_id="SPX-20240115-4500-C",
