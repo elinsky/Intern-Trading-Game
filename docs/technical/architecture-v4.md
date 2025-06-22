@@ -34,6 +34,7 @@ graph TB
                 EX_VENUE[ExchangeVenue<br/>- Order Books<br/>- Matching Engine<br/>- Phase Manager]
                 EX_VAL[ConstraintBasedOrderValidator<br/>- Position Limits<br/>- Order Rate Limits<br/>- Role-based Rules]
                 EX_PHASE[ExchangePhaseTransitionHandler<br/>- Opening Auction<br/>- Market Close<br/>- Automatic Actions]
+                EX_PRICING[BatchAuctionPricingStrategy<br/>- Maximum Volume Algorithm<br/>- Equilibrium Pricing<br/>- Uniform Price Discovery]
             end
 
             subgraph "Service Layer"
@@ -104,6 +105,9 @@ graph TB
     T3 -.->|Triggers Check| EX_VENUE
     EX_PHASE -.->|Executes Actions| EX_VENUE
 
+    %% Batch Auction Pricing
+    EX_VENUE -.->|Uses| EX_PRICING
+
     %% State Access
     SVC4 -.->|Read/Write| STATE
     GAME -.->|Read/Write| STATE
@@ -129,7 +133,7 @@ graph TB
 3. **Thread Communication**: Queue-based message passing
 4. **Shared State**: Protected by RLock for thread safety
 5. **Service Boundaries**: Clear domain separation achieved
-   - Exchange domain: core types, order book, matching, validation, phase transitions
+   - Exchange domain: core types, order book, matching, validation, phase transitions, batch auction pricing strategies
    - Underlying domain: market data for underlying assets
    - Signals domain: trading signals for roles
    - Events domain: market news events
@@ -268,17 +272,18 @@ graph TB
 ## Service Boundaries and Responsibilities
 
 ### Exchange Service
-**Owns**: Order matching, trade generation, order books, phase transitions
+**Owns**: Order matching, trade generation, order books, phase transitions, batch auction pricing
 
 **Responsibilities**:
 
 - Accept and validate orders (format, instrument exists)
 - Match orders using configured algorithm
-- Generate trades with unique IDs
+- Determine auction clearing prices using pluggable strategies (Maximum Volume, Equilibrium)
+- Generate trades with unique IDs at uniform auction prices
 - Maintain order book state
 - Publish trade events
 - Manage market phases and transitions
-- Execute opening auctions automatically
+- Execute opening auctions automatically with proper pricing
 - Cancel all orders at market close
 
 **Does NOT Own**:
@@ -488,6 +493,98 @@ graph TB
 3. **Performance**: Minimal overhead (100ms checks) with configurable intervals
 4. **Reliability**: Guaranteed execution of critical operations like opening auctions
 5. **Future-Ready**: Easy migration to event bus when moving to microservices
+
+### Batch Auction Pricing Design Decision
+
+**Strategy Pattern vs Direct Implementation**: Batch auction pricing uses the Strategy Pattern for algorithm selection
+
+**Rationale**:
+
+1. **Extensibility**: Easy to add new pricing algorithms without modifying engine
+2. **Testability**: Each strategy can be tested in isolation
+3. **Configuration**: Switch between algorithms via configuration
+4. **Backward Compatibility**: Default to current behavior when not specified
+5. **Single Responsibility**: Pricing logic separated from matching logic
+
+**Current Strategies**:
+
+- **EquilibriumPricingStrategy**: Traditional approach (current behavior)
+- **MaximumVolumePricingStrategy**: Based on arXiv:1304.3135v1 with midpoint selection
+
+### Exchange Domain Component Architecture
+
+The following diagram shows the detailed component relationships within the Exchange Domain:
+
+```mermaid
+graph TB
+    subgraph "Exchange Domain"
+        subgraph "Core Models"
+            Order[Order<br/>- order_id<br/>- instrument_id<br/>- side<br/>- price<br/>- quantity]
+            Trade[Trade<br/>- trade_id<br/>- buyer/seller info<br/>- price<br/>- quantity]
+            Instrument[Instrument<br/>- symbol<br/>- instrument_type]
+            OrderResult[OrderResult<br/>- status<br/>- fills<br/>- remaining_qty]
+        end
+
+        subgraph "Order Book Layer"
+            OrderBook[OrderBook<br/>- bids: List<br/>- asks: List<br/>- trades: List<br/>- add_order<br/>- cancel_order]
+
+            subgraph "Matching Engines"
+                ME[MatchingEngine<br/>interface<br/>- submit_order<br/>- execute_batch<br/>- get_mode]
+                CME[ContinuousMatchingEngine<br/>- Immediate matching<br/>- Price-time priority]
+                BME[BatchMatchingEngine<br/>- Collect orders<br/>- Batch execution<br/>- Uses pricing strategy]
+            end
+
+            subgraph "Batch Auction Strategies NEW"
+                BAS[BatchAuctionPricingStrategy<br/>protocol<br/>- calculate_clearing_price]
+                MVPS[MaximumVolumePricingStrategy<br/>- MV algorithm<br/>- Midpoint selection]
+                EPS[EquilibriumPricingStrategy<br/>- Supply = Demand<br/>- Traditional approach]
+                ACR[AuctionClearingResult<br/>- clearing_price<br/>- max_volume<br/>- algorithm<br/>- price_range]
+            end
+        end
+
+        subgraph "Validation Layer"
+            OV[ConstraintBasedOrderValidator<br/>- Role limits<br/>- Position limits<br/>- Rate limits]
+        end
+
+        subgraph "Phase Management"
+            PM[PhaseManager<br/>- Current phase<br/>- Transition rules]
+            PTH[PhaseTransitionHandler<br/>- Opening auction<br/>- Market close]
+        end
+
+        subgraph "Venue Layer"
+            EV[ExchangeVenue<br/>- Order books<br/>- Matching engine<br/>- Phase manager<br/>- submit_order<br/>- execute_batch]
+        end
+    end
+
+    %% Inheritance/Implementation
+    ME -->|implements| CME
+    ME -->|implements| BME
+    BAS -->|implements| MVPS
+    BAS -->|implements| EPS
+
+    %% Dependencies
+    BME -->|uses| BAS
+    BME -->|creates| Trade
+    CME -->|creates| Trade
+    MVPS -->|returns| ACR
+    EPS -->|returns| ACR
+
+    EV -->|contains| OrderBook
+    EV -->|contains| ME
+    EV -->|contains| PM
+    EV -->|delegates to| PTH
+
+    OrderBook -->|stores| Order
+    OrderBook -->|records| Trade
+
+    OV -->|validates| Order
+    EV -->|uses| OV
+
+    style BAS fill:#90EE90
+    style MVPS fill:#90EE90
+    style EPS fill:#90EE90
+    style ACR fill:#90EE90
+```
 
 ## Implementation Plan
 
