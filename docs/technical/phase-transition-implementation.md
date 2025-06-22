@@ -141,13 +141,13 @@ class ExchangePhaseTransitionHandler:
 
 ## Implementation Plan (TDD)
 
-### Commit 1: Define ExchangeOperations Protocol
+### ~~Commit 1: Define ExchangeOperations Protocol~~ [DONE]
 **Branch**: `feat/phase-transition-protocol`
 **Commit Message**: `feat: add ExchangeOperations protocol for phase transition handler`
 
 **Files**:
 
-- Create `src/intern_trading_game/domain/exchange/phase/protocols.py`
+- ~~Create `src/intern_trading_game/domain/exchange/phase/protocols.py`~~ [DONE]
 
 **Implementation**:
 ```python
@@ -183,12 +183,12 @@ class ExchangeOperations(Protocol):
         ...
 ```
 
-### Commit 2: Create TransitionHandler Tests
+### ~~Commit 2: Create TransitionHandler Tests~~ [DONE]
 **Commit Message**: `test: add failing tests for ExchangePhaseTransitionHandler`
 
 **Files**:
 
-- Create `tests/unit/domain/exchange/phase/test_transition_handler.py`
+- ~~Create `tests/unit/domain/exchange/phase/test_transition_handler.py`~~ [DONE]
 
 **Unit Test Cases**:
 
@@ -215,13 +215,13 @@ class ExchangeOperations(Protocol):
 14. `test_handles_holiday_scenarios` - Extended CLOSED period doesn't break state
 15. `test_auction_not_called_during_closed` - Safety check for invalid transitions
 
-### Commit 3: Implement TransitionHandler
+### ~~Commit 3: Implement TransitionHandler~~ [DONE]
 **Commit Message**: `feat: implement ExchangePhaseTransitionHandler`
 
 **Files**:
 
-- Create `src/intern_trading_game/domain/exchange/phase/transition_handler.py`
-- Implement full handler with comprehensive docstrings
+- ~~Create `src/intern_trading_game/domain/exchange/phase/transition_handler.py`~~ [DONE]
+- ~~Implement full handler with comprehensive docstrings~~ [DONE]
 
 ### Commit 4: Add ExchangeVenue Integration Tests
 **Commit Message**: `test: add failing integration tests for phase-aware ExchangeVenue`
@@ -541,9 +541,9 @@ def create_test_option(underlying: str, strike: float, option_type: str) -> Inst
 
 ## Checklist for Implementation
 
-- [ ] Create protocols.py with ExchangeOperations
-- [ ] Write comprehensive unit tests for handler
-- [ ] Implement handler with full docstrings
+- [x] Create protocols.py with ExchangeOperations
+- [x] Write comprehensive unit tests for handler
+- [x] Implement handler with full docstrings
 - [ ] Write integration tests for venue
 - [ ] Integrate handler into venue
 - [ ] Update matching thread
