@@ -11,7 +11,30 @@ from intern_trading_game.api.main import app
 
 
 @pytest.fixture
-def api_context():
+def test_exchange():
+    """Create exchange with IntegrationTestPhaseManager for testing.
+
+    This fixture creates an exchange that uses IntegrationTestPhaseManager instead
+    of ConfigDrivenPhaseManager, allowing integration tests to run
+    outside of actual market hours.
+    """
+    from intern_trading_game.infrastructure.config.loader import ConfigLoader
+    from intern_trading_game.infrastructure.factories.exchange_factory import (
+        ExchangeFactory,
+    )
+    from tests.utils.test_phase_manager import IntegrationTestPhaseManager
+
+    config_loader = ConfigLoader()
+    exchange_config = config_loader.get_exchange_config()
+    test_manager = IntegrationTestPhaseManager()
+
+    return ExchangeFactory.create_from_config(
+        exchange_config, test_phase_manager=test_manager
+    )
+
+
+@pytest.fixture
+def api_context(test_exchange):
     """Full API context with all threads running.
 
     This fixture provides a complete API environment with:
@@ -86,13 +109,15 @@ def api_context():
                 "websocket": fresh_websocket_t,
             }
 
-            # Get services from app state after startup
-            exchange = client.app.state.exchange
+            # Override exchange with test version and get other services
+            client.app.state.exchange = (
+                test_exchange  # Replace with test exchange
+            )
             game_service = client.app.state.game_service
 
             yield {
                 "client": client,
-                "exchange": exchange,
+                "exchange": test_exchange,  # Use test exchange
                 # Position service is now internal to the app
                 "game_service": game_service,
                 "threads": threads,

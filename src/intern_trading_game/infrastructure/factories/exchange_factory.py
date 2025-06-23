@@ -4,15 +4,16 @@ This module provides factory methods to create ExchangeVenue instances
 with the appropriate matching engine based on configuration.
 """
 
-from unittest.mock import Mock
+from typing import Optional
 
 from ...domain.exchange.book.matching_engine import (
     BatchMatchingEngine,
     ContinuousMatchingEngine,
 )
 from ...domain.exchange.phase.interfaces import PhaseManagerInterface
-from ...domain.exchange.types import PhaseState, PhaseType
+from ...domain.exchange.phase.manager import ConfigDrivenPhaseManager
 from ...domain.exchange.venue import ExchangeVenue
+from ..config.loader import ConfigLoader
 from ..config.models import ExchangeConfig
 
 
@@ -25,7 +26,10 @@ class ExchangeFactory:
     """
 
     @staticmethod
-    def create_from_config(config: ExchangeConfig) -> ExchangeVenue:
+    def create_from_config(
+        config: ExchangeConfig,
+        test_phase_manager: Optional[PhaseManagerInterface] = None,
+    ) -> ExchangeVenue:
         """Create exchange based on configuration.
 
         Creates an ExchangeVenue with explicit engine dependencies
@@ -35,6 +39,9 @@ class ExchangeFactory:
         ----------
         config : ExchangeConfig
             Configuration specifying the exchange settings
+        test_phase_manager : Optional[PhaseManagerInterface]
+            Optional phase manager for testing. If provided, uses this instead
+            of ConfigDrivenPhaseManager. Intended for integration tests.
 
         Returns
         -------
@@ -44,19 +51,23 @@ class ExchangeFactory:
         Notes
         -----
         Creates both continuous and batch engines explicitly and injects
-        them into the ExchangeVenue. The exchange will automatically
-        select the appropriate engine based on market phase.
+        them into the ExchangeVenue along with either a ConfigDrivenPhaseManager
+        (production) or test phase manager (testing). The exchange will
+        automatically select the appropriate engine based on the current phase.
         """
         # Create both engines explicitly for dependency injection
         continuous_engine = ContinuousMatchingEngine()
         batch_engine = BatchMatchingEngine()
 
-        # Create a phase manager based on matching mode
-        # TODO: Replace with ConfigDrivenPhaseManager in Milestone 2
-        if config.matching_mode == "batch":
-            phase_manager = ExchangeFactory._create_batch_phase_manager()
+        # Create phase manager (test override or production)
+        if test_phase_manager:
+            # Use provided test phase manager for integration testing
+            phase_manager = test_phase_manager
         else:
-            phase_manager = ExchangeFactory._create_default_phase_manager()
+            # Production: create real phase manager using market configuration
+            config_loader = ConfigLoader()
+            market_phases_config = config_loader.get_market_phases_config()
+            phase_manager = ConfigDrivenPhaseManager(market_phases_config)
 
         # Set primary engine based on config for backward compatibility
         primary_engine = (
@@ -71,49 +82,3 @@ class ExchangeFactory:
             batch_engine=batch_engine,
             matching_engine=primary_engine,  # This makes tests pass
         )
-
-    @staticmethod
-    def _create_default_phase_manager() -> PhaseManagerInterface:
-        """Create a default phase manager for continuous trading.
-
-        Creates a mock phase manager that always returns continuous
-        trading phase for testing and development purposes.
-
-        Returns
-        -------
-        PhaseManagerInterface
-            A mock phase manager for continuous trading
-        """
-        manager = Mock(spec=PhaseManagerInterface)
-        manager.get_current_phase_state.return_value = PhaseState(
-            phase_type=PhaseType.CONTINUOUS,
-            is_order_submission_allowed=True,
-            is_order_cancellation_allowed=True,
-            is_matching_enabled=True,
-            execution_style="continuous",
-        )
-        manager.get_current_phase_type.return_value = PhaseType.CONTINUOUS
-        return manager
-
-    @staticmethod
-    def _create_batch_phase_manager() -> PhaseManagerInterface:
-        """Create a phase manager for batch mode testing.
-
-        This creates a phase manager that simulates pre-open
-        phase where orders are collected but not matched.
-
-        Returns
-        -------
-        PhaseManagerInterface
-            A mock phase manager for batch mode
-        """
-        manager = Mock(spec=PhaseManagerInterface)
-        manager.get_current_phase_state.return_value = PhaseState(
-            phase_type=PhaseType.PRE_OPEN,
-            is_order_submission_allowed=True,
-            is_order_cancellation_allowed=True,
-            is_matching_enabled=False,
-            execution_style="batch",
-        )
-        manager.get_current_phase_type.return_value = PhaseType.PRE_OPEN
-        return manager
