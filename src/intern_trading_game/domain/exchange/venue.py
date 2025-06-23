@@ -69,9 +69,10 @@ class ExchangeVenue:
     phase_manager : PhaseManagerInterface
         The phase manager that determines market phases and rules.
         Exchange depends on this abstraction, not concrete implementation.
-    matching_engine : MatchingEngine, optional
-        The matching engine to use for order processing. If not provided,
-        defaults to ContinuousMatchingEngine for immediate order matching.
+    continuous_engine : ContinuousMatchingEngine, optional
+        The engine for continuous trading. If not provided, creates default.
+    batch_engine : BatchMatchingEngine, optional
+        The engine for batch trading. If not provided, creates default.
 
     Attributes
     ----------
@@ -121,28 +122,28 @@ class ExchangeVenue:
 
     Examples
     --------
-    Creating an exchange with continuous matching (default):
+    Creating an exchange with a phase manager:
 
-    >>> exchange = ExchangeVenue()
+    >>> from .phase.interfaces import PhaseManagerInterface
+    >>> phase_manager = MockPhaseManager()  # Or ConfigDrivenPhaseManager
+    >>> exchange = ExchangeVenue(phase_manager=phase_manager)
     >>> apple_stock = Instrument(symbol="AAPL", underlying="AAPL")
     >>> exchange.list_instrument(apple_stock)
 
-    Using batch matching for fair order processing:
+    Creating an exchange with explicit engine injection:
 
-    >>> from .matching_engine import BatchMatchingEngine
-    >>> batch_exchange = ExchangeVenue(matching_engine=BatchMatchingEngine())
+    >>> from .book.matching_engine import BatchMatchingEngine, ContinuousMatchingEngine
+    >>> exchange = ExchangeVenue(
+    ...     phase_manager=phase_manager,
+    ...     continuous_engine=ContinuousMatchingEngine(),
+    ...     batch_engine=BatchMatchingEngine()
+    ... )
     >>>
-    >>> # Orders are collected during submission
+    >>> # The exchange automatically selects the appropriate engine
+    >>> # based on the current phase from the phase manager
     >>> order1 = Order(instrument_id="AAPL", side="buy", quantity=10,
     ...                price=150.0, trader_id="trader1")
-    >>> result1 = batch_exchange.submit_order(order1)
-    >>> result1.status
-    'pending'
-    >>>
-    >>> # Execute batch to process all orders
-    >>> batch_results = batch_exchange.execute_batch()
-    >>> batch_results["AAPL"][order1.order_id].status
-    'accepted'
+    >>> result1 = exchange.submit_order(order1)
     """
 
     def __init__(
@@ -150,7 +151,6 @@ class ExchangeVenue:
         phase_manager: PhaseManagerInterface,
         continuous_engine: Optional[ContinuousMatchingEngine] = None,
         batch_engine: Optional[BatchMatchingEngine] = None,
-        matching_engine: Optional[MatchingEngine] = None,
     ):
         """Initialize the exchange venue.
 
@@ -162,9 +162,6 @@ class ExchangeVenue:
             The engine for continuous trading. If not provided, creates default.
         batch_engine : BatchMatchingEngine, optional
             The engine for batch trading. If not provided, creates default.
-        matching_engine : MatchingEngine, optional
-            Deprecated: Use continuous_engine and batch_engine instead.
-            Maintained for backward compatibility.
 
         Notes
         -----
@@ -197,9 +194,6 @@ class ExchangeVenue:
             continuous_engine or ContinuousMatchingEngine()
         )
         self._batch_engine = batch_engine or BatchMatchingEngine()
-
-        # For backward compatibility, still support old matching_engine param
-        self.matching_engine = matching_engine or self._continuous_engine
 
         # Cache current phase state to avoid repeated lookups
         self._current_phase_state = (
@@ -503,25 +497,6 @@ class ExchangeVenue:
         ...     print("Market is closed")
         """
         return self.phase_manager.get_current_phase_state()
-
-    def set_matching_engine(self, matching_engine: MatchingEngine) -> None:
-        """Set the matching engine for the exchange.
-
-        This method allows switching between different matching engines,
-        typically used for phase transitions (e.g., switching to batch
-        mode for opening auction).
-
-        Parameters
-        ----------
-        matching_engine : MatchingEngine
-            The new matching engine to use
-
-        Notes
-        -----
-        This is primarily used by the PhaseTransitionExecutor to switch
-        between continuous and batch matching modes based on market phase.
-        """
-        self.matching_engine = matching_engine
 
     def execute_opening_auction(self) -> None:
         """Execute the opening auction batch match.

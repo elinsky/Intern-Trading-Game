@@ -15,6 +15,7 @@ from unittest.mock import Mock
 import pytest
 
 from intern_trading_game.domain.exchange.book.matching_engine import (
+    BatchMatchingEngine,
     ContinuousMatchingEngine,
 )
 from intern_trading_game.domain.exchange.models.instrument import Instrument
@@ -81,7 +82,8 @@ def exchange(mock_phase_manager):
     """Create a fresh exchange instance for testing."""
     return ExchangeVenue(
         phase_manager=mock_phase_manager,
-        matching_engine=ContinuousMatchingEngine(),
+        continuous_engine=ContinuousMatchingEngine(),
+        batch_engine=BatchMatchingEngine(),
     )
 
 

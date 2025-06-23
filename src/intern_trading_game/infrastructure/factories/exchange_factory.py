@@ -61,5 +61,4 @@ class ExchangeFactory:
             phase_manager=phase_manager,
             continuous_engine=continuous_engine,
             batch_engine=batch_engine,
-            matching_engine=continuous_engine,  # Default for backward compatibility
         )

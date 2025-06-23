@@ -13,6 +13,7 @@ from typing import Dict
 import pytest
 
 from intern_trading_game.domain.exchange.book.matching_engine import (
+    BatchMatchingEngine,
     ContinuousMatchingEngine,
 )
 from intern_trading_game.domain.exchange.models.instrument import Instrument
@@ -74,7 +75,9 @@ def exchange():
     )
 
     exchange = ExchangeVenue(
-        phase_manager=phase_manager, matching_engine=ContinuousMatchingEngine()
+        phase_manager=phase_manager,
+        continuous_engine=ContinuousMatchingEngine(),
+        batch_engine=BatchMatchingEngine(),
     )
 
     # List test instruments

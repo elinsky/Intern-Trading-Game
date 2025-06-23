@@ -728,7 +728,9 @@ def test_exchange_venue_batch_matching_preserves_order_ids():
     )
 
     exchange = ExchangeVenue(
-        phase_manager=phase_manager, matching_engine=BatchMatchingEngine()
+        phase_manager=phase_manager,
+        continuous_engine=ContinuousMatchingEngine(),
+        batch_engine=BatchMatchingEngine(),
     )
     exchange.list_instrument(Instrument(symbol="TEST", underlying="TEST"))
 
@@ -792,7 +794,9 @@ def test_exchange_venue_with_batch_engine():
     )
 
     exchange = ExchangeVenue(
-        phase_manager=phase_manager, matching_engine=BatchMatchingEngine()
+        phase_manager=phase_manager,
+        continuous_engine=ContinuousMatchingEngine(),
+        batch_engine=BatchMatchingEngine(),
     )
     exchange.list_instrument(Instrument(symbol="TEST", underlying="TEST"))
 
@@ -831,7 +835,9 @@ def test_exchange_venue_batch_multiple_instruments():
     )
 
     exchange = ExchangeVenue(
-        phase_manager=phase_manager, matching_engine=BatchMatchingEngine()
+        phase_manager=phase_manager,
+        continuous_engine=ContinuousMatchingEngine(),
+        batch_engine=BatchMatchingEngine(),
     )
     exchange.list_instrument(Instrument(symbol="SPX", underlying="SPX"))
     exchange.list_instrument(Instrument(symbol="SPY", underlying="SPY"))
@@ -890,7 +896,9 @@ def test_exchange_venue_multiple_batches_sequential():
     )
 
     exchange = ExchangeVenue(
-        phase_manager=phase_manager, matching_engine=BatchMatchingEngine()
+        phase_manager=phase_manager,
+        continuous_engine=ContinuousMatchingEngine(),
+        batch_engine=BatchMatchingEngine(),
     )
     exchange.list_instrument(Instrument(symbol="TEST", underlying="TEST"))
 
@@ -936,7 +944,9 @@ def test_batch_engine_duplicate_order_id_rejected():
     )
 
     exchange = ExchangeVenue(
-        phase_manager=phase_manager, matching_engine=BatchMatchingEngine()
+        phase_manager=phase_manager,
+        continuous_engine=ContinuousMatchingEngine(),
+        batch_engine=BatchMatchingEngine(),
     )
     exchange.list_instrument(Instrument(symbol="TEST", underlying="TEST"))
 

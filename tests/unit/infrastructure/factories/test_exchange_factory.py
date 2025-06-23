@@ -51,7 +51,10 @@ class TestExchangeFactory:
         # Then - Should have continuous matching mode
         assert isinstance(exchange, ExchangeVenue)
         assert exchange.get_matching_mode() == "continuous"
-        assert isinstance(exchange.matching_engine, ContinuousMatchingEngine)
+        # Exchange has both engines available
+        assert isinstance(
+            exchange._continuous_engine, ContinuousMatchingEngine
+        )
 
     @patch(
         "intern_trading_game.infrastructure.factories.exchange_factory.ConfigDrivenPhaseManager"
@@ -88,9 +91,9 @@ class TestExchangeFactory:
         # Then - Should have batch matching mode from phase
         assert isinstance(exchange, ExchangeVenue)
         assert exchange.get_matching_mode() == "batch"
-        # Note: matching_engine is always continuous for backward compatibility
-        # The actual engine used is determined dynamically by phase
-        assert isinstance(exchange.matching_engine, ContinuousMatchingEngine)
+        # Exchange has both engines available
+        assert hasattr(exchange, "_continuous_engine")
+        assert hasattr(exchange, "_batch_engine")
 
     @patch(
         "intern_trading_game.infrastructure.factories.exchange_factory.ConfigDrivenPhaseManager"
@@ -170,7 +173,7 @@ class TestExchangeFactory:
 
         # Then - Should be different instances
         assert exchange1 is not exchange2
-        assert exchange1.matching_engine is not exchange2.matching_engine
+        assert exchange1._continuous_engine is not exchange2._continuous_engine
 
         # Then - State should be independent
         from intern_trading_game.domain.exchange.models.instrument import (

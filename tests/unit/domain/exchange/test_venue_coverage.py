@@ -10,6 +10,7 @@ import pytest
 
 from intern_trading_game.domain.exchange.book.matching_engine import (
     BatchMatchingEngine,
+    ContinuousMatchingEngine,
 )
 from intern_trading_game.domain.exchange.models.instrument import Instrument
 from intern_trading_game.domain.exchange.models.order import Order
@@ -293,7 +294,9 @@ class TestExchangeVenueAdditionalMethods:
 
         batch_engine = BatchMatchingEngine()
         exchange = ExchangeVenue(
-            phase_manager=phase_manager, matching_engine=batch_engine
+            phase_manager=phase_manager,
+            continuous_engine=ContinuousMatchingEngine(),
+            batch_engine=batch_engine,
         )
 
         # List instrument
@@ -374,7 +377,9 @@ class TestExchangeVenueAdditionalMethods:
 
         batch_engine = BatchMatchingEngine()
         exchange = ExchangeVenue(
-            phase_manager=phase_manager, matching_engine=batch_engine
+            phase_manager=phase_manager,
+            continuous_engine=ContinuousMatchingEngine(),
+            batch_engine=batch_engine,
         )
 
         # When - Get matching mode
@@ -668,7 +673,9 @@ class TestExchangeVenueTrading:
 
         batch_engine = BatchMatchingEngine()
         exchange = ExchangeVenue(
-            phase_manager=phase_manager, matching_engine=batch_engine
+            phase_manager=phase_manager,
+            continuous_engine=ContinuousMatchingEngine(),
+            batch_engine=batch_engine,
         )
         spx_option = Instrument(
             symbol="SPX_CALL_4500",
