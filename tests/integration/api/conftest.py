@@ -18,6 +18,8 @@ def test_exchange():
     of ConfigDrivenPhaseManager, allowing integration tests to run
     outside of actual market hours.
     """
+    from unittest.mock import patch
+
     from intern_trading_game.infrastructure.config.loader import ConfigLoader
     from intern_trading_game.infrastructure.factories.exchange_factory import (
         ExchangeFactory,
@@ -26,11 +28,13 @@ def test_exchange():
 
     config_loader = ConfigLoader()
     exchange_config = config_loader.get_exchange_config()
-    test_manager = IntegrationTestPhaseManager()
 
-    return ExchangeFactory.create_from_config(
-        exchange_config, test_phase_manager=test_manager
-    )
+    # Patch ConfigDrivenPhaseManager to return our test manager
+    with patch(
+        "intern_trading_game.infrastructure.factories.exchange_factory.ConfigDrivenPhaseManager"
+    ) as mock_phase_manager_class:
+        mock_phase_manager_class.return_value = IntegrationTestPhaseManager()
+        return ExchangeFactory.create_from_config(exchange_config)
 
 
 @pytest.fixture
