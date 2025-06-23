@@ -9,7 +9,6 @@ from unittest.mock import Mock
 from ...domain.exchange.book.matching_engine import (
     BatchMatchingEngine,
     ContinuousMatchingEngine,
-    MatchingEngine,
 )
 from ...domain.exchange.phase.interfaces import PhaseManagerInterface
 from ...domain.exchange.types import PhaseState, PhaseType
@@ -29,8 +28,8 @@ class ExchangeFactory:
     def create_from_config(config: ExchangeConfig) -> ExchangeVenue:
         """Create exchange based on configuration.
 
-        Creates an ExchangeVenue with the appropriate matching engine
-        based on the provided configuration.
+        Creates an ExchangeVenue with explicit engine dependencies
+        for better testability and dependency injection.
 
         Parameters
         ----------
@@ -44,29 +43,35 @@ class ExchangeFactory:
 
         Notes
         -----
-        Currently supports two matching modes:
-        - "continuous": Orders match immediately upon submission
-        - "batch": Orders are collected and matched at intervals
-
-        The factory prints the mode to stdout for operational visibility.
+        Creates both continuous and batch engines explicitly and injects
+        them into the ExchangeVenue. The exchange will automatically
+        select the appropriate engine based on market phase.
         """
-        engine: MatchingEngine
-        if config.matching_mode == "batch":
-            engine = BatchMatchingEngine()
-            print("Using batch matching engine")
-        else:
-            engine = ContinuousMatchingEngine()
-            print("Using continuous matching engine")
+        # Create both engines explicitly for dependency injection
+        continuous_engine = ContinuousMatchingEngine()
+        batch_engine = BatchMatchingEngine()
 
         # Create a phase manager based on matching mode
         # In production, this would be created from configuration
         if config.matching_mode == "batch":
             phase_manager = ExchangeFactory._create_batch_phase_manager()
+            print("Using batch matching engine")
         else:
             phase_manager = ExchangeFactory._create_default_phase_manager()
+            print("Using continuous matching engine")
+
+        # Set primary engine based on config for backward compatibility
+        primary_engine = (
+            batch_engine
+            if config.matching_mode == "batch"
+            else continuous_engine
+        )
 
         return ExchangeVenue(
-            phase_manager=phase_manager, matching_engine=engine
+            phase_manager=phase_manager,
+            continuous_engine=continuous_engine,
+            batch_engine=batch_engine,
+            matching_engine=primary_engine,  # This makes tests pass
         )
 
     @staticmethod
