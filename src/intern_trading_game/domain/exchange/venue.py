@@ -449,30 +449,37 @@ class ExchangeVenue:
             return {}
 
     def get_matching_mode(self) -> str:
-        """Get the current matching mode of the exchange.
+        """Get the current matching mode based on market phase.
+
+        Returns the active matching mode which depends on the current
+        market phase. During CONTINUOUS phase, returns "continuous".
+        During other phases (PRE_OPEN, OPENING_AUCTION), returns "batch".
 
         Returns
         -------
         str
-            Either "continuous" or "batch"
+            Either "continuous" or "batch" based on current phase
 
         Notes
         -----
-        This is useful for strategies or systems that need to adapt their
-        behavior based on the matching mode. For example, a strategy might
-        submit orders differently if it knows they won't match immediately.
+        This method reflects the dynamic nature of the exchange, where
+        the matching mode changes based on market phases throughout the
+        trading day. The mode is determined by the current phase's
+        execution style, not by a static configuration.
 
         Examples
         --------
-        >>> exchange = ExchangeVenue()
+        >>> exchange = ExchangeVenue(phase_manager)
+        >>> # During continuous trading hours (9:30 AM - 4:00 PM)
         >>> exchange.get_matching_mode()
         'continuous'
         >>>
-        >>> batch_exchange = ExchangeVenue(BatchMatchingEngine())
-        >>> batch_exchange.get_matching_mode()
+        >>> # During opening auction (9:30 AM)
+        >>> exchange.get_matching_mode()
         'batch'
         """
-        return self.matching_engine.get_mode()
+        phase_state = self.get_current_phase_state()
+        return phase_state.execution_style
 
     def get_current_phase_state(self) -> PhaseState:
         """Get the current market phase state.
