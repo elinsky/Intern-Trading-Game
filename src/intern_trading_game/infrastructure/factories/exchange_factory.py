@@ -52,13 +52,11 @@ class ExchangeFactory:
         batch_engine = BatchMatchingEngine()
 
         # Create a phase manager based on matching mode
-        # In production, this would be created from configuration
+        # TODO: Replace with ConfigDrivenPhaseManager in Milestone 2
         if config.matching_mode == "batch":
             phase_manager = ExchangeFactory._create_batch_phase_manager()
-            print("Using batch matching engine")
         else:
             phase_manager = ExchangeFactory._create_default_phase_manager()
-            print("Using continuous matching engine")
 
         # Set primary engine based on config for backward compatibility
         primary_engine = (
@@ -78,10 +76,8 @@ class ExchangeFactory:
     def _create_default_phase_manager() -> PhaseManagerInterface:
         """Create a default phase manager for continuous trading.
 
-        This is a temporary implementation that always returns
-        continuous trading phase. In production, this would be
-        replaced with ConfigDrivenPhaseManager based on schedule
-        configuration.
+        Creates a mock phase manager that always returns continuous
+        trading phase for testing and development purposes.
 
         Returns
         -------
