@@ -186,7 +186,9 @@ async def startup():
 
     # Load configuration
     from ..infrastructure.config import ConfigLoader
-    from ..infrastructure.factories.exchange_factory import ExchangeFactory
+    from ..infrastructure.factories.exchange_factory import (
+        ExchangeVenueFactory,
+    )
     from ..infrastructure.factories.fee_service_factory import (
         FeeServiceFactory,
     )
@@ -208,7 +210,7 @@ async def startup():
 
     # Create exchange from config
     exchange_config = config_loader.get_exchange_config()
-    exchange = ExchangeFactory.create_from_config(exchange_config)
+    exchange = ExchangeVenueFactory.create_from_config(exchange_config)
 
     # Store exchange for thread access and dependency injection
     _exchange = exchange

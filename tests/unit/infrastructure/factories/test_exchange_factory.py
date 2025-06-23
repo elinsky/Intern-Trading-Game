@@ -9,11 +9,11 @@ from intern_trading_game.domain.exchange.types import PhaseState, PhaseType
 from intern_trading_game.domain.exchange.venue import ExchangeVenue
 from intern_trading_game.infrastructure.config.models import ExchangeConfig
 from intern_trading_game.infrastructure.factories.exchange_factory import (
-    ExchangeFactory,
+    ExchangeVenueFactory,
 )
 
 
-class TestExchangeFactory:
+class TestExchangeVenueFactory:
     """Test exchange creation from configuration."""
 
     @patch(
@@ -46,7 +46,7 @@ class TestExchangeFactory:
         mock_phase_manager_class.return_value = mock_phase_manager
 
         # When - Create exchange
-        exchange = ExchangeFactory.create_from_config(config)
+        exchange = ExchangeVenueFactory.create_from_config(config)
 
         # Then - Should have continuous matching mode
         assert isinstance(exchange, ExchangeVenue)
@@ -86,7 +86,7 @@ class TestExchangeFactory:
         mock_phase_manager_class.return_value = mock_phase_manager
 
         # When - Create exchange
-        exchange = ExchangeFactory.create_from_config(config)
+        exchange = ExchangeVenueFactory.create_from_config(config)
 
         # Then - Should have batch matching mode from phase
         assert isinstance(exchange, ExchangeVenue)
@@ -125,7 +125,7 @@ class TestExchangeFactory:
         mock_phase_manager_class.return_value = mock_phase_manager
 
         # When - Create exchange
-        exchange = ExchangeFactory.create_from_config(config)
+        exchange = ExchangeVenueFactory.create_from_config(config)
 
         # Then - Should have no instruments
         assert len(exchange.get_all_instruments()) == 0
@@ -168,8 +168,8 @@ class TestExchangeFactory:
         ]
 
         # When - Create two exchanges
-        exchange1 = ExchangeFactory.create_from_config(config)
-        exchange2 = ExchangeFactory.create_from_config(config)
+        exchange1 = ExchangeVenueFactory.create_from_config(config)
+        exchange2 = ExchangeVenueFactory.create_from_config(config)
 
         # Then - Should be different instances
         assert exchange1 is not exchange2

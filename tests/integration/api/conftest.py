@@ -22,7 +22,7 @@ def test_exchange():
 
     from intern_trading_game.infrastructure.config.loader import ConfigLoader
     from intern_trading_game.infrastructure.factories.exchange_factory import (
-        ExchangeFactory,
+        ExchangeVenueFactory,
     )
     from tests.utils.test_phase_manager import IntegrationTestPhaseManager
 
@@ -34,7 +34,7 @@ def test_exchange():
         "intern_trading_game.infrastructure.factories.exchange_factory.ConfigDrivenPhaseManager"
     ) as mock_phase_manager_class:
         mock_phase_manager_class.return_value = IntegrationTestPhaseManager()
-        return ExchangeFactory.create_from_config(exchange_config)
+        return ExchangeVenueFactory.create_from_config(exchange_config)
 
 
 @pytest.fixture

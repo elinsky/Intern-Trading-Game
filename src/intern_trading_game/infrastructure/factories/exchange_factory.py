@@ -14,8 +14,8 @@ from ..config.loader import ConfigLoader
 from ..config.models import ExchangeConfig
 
 
-class ExchangeFactory:
-    """Factory for creating configured exchange instances.
+class ExchangeVenueFactory:
+    """Factory for creating configured ExchangeVenue instances.
 
     This class provides static methods to create ExchangeVenue instances
     based on configuration objects, hiding the complexity of matching

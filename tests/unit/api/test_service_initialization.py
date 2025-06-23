@@ -57,7 +57,7 @@ class TestServiceInitialization:
 
     @patch("intern_trading_game.infrastructure.config.ConfigLoader")
     @patch(
-        "intern_trading_game.infrastructure.factories.exchange_factory.ExchangeFactory"
+        "intern_trading_game.infrastructure.factories.exchange_factory.ExchangeVenueFactory"
     )
     @patch(
         "intern_trading_game.infrastructure.factories.validator_factory.ValidatorFactory"

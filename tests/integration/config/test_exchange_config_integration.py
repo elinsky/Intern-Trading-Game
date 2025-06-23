@@ -8,7 +8,7 @@ import yaml
 
 from intern_trading_game.infrastructure.config.loader import ConfigLoader
 from intern_trading_game.infrastructure.factories.exchange_factory import (
-    ExchangeFactory,
+    ExchangeVenueFactory,
 )
 from tests.fixtures.market_data import (
     create_matched_orders,
@@ -41,7 +41,7 @@ class TestExchangeConfigIntegration:
             # When - Load config and create exchange
             loader = ConfigLoader(config_path)
             exchange_config = loader.get_exchange_config()
-            exchange = ExchangeFactory.create_from_config(exchange_config)
+            exchange = ExchangeVenueFactory.create_from_config(exchange_config)
 
             # List test instruments using fixture
             instrument = create_spx_option(strike=4500.0, option_type="call")
@@ -98,7 +98,7 @@ class TestExchangeConfigIntegration:
             # When - Load config and create exchange
             loader = ConfigLoader(config_path)
             exchange_config = loader.get_exchange_config()
-            exchange = ExchangeFactory.create_from_config(exchange_config)
+            exchange = ExchangeVenueFactory.create_from_config(exchange_config)
 
             # List test instrument
             instrument = create_spx_option(strike=4500.0, option_type="put")
@@ -170,12 +170,12 @@ class TestExchangeConfigIntegration:
         try:
             # When - Create two exchanges
             loader1 = ConfigLoader(continuous_path)
-            exchange1 = ExchangeFactory.create_from_config(
+            exchange1 = ExchangeVenueFactory.create_from_config(
                 loader1.get_exchange_config()
             )
 
             loader2 = ConfigLoader(batch_path)
-            exchange2 = ExchangeFactory.create_from_config(
+            exchange2 = ExchangeVenueFactory.create_from_config(
                 loader2.get_exchange_config()
             )
 
@@ -226,7 +226,7 @@ class TestExchangeConfigIntegration:
         try:
             # Create batch exchange
             loader = ConfigLoader(config_path)
-            exchange = ExchangeFactory.create_from_config(
+            exchange = ExchangeVenueFactory.create_from_config(
                 loader.get_exchange_config()
             )
 

@@ -26,7 +26,7 @@ class IntegrationTestPhaseManager(PhaseManagerInterface):
     --------
     >>> # In integration test fixtures
     >>> test_manager = TestPhaseManager()
-    >>> exchange = ExchangeFactory.create_from_config(
+    >>> exchange = ExchangeVenueFactory.create_from_config(
     ...     config, test_phase_manager=test_manager
     ... )
     >>> # Exchange will accept orders anytime during tests
