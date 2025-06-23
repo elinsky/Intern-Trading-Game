@@ -98,7 +98,6 @@ class ConfigLoader:
 
         # Create config with explicit field extraction for clarity
         return ExchangeConfig(
-            matching_mode=exchange_data.get("matching_mode", "continuous"),
             phase_check_interval=exchange_data.get(
                 "phase_check_interval", 0.1
             ),

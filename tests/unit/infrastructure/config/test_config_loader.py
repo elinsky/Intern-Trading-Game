@@ -18,13 +18,13 @@ class TestConfigLoader:
 
         Given - A YAML config file with exchange settings
         When - Config loader reads the file
-        Then - Exchange config object has correct matching mode
+        Then - Exchange config object is created correctly
         """
-        # Given - Create a temporary config file with continuous mode
+        # Given - Create a temporary config file with exchange settings
         with tempfile.NamedTemporaryFile(
             mode="w", suffix=".yaml", delete=False
         ) as f:
-            config_data = {"exchange": {"matching_mode": "continuous"}}
+            config_data = {"exchange": {"phase_check_interval": 0.2}}
             yaml.dump(config_data, f)
             config_path = Path(f.name)
 
@@ -33,24 +33,24 @@ class TestConfigLoader:
             loader = ConfigLoader(config_path)
             exchange_config = loader.get_exchange_config()
 
-            # Then - Config should have continuous matching mode
-            assert exchange_config.matching_mode == "continuous"
+            # Then - Config should have the specified values
+            assert exchange_config.phase_check_interval == 0.2
             assert isinstance(exchange_config, ExchangeConfig)
         finally:
             config_path.unlink()
 
-    def test_load_batch_mode_config(self):
-        """Test loading configuration with batch matching mode.
+    def test_load_timeout_config(self):
+        """Test loading configuration with custom timeout values.
 
-        Given - A YAML config specifying batch matching mode
+        Given - A YAML config specifying timeout values
         When - Config loader reads the file
-        Then - Exchange config reflects batch mode
+        Then - Exchange config reflects the custom values
         """
-        # Given - Create config with batch mode
+        # Given - Create config with custom timeout
         with tempfile.NamedTemporaryFile(
             mode="w", suffix=".yaml", delete=False
         ) as f:
-            config_data = {"exchange": {"matching_mode": "batch"}}
+            config_data = {"exchange": {"order_queue_timeout": 0.05}}
             yaml.dump(config_data, f)
             config_path = Path(f.name)
 
@@ -59,8 +59,8 @@ class TestConfigLoader:
             loader = ConfigLoader(config_path)
             exchange_config = loader.get_exchange_config()
 
-            # Then - Config should have batch matching mode
-            assert exchange_config.matching_mode == "batch"
+            # Then - Config should have custom timeout
+            assert exchange_config.order_queue_timeout == 0.05
         finally:
             config_path.unlink()
 
@@ -84,8 +84,9 @@ class TestConfigLoader:
             loader = ConfigLoader(config_path)
             exchange_config = loader.get_exchange_config()
 
-            # Then - Should use default continuous mode
-            assert exchange_config.matching_mode == "continuous"
+            # Then - Should use default values
+            assert exchange_config.phase_check_interval == 0.1
+            assert exchange_config.order_queue_timeout == 0.01
         finally:
             config_path.unlink()
 
@@ -109,7 +110,8 @@ class TestConfigLoader:
             exchange_config = loader.get_exchange_config()
 
             # Then - Should work with defaults
-            assert exchange_config.matching_mode == "continuous"
+            assert exchange_config.phase_check_interval == 0.1
+            assert exchange_config.order_queue_timeout == 0.01
         finally:
             config_path.unlink()
 
@@ -166,7 +168,7 @@ class TestConfigLoader:
         with tempfile.NamedTemporaryFile(
             mode="w", suffix=".yaml", delete=False
         ) as f:
-            config_data = {"exchange": {"matching_mode": "continuous"}}
+            config_data = {"exchange": {"phase_check_interval": 0.5}}
             yaml.dump(config_data, f)
             config_path = Path(f.name)
 
@@ -174,16 +176,16 @@ class TestConfigLoader:
             # When - Load config first time
             loader = ConfigLoader(config_path)
             first_config = loader.get_exchange_config()
-            assert first_config.matching_mode == "continuous"
+            assert first_config.phase_check_interval == 0.5
 
             # When - Modify file and load again
             with open(config_path, "w") as f:
-                new_data = {"exchange": {"matching_mode": "batch"}}
+                new_data = {"exchange": {"phase_check_interval": 1.0}}
                 yaml.dump(new_data, f)
 
             second_config = loader.get_exchange_config()
 
-            # Then - Should still return cached continuous mode
-            assert second_config.matching_mode == "continuous"
+            # Then - Should still return cached value
+            assert second_config.phase_check_interval == 0.5
         finally:
             config_path.unlink()

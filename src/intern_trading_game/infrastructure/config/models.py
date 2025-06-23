@@ -5,7 +5,7 @@ using dataclasses for type safety and clarity.
 """
 
 from dataclasses import dataclass
-from typing import Any, Dict, List, Literal
+from typing import Any, Dict, List
 
 
 @dataclass
@@ -14,10 +14,6 @@ class ExchangeConfig:
 
     Attributes
     ----------
-    matching_mode : Literal["continuous", "batch"]
-        The order matching mode for the exchange.
-        - "continuous": Orders match immediately upon submission
-        - "batch": Orders collected and matched at intervals
     phase_check_interval : float
         Maximum delay in seconds before checking for market phase transitions.
         Controls how quickly the exchange responds to phase changes like market open
@@ -32,7 +28,6 @@ class ExchangeConfig:
         increase CPU usage. Default: 0.01 seconds.
     """
 
-    matching_mode: Literal["continuous", "batch"] = "continuous"
     phase_check_interval: float = 0.1
     order_queue_timeout: float = 0.01
 

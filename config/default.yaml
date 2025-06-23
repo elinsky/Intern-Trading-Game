@@ -2,7 +2,6 @@
 # This file contains the baseline configuration that can be overridden
 
 exchange:
-  matching_mode: continuous  # Options: continuous, batch
   phase_check_interval: 0.1  # Seconds between phase transition checks (100ms)
   order_queue_timeout: 0.01  # Seconds to wait for orders before checking phases (10ms)
 

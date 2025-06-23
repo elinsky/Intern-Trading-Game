@@ -24,7 +24,7 @@ class ExchangeFactory:
 
     @staticmethod
     def create_from_config(
-        config: ExchangeConfig,
+        config: ExchangeConfig,  # pylint: disable=unused-argument
     ) -> ExchangeVenue:
         """Create exchange based on configuration.
 
@@ -57,16 +57,9 @@ class ExchangeFactory:
         market_phases_config = config_loader.get_market_phases_config()
         phase_manager = ConfigDrivenPhaseManager(market_phases_config)
 
-        # Set primary engine based on config for backward compatibility
-        primary_engine = (
-            batch_engine
-            if config.matching_mode == "batch"
-            else continuous_engine
-        )
-
         return ExchangeVenue(
             phase_manager=phase_manager,
             continuous_engine=continuous_engine,
             batch_engine=batch_engine,
-            matching_engine=primary_engine,  # This makes tests pass
+            matching_engine=continuous_engine,  # Default for backward compatibility
         )

@@ -3,7 +3,6 @@
 from unittest.mock import Mock, patch
 
 from intern_trading_game.domain.exchange.book.matching_engine import (
-    BatchMatchingEngine,
     ContinuousMatchingEngine,
 )
 from intern_trading_game.domain.exchange.types import PhaseState, PhaseType
@@ -32,8 +31,8 @@ class TestExchangeFactory:
         When - Factory creates exchange from config
         Then - Exchange has continuous matching engine
         """
-        # Given - Config for continuous mode and mock phase manager
-        config = ExchangeConfig(matching_mode="continuous")
+        # Given - Config and mock phase manager
+        config = ExchangeConfig()
 
         # Set up mock phase manager to return continuous phase
         mock_phase_manager = Mock()
@@ -69,8 +68,8 @@ class TestExchangeFactory:
         When - Factory creates exchange from config
         Then - Exchange has batch matching engine
         """
-        # Given - Config for batch mode and mock phase manager
-        config = ExchangeConfig(matching_mode="batch")
+        # Given - Config and mock phase manager
+        config = ExchangeConfig()
 
         # Set up mock phase manager to return batch phase
         mock_phase_manager = Mock()
@@ -86,10 +85,12 @@ class TestExchangeFactory:
         # When - Create exchange
         exchange = ExchangeFactory.create_from_config(config)
 
-        # Then - Should have batch matching mode
+        # Then - Should have batch matching mode from phase
         assert isinstance(exchange, ExchangeVenue)
         assert exchange.get_matching_mode() == "batch"
-        assert isinstance(exchange.matching_engine, BatchMatchingEngine)
+        # Note: matching_engine is always continuous for backward compatibility
+        # The actual engine used is determined dynamically by phase
+        assert isinstance(exchange.matching_engine, ContinuousMatchingEngine)
 
     @patch(
         "intern_trading_game.infrastructure.factories.exchange_factory.ConfigDrivenPhaseManager"
@@ -106,8 +107,8 @@ class TestExchangeFactory:
         When - Factory creates exchange
         Then - Exchange has no instruments listed
         """
-        # Given - Config (mode doesn't matter) and mock phase manager
-        config = ExchangeConfig(matching_mode="continuous")
+        # Given - Config and mock phase manager
+        config = ExchangeConfig()
 
         # Set up mock phase manager
         mock_phase_manager = Mock()
@@ -144,7 +145,7 @@ class TestExchangeFactory:
         Then - They are separate instances with separate state
         """
         # Given - Same config and set up mock phase manager
-        config = ExchangeConfig(matching_mode="continuous")
+        config = ExchangeConfig()
 
         # Set up mock phase manager factory to return new instances
         def create_mock_phase_manager():

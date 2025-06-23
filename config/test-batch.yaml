@@ -1,3 +1,2 @@
 # Test configuration with batch matching mode
 exchange:
-  matching_mode: batch

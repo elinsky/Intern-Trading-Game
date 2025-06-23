@@ -1,6 +1,5 @@
 # Test configuration with different constraints
 exchange:
-  matching_mode: continuous
 
 roles:
   market_maker:
