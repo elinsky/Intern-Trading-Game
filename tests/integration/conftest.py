@@ -12,12 +12,12 @@ from typing import Dict
 
 import pytest
 
-from intern_trading_game.domain.exchange.book.matching_engine import (
-    BatchMatchingEngine,
-    ContinuousMatchingEngine,
-)
 from intern_trading_game.domain.exchange.components.core.models import (
     Instrument,
+)
+from intern_trading_game.domain.exchange.components.orderbook.matching_engine import (
+    BatchMatchingEngine,
+    ContinuousMatchingEngine,
 )
 from intern_trading_game.domain.exchange.validation.order_validator import (
     ConstraintBasedOrderValidator,

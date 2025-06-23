@@ -4,7 +4,7 @@ This module provides factory methods to create ExchangeVenue instances
 with the appropriate matching engine based on configuration.
 """
 
-from ...domain.exchange.book.matching_engine import (
+from ...domain.exchange.components.orderbook.matching_engine import (
     BatchMatchingEngine,
     ContinuousMatchingEngine,
 )

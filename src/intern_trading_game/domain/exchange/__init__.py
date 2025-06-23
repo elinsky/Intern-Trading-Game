@@ -5,13 +5,13 @@ This module contains classes for the trading exchange, order book, orders,
 and trades.
 """
 
-from .book.matching_engine import (
+from .components.core.models import Order, OrderResult, Trade
+from .components.orderbook import (
     BatchMatchingEngine,
     ContinuousMatchingEngine,
     MatchingEngine,
+    OrderBook,
 )
-from .book.order_book import OrderBook
-from .components.core.models import Order, OrderResult, Trade
 from .venue import ExchangeVenue
 
 __all__ = [

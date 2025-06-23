@@ -2,12 +2,12 @@
 
 from unittest.mock import Mock, patch
 
-from intern_trading_game.domain.exchange.book.matching_engine import (
-    ContinuousMatchingEngine,
-)
 from intern_trading_game.domain.exchange.components.core.types import (
     PhaseState,
     PhaseType,
+)
+from intern_trading_game.domain.exchange.components.orderbook.matching_engine import (
+    ContinuousMatchingEngine,
 )
 from intern_trading_game.domain.exchange.venue import ExchangeVenue
 from intern_trading_game.infrastructure.config.models import ExchangeConfig

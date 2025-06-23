@@ -10,7 +10,7 @@ from collections import deque
 from dataclasses import dataclass, field
 from typing import Dict, List, Optional, Set, Tuple
 
-from ..components.core.models import Order, Trade
+from ..core.models import Order, Trade
 
 
 @dataclass

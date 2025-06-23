@@ -20,9 +20,9 @@ will satisfy the protocol without explicit inheritance.
 
 from typing import Dict, Optional, Protocol
 
-from .book.order_book import OrderBook
 from .components.core.models import Order, OrderResult
 from .components.core.types import PhaseState
+from .components.orderbook.book import OrderBook
 
 
 class ExchangeServiceProtocol(Protocol):

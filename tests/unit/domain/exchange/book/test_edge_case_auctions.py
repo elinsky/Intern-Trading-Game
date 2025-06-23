@@ -4,10 +4,10 @@ These tests verify the MaximumVolumePricingStrategy handles edge cases correctly
 including no overlap, single orders, empty sides, and extreme imbalances.
 """
 
-from intern_trading_game.domain.exchange.book.batch_auction_strategies import (
+from intern_trading_game.domain.exchange.components.core.models import Order
+from intern_trading_game.domain.exchange.components.orderbook.batch_auction_strategies import (
     MaximumVolumePricingStrategy,
 )
-from intern_trading_game.domain.exchange.components.core.models import Order
 
 
 class TestEdgeCaseAuctions:

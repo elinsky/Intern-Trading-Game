@@ -29,8 +29,8 @@ from collections import defaultdict
 from dataclasses import dataclass, field
 from typing import Dict, List
 
-from ..components.core.models import Order, OrderResult, Trade
-from .order_book import OrderBook
+from ..core.models import Order, OrderResult, Trade
+from .book import OrderBook
 
 
 class MatchingEngine(ABC):

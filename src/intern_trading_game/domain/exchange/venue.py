@@ -7,14 +7,14 @@ the exchange.
 
 from typing import Dict, List, Optional, Set
 
-from .book.matching_engine import (
+from .components.core.models import Instrument, Order, OrderResult, Trade
+from .components.core.types import PhaseState
+from .components.orderbook.book import OrderBook
+from .components.orderbook.matching_engine import (
     BatchMatchingEngine,
     ContinuousMatchingEngine,
     MatchingEngine,
 )
-from .book.order_book import OrderBook
-from .components.core.models import Instrument, Order, OrderResult, Trade
-from .components.core.types import PhaseState
 from .phase.interfaces import PhaseManagerInterface
 from .phase.transition_handler import ExchangePhaseTransitionHandler
 
@@ -129,7 +129,7 @@ class ExchangeVenue:
 
     Creating an exchange with explicit engine injection:
 
-    >>> from .book.matching_engine import BatchMatchingEngine, ContinuousMatchingEngine
+    >>> from .components.orderbook.matching_engine import BatchMatchingEngine, ContinuousMatchingEngine
     >>> exchange = ExchangeVenue(
     ...     phase_manager=phase_manager,
     ...     continuous_engine=ContinuousMatchingEngine(),

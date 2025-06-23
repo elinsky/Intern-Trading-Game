@@ -5,10 +5,10 @@ the same maximum volume, and the MaximumVolumePricingStrategy must select the mi
 This is a key fairness feature of the Maximum Volume algorithm.
 """
 
-from intern_trading_game.domain.exchange.book.batch_auction_strategies import (
+from intern_trading_game.domain.exchange.components.core.models import Order
+from intern_trading_game.domain.exchange.components.orderbook.batch_auction_strategies import (
     MaximumVolumePricingStrategy,
 )
-from intern_trading_game.domain.exchange.components.core.models import Order
 
 
 class TestMidpointSelectionScenarios:

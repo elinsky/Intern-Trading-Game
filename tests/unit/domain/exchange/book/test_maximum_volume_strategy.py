@@ -5,10 +5,10 @@ the price that maximizes trading volume, with special focus on the
 midpoint selection rule when multiple prices achieve maximum volume.
 """
 
-from intern_trading_game.domain.exchange.book.batch_auction_strategies import (
+from intern_trading_game.domain.exchange.components.core.models import Order
+from intern_trading_game.domain.exchange.components.orderbook.batch_auction_strategies import (
     MaximumVolumePricingStrategy,
 )
-from intern_trading_game.domain.exchange.components.core.models import Order
 
 
 class TestMaximumVolumePricingStrategy:

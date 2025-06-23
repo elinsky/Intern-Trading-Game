@@ -8,10 +8,6 @@ from unittest.mock import Mock, patch
 
 import pytest
 
-from intern_trading_game.domain.exchange.book.matching_engine import (
-    BatchMatchingEngine,
-    ContinuousMatchingEngine,
-)
 from intern_trading_game.domain.exchange.components.core.models import (
     Instrument,
     Order,
@@ -19,6 +15,10 @@ from intern_trading_game.domain.exchange.components.core.models import (
 from intern_trading_game.domain.exchange.components.core.types import (
     PhaseState,
     PhaseType,
+)
+from intern_trading_game.domain.exchange.components.orderbook.matching_engine import (
+    BatchMatchingEngine,
+    ContinuousMatchingEngine,
 )
 from intern_trading_game.domain.exchange.venue import ExchangeVenue
 from tests.fixtures import (
