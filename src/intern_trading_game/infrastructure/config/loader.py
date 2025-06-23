@@ -449,7 +449,12 @@ class ConfigLoader:
         ValueError
             If schedule is missing, has invalid phase names, or missing fields
         """
-        VALID_PHASE_NAMES = {"closed", "pre_open", "continuous"}
+        VALID_PHASE_NAMES = {
+            "closed",
+            "pre_open",
+            "opening_auction",
+            "continuous",
+        }
 
         if "schedule" not in phases_data:
             raise ValueError("Missing required 'schedule' in market_phases")
@@ -500,7 +505,12 @@ class ConfigLoader:
         ValueError
             If phase_states is missing, has invalid phase names, or missing fields
         """
-        VALID_PHASE_NAMES = {"closed", "pre_open", "continuous"}
+        VALID_PHASE_NAMES = {
+            "closed",
+            "pre_open",
+            "opening_auction",
+            "continuous",
+        }
 
         if "phase_states" not in phases_data:
             raise ValueError(
