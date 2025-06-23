@@ -10,8 +10,7 @@ from dataclasses import dataclass
 from typing import Dict, Optional, Tuple
 
 from ..constants.errors import ErrorMessages
-from ..domain.exchange.models.order import Order
-from ..domain.exchange.order_result import OrderResult
+from ..domain.exchange.components.core.models import Order, OrderResult
 from ..domain.exchange.validation.interfaces import ValidationContext
 from ..domain.exchange.validation.order_validator import (
     ConstraintBasedOrderValidator,

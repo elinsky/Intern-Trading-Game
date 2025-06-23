@@ -22,8 +22,13 @@ from intern_trading_game.domain.exchange import (
     Order,
     OrderBook,
 )
-from intern_trading_game.domain.exchange.models.instrument import Instrument
-from intern_trading_game.domain.exchange.types import PhaseState, PhaseType
+from intern_trading_game.domain.exchange.components.core.models import (
+    Instrument,
+)
+from intern_trading_game.domain.exchange.components.core.types import (
+    PhaseState,
+    PhaseType,
+)
 
 # Test fixtures
 

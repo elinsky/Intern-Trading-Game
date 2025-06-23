@@ -15,8 +15,8 @@ import time
 
 import pytest
 
-from intern_trading_game.domain.exchange.models.instrument import Instrument
-from intern_trading_game.domain.exchange.models.order import (
+from intern_trading_game.domain.exchange.components.core.models import (
+    Instrument,
     Order,
     OrderSide,
     OrderType,

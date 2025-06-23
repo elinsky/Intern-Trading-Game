@@ -6,13 +6,13 @@ from unittest.mock import call, create_autospec
 
 import pytest
 
-from intern_trading_game.domain.exchange.models.order import (
+from intern_trading_game.domain.exchange.components.core.models import (
     Order,
+    OrderResult,
     OrderSide,
     OrderType,
+    Trade,
 )
-from intern_trading_game.domain.exchange.models.trade import Trade
-from intern_trading_game.domain.exchange.order_result import OrderResult
 from intern_trading_game.domain.positions import (
     PositionManagementService,
     TradeProcessingService,

@@ -7,7 +7,7 @@ components in the exchange domain.
 from datetime import datetime
 from typing import Optional, Protocol, runtime_checkable
 
-from ..types import PhaseState, PhaseType
+from ..components.core.types import PhaseState, PhaseType
 
 
 @runtime_checkable

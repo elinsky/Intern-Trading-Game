@@ -2,7 +2,7 @@
 
 from pathlib import Path
 
-from intern_trading_game.domain.exchange.models.order import (
+from intern_trading_game.domain.exchange.components.core.models import (
     Order,
     OrderSide,
     OrderType,

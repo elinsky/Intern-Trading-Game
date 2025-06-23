@@ -6,7 +6,9 @@ from pathlib import Path
 import pytest
 import yaml
 
-from intern_trading_game.domain.exchange.models.instrument import Instrument
+from intern_trading_game.domain.exchange.components.core.models import (
+    Instrument,
+)
 from intern_trading_game.infrastructure.config.loader import ConfigLoader
 
 

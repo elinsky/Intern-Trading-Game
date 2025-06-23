@@ -10,7 +10,7 @@ from unittest.mock import AsyncMock
 import pytest
 from fastapi import WebSocket
 
-from intern_trading_game.domain.exchange.types import (
+from intern_trading_game.domain.exchange.components.core.types import (
     LiquidityType as CoreLiquidityType,
 )
 from intern_trading_game.infrastructure.api.models import TeamInfo

@@ -46,7 +46,7 @@ from datetime import datetime
 from enum import Enum
 from typing import Optional
 
-from ...domain.exchange.types import LiquidityType
+from ...domain.exchange.components.core.types import LiquidityType
 
 
 class MessageType(str, Enum):

@@ -43,7 +43,7 @@ Examples
 """
 
 # Re-export existing types for convenience
-from ..domain.exchange.order_result import OrderResult
+from ..domain.exchange.components.core.models import OrderResult
 from ..infrastructure.api.models import OrderResponse
 
 # Import supporting services and configs

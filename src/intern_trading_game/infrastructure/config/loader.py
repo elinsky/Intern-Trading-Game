@@ -9,7 +9,7 @@ from typing import Dict, List, Optional
 
 import yaml
 
-from ...domain.exchange.models.instrument import Instrument
+from ...domain.exchange.components.core.models import Instrument
 from ...domain.exchange.response.models import CoordinationConfig
 from ...domain.exchange.validation.order_validator import (
     ConstraintConfig,

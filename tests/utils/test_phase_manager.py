@@ -4,10 +4,13 @@ This module provides test-specific phase managers that enable predictable
 behavior during integration testing, separate from production phase logic.
 """
 
+from intern_trading_game.domain.exchange.components.core.types import (
+    PhaseState,
+    PhaseType,
+)
 from intern_trading_game.domain.exchange.phase.interfaces import (
     PhaseManagerInterface,
 )
-from intern_trading_game.domain.exchange.types import PhaseState, PhaseType
 
 
 class IntegrationTestPhaseManager(PhaseManagerInterface):

@@ -10,10 +10,10 @@ from zoneinfo import ZoneInfo
 
 import pytest
 
+from intern_trading_game.domain.exchange.components.core.types import PhaseType
 from intern_trading_game.domain.exchange.phase.interfaces import (
     PhaseManagerInterface,
 )
-from intern_trading_game.domain.exchange.types import PhaseType
 from intern_trading_game.infrastructure.config.models import (
     MarketPhasesConfig,
     PhaseScheduleConfig,

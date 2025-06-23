@@ -55,7 +55,7 @@ from typing import Dict, Optional, Set
 
 from fastapi import WebSocket
 
-from ...domain.exchange.types import LiquidityType
+from ...domain.exchange.components.core.types import LiquidityType
 from ..api.models import TeamInfo
 from .websocket_messages import (
     MessageType,

@@ -21,9 +21,8 @@ will satisfy the protocol without explicit inheritance.
 from typing import Dict, Optional, Protocol
 
 from .book.order_book import OrderBook
-from .models.order import Order
-from .order_result import OrderResult
-from .types import PhaseState
+from .components.core.models import Order, OrderResult
+from .components.core.types import PhaseState
 
 
 class ExchangeServiceProtocol(Protocol):

@@ -12,12 +12,12 @@ from unittest.mock import Mock
 
 import pytest
 
-from intern_trading_game.domain.exchange.models.order import (
+from intern_trading_game.domain.exchange.components.core.models import (
     Order,
+    OrderResult,
     OrderSide,
     OrderType,
 )
-from intern_trading_game.domain.exchange.order_result import OrderResult
 from intern_trading_game.domain.exchange.response.coordinator import (
     OrderResponseCoordinator,
 )
@@ -459,7 +459,7 @@ class TestMatchingThreadIntegration:
         env = setup_matching_thread
 
         # Configure exchange to accept order
-        from intern_trading_game.domain.exchange.order_result import (
+        from intern_trading_game.domain.exchange.components.core.models import (
             OrderResult,
         )
 

@@ -18,8 +18,7 @@ compatibility with the current implementation.
 from typing import Dict, Protocol
 
 from ...infrastructure.api.models import OrderResponse, TeamInfo
-from ..exchange.models.order import Order
-from ..exchange.order_result import OrderResult
+from ..exchange.components.core.models import Order, OrderResult
 
 
 class PositionServiceProtocol(Protocol):

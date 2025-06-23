@@ -13,13 +13,10 @@ from .book.matching_engine import (
     MatchingEngine,
 )
 from .book.order_book import OrderBook
-from .models.instrument import Instrument
-from .models.order import Order
-from .models.trade import Trade
-from .order_result import OrderResult
+from .components.core.models import Instrument, Order, OrderResult, Trade
+from .components.core.types import PhaseState
 from .phase.interfaces import PhaseManagerInterface
 from .phase.transition_handler import ExchangePhaseTransitionHandler
-from .types import PhaseState
 
 
 class ExchangeVenue:

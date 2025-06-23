@@ -6,7 +6,7 @@ and position management without threading complexity.
 
 from datetime import datetime
 
-from intern_trading_game.domain.exchange.models.order import (
+from intern_trading_game.domain.exchange.components.core.models import (
     Order,
     OrderSide,
     OrderType,

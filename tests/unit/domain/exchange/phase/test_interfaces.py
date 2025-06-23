@@ -4,7 +4,10 @@ This module tests the PhaseManagerInterface protocol to ensure
 it defines the correct contract for phase management.
 """
 
-from intern_trading_game.domain.exchange.types import PhaseState, PhaseType
+from intern_trading_game.domain.exchange.components.core.types import (
+    PhaseState,
+    PhaseType,
+)
 
 
 class TestPhaseManagerInterface:

@@ -69,7 +69,7 @@ class TestPackageImports:
     def test_reexported_types_match_originals(self):
         """Test that re-exported types are same as originals."""
         import intern_trading_game.services as services
-        from intern_trading_game.domain.exchange.order_result import (
+        from intern_trading_game.domain.exchange.components.core.models import (
             OrderResult,
         )
         from intern_trading_game.infrastructure.api.models import OrderResponse
@@ -105,7 +105,7 @@ class TestPackageImports:
         modules_to_clear = [
             "intern_trading_game.services",
             "intern_trading_game.services.interfaces",
-            "intern_trading_game.domain.exchange.order_result",
+            "intern_trading_game.domain.exchange.components.core.models",
             "intern_trading_game.infrastructure.api.models",
         ]
 
@@ -117,13 +117,16 @@ class TestPackageImports:
         try:
             # Import services first
             # Then import the source modules
-            import intern_trading_game.domain.exchange.order_result
+            import intern_trading_game.domain.exchange.components.core.models
             import intern_trading_game.infrastructure.api.models
             import intern_trading_game.services
 
             # Verify modules loaded (satisfies F401)
             assert intern_trading_game.services is not None
-            assert intern_trading_game.domain.exchange.order_result is not None
+            assert (
+                intern_trading_game.domain.exchange.components.core.models
+                is not None
+            )
             assert intern_trading_game.infrastructure.api.models is not None
 
         except ImportError as e:
@@ -155,7 +158,9 @@ class TestPackageImports:
 
         if TYPE_CHECKING:
             # This tests that the imports work for type checking
-            from intern_trading_game.domain.exchange.models.order import Order
+            from intern_trading_game.domain.exchange.components.core.models import (
+                Order,
+            )
             from intern_trading_game.infrastructure.api.models import TeamInfo
             from intern_trading_game.services import (
                 OrderResult,

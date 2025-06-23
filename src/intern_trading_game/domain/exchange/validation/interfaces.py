@@ -8,8 +8,7 @@ from abc import ABC, abstractmethod
 from dataclasses import dataclass, field
 from typing import Dict
 
-from ..models.order import Order
-from ..order_result import OrderResult
+from ..components.core.models import Order, OrderResult
 
 
 @dataclass

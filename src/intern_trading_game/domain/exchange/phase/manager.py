@@ -8,7 +8,7 @@ from datetime import datetime, time
 from typing import Optional
 from zoneinfo import ZoneInfo
 
-from ..types import PhaseState, PhaseType
+from ..components.core.types import PhaseState, PhaseType
 
 
 class ConfigDrivenPhaseManager:

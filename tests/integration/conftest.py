@@ -16,7 +16,9 @@ from intern_trading_game.domain.exchange.book.matching_engine import (
     BatchMatchingEngine,
     ContinuousMatchingEngine,
 )
-from intern_trading_game.domain.exchange.models.instrument import Instrument
+from intern_trading_game.domain.exchange.components.core.models import (
+    Instrument,
+)
 from intern_trading_game.domain.exchange.validation.order_validator import (
     ConstraintBasedOrderValidator,
     ConstraintConfig,
@@ -62,7 +64,10 @@ def exchange():
     """Create a clean exchange for testing."""
     from unittest.mock import Mock
 
-    from intern_trading_game.domain.exchange.types import PhaseState, PhaseType
+    from intern_trading_game.domain.exchange.components.core.types import (
+        PhaseState,
+        PhaseType,
+    )
 
     # Create a mock phase manager for continuous trading
     phase_manager = Mock()

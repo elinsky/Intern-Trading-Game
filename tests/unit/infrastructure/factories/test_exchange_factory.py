@@ -5,7 +5,10 @@ from unittest.mock import Mock, patch
 from intern_trading_game.domain.exchange.book.matching_engine import (
     ContinuousMatchingEngine,
 )
-from intern_trading_game.domain.exchange.types import PhaseState, PhaseType
+from intern_trading_game.domain.exchange.components.core.types import (
+    PhaseState,
+    PhaseType,
+)
 from intern_trading_game.domain.exchange.venue import ExchangeVenue
 from intern_trading_game.infrastructure.config.models import ExchangeConfig
 from intern_trading_game.infrastructure.factories.exchange_factory import (
@@ -176,7 +179,7 @@ class TestExchangeVenueFactory:
         assert exchange1._continuous_engine is not exchange2._continuous_engine
 
         # Then - State should be independent
-        from intern_trading_game.domain.exchange.models.instrument import (
+        from intern_trading_game.domain.exchange.components.core.models import (
             Instrument,
         )
 

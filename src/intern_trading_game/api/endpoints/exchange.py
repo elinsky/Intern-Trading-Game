@@ -46,7 +46,7 @@ def get_response_coordinator() -> OrderResponseCoordinatorInterface:
 
 def validate_order_type(order_request: OrderRequest):
     """Validate and convert order type."""
-    from ...domain.exchange.models.order import OrderType
+    from ...domain.exchange.components.core.models import OrderType
 
     try:
         return OrderType[order_request.order_type.upper()]
@@ -56,7 +56,7 @@ def validate_order_type(order_request: OrderRequest):
 
 def validate_order_side(order_request: OrderRequest):
     """Validate and convert order side."""
-    from ...domain.exchange.models.order import OrderSide
+    from ...domain.exchange.components.core.models import OrderSide
 
     try:
         return OrderSide(order_request.side)
@@ -150,7 +150,7 @@ async def submit_order(
     """
     try:
         # Convert request to domain order
-        from ...domain.exchange.models.order import Order, OrderType
+        from ...domain.exchange.components.core.models import Order, OrderType
 
         # Validate order type
         order_type = validate_order_type(order_request)

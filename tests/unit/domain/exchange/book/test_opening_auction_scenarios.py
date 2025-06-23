@@ -9,7 +9,7 @@ rather than through the full exchange infrastructure.
 from intern_trading_game.domain.exchange.book.batch_auction_strategies import (
     MaximumVolumePricingStrategy,
 )
-from intern_trading_game.domain.exchange.models.order import Order
+from intern_trading_game.domain.exchange.components.core.models import Order
 
 
 class TestOpeningAuctionScenarios:

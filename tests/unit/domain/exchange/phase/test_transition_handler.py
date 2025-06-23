@@ -6,6 +6,10 @@ and executes appropriate actions like opening auctions and order cancellations.
 
 from unittest.mock import Mock
 
+from intern_trading_game.domain.exchange.components.core.types import (
+    PhaseState,
+    PhaseType,
+)
 from intern_trading_game.domain.exchange.phase.interfaces import (
     PhaseManagerInterface,
 )
@@ -15,7 +19,6 @@ from intern_trading_game.domain.exchange.phase.protocols import (
 from intern_trading_game.domain.exchange.phase.transition_handler import (
     ExchangePhaseTransitionHandler,
 )
-from intern_trading_game.domain.exchange.types import PhaseState, PhaseType
 
 
 def create_handler_with_mocks(initial_phase: PhaseType = PhaseType.CONTINUOUS):

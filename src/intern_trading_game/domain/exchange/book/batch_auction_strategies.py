@@ -27,7 +27,7 @@ arXiv:1304.3135v1
 from dataclasses import dataclass
 from typing import Dict, List, Optional, Protocol, Set, Tuple
 
-from ..models.order import Order
+from ..components.core.models import Order
 
 
 @dataclass

@@ -4,7 +4,10 @@ This module tests the PhaseType enum and PhaseState dataclass that form
 the foundation of the phase-based trading system.
 """
 
-from intern_trading_game.domain.exchange.types import PhaseState, PhaseType
+from intern_trading_game.domain.exchange.components.core.types import (
+    PhaseState,
+    PhaseType,
+)
 from intern_trading_game.infrastructure.config.models import PhaseStateConfig
 
 

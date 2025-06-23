@@ -7,13 +7,13 @@ and order cancellations.
 
 from typing import Callable, Dict, Optional, Tuple
 
+from intern_trading_game.domain.exchange.components.core.types import PhaseType
 from intern_trading_game.domain.exchange.phase.interfaces import (
     PhaseManagerInterface,
 )
 from intern_trading_game.domain.exchange.phase.protocols import (
     ExchangeOperations,
 )
-from intern_trading_game.domain.exchange.types import PhaseType
 
 
 class ExchangePhaseTransitionHandler:
